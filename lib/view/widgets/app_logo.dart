@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../config/theme/app_colors.dart';
 
 class AppLogo extends StatelessWidget {
   final double scale;
   final Color color;
 
-  const AppLogo({
-    super.key,
-    this.scale = 1.0,
-    this.color = const Color(0xFF514EB6),
-  });
+  const AppLogo({super.key, this.scale = 1.0, this.color = AppColors.primary});
 
   @override
   Widget build(BuildContext context) {
@@ -113,14 +110,14 @@ class _Dot extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: const ShapeDecoration(
-        color: Color(0xFFF5F5F5),
+      decoration: ShapeDecoration(
+        color: AppColors.background,
         shape: OvalBorder(),
         shadows: [
           BoxShadow(
-            color: Color(0x3F000000),
+            color: AppColors.shadowDark,
             blurRadius: 4,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
