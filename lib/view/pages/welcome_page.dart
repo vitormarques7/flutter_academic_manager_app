@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_text_styles.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/primary_button.dart';
 import '../widgets/secondary_button.dart';
@@ -10,7 +12,7 @@ class WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FF),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 37),
@@ -22,29 +24,15 @@ class WelcomePage extends StatelessWidget {
 
               const Spacer(flex: 2),
 
-              const Text(
-                'Bem vindo',
-                style: TextStyle(
-                  color: Color(0xFF191820),
-                  fontSize: 40,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -1,
-                ),
-              ),
+              Text('Bem vindo', style: AppTextStyles.headline1),
 
               const SizedBox(height: 16),
 
-              const Text(
+              Text(
                 'Tudo que você precisa para uma boa organização dos seus estudos em um só lugar',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Color(0xFF6B6B6B),
-                  fontSize: 16,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w700,
-                  height: 1.38,
-                  letterSpacing: -1,
+                style: AppTextStyles.bodyBold.copyWith(
+                  color: AppColors.textLight,
                 ),
               ),
 
@@ -53,7 +41,7 @@ class WelcomePage extends StatelessWidget {
               PrimaryButton(
                 label: 'Login',
                 onPressed: () {
-                  // TODO: navegar para Tela login
+                  // TODO: navegar para Tela Login
                 },
               ),
 
@@ -62,7 +50,7 @@ class WelcomePage extends StatelessWidget {
               SecondaryButton(
                 label: 'Cadastrar',
                 onPressed: () {
-                  // TODO: navegar para Tela cadastro
+                  // TODO: navegar para Tela Cadastro
                 },
               ),
 
