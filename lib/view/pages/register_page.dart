@@ -1,5 +1,6 @@
 import 'package:academic_manager_app/config/theme/app_colors.dart';
 import 'package:academic_manager_app/config/theme/app_text_styles.dart';
+import 'package:academic_manager_app/view/pages/filtering_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import '../widgets/primary_button.dart';
@@ -42,6 +43,13 @@ class _RegisterPageState extends State<RegisterPage> {
 
     try {
       await Future.delayed(const Duration(seconds: 2));
+
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const StudentFilteringPage()),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -152,7 +160,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 40),
 
                 PrimaryButton(
-                  label: 'Cadastrar',
+                  label: 'Entrar',
                   isLoading: _isLoading,
                   onPressed: _onRegister,
                 ),
