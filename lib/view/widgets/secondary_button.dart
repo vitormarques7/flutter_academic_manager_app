@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_text_styles.dart';
 
 class SecondaryButton extends StatelessWidget {
   final String label;
@@ -17,9 +19,9 @@ class SecondaryButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.leading,
-    this.backgroundColor = const Color(0xFFF8F9FF),
-    this.borderColor = const Color(0xFF514EB6),
-    this.textColor = const Color(0xFF191820),
+    this.backgroundColor = AppColors.background,
+    this.borderColor = AppColors.primary,
+    this.textColor = AppColors.textDark,
     this.borderRadius = 35,
     this.height = 65,
     this.padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
@@ -59,13 +61,7 @@ class SecondaryButton extends StatelessWidget {
                 label,
                 style:
                     textStyle ??
-                    TextStyle(
-                      color: textColor,
-                      fontSize: 24,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: -1,
-                    ),
+                    AppTextStyles.button.copyWith(color: textColor),
               ),
             ],
           ),
