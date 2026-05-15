@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
 import '../widgets/primary_button.dart';
+import '../widgets/section_label.dart';
+import '../widgets/config_text_field.dart';
+import '../widgets/add_discipline_button.dart';
 
 class IndependentConfigPage extends StatefulWidget {
   const IndependentConfigPage({super.key});
@@ -16,22 +19,28 @@ class IndependentConfigPageState extends State<IndependentConfigPage> {
 
   final goalController = TextEditingController();
 
-  final discipline1Controller = TextEditingController();
-  final discipline2Controller = TextEditingController();
-  final discipline3Controller = TextEditingController();
+  final List<TextEditingController> disciplineControllers = [
+    TextEditingController(),
+    TextEditingController(),
+    TextEditingController(),
+  ];
 
   bool isLoading = false;
 
   @override
   void dispose() {
     goalController.dispose();
-    discipline1Controller.dispose();
-    discipline2Controller.dispose();
-    discipline3Controller.dispose();
+    for (final c in disciplineControllers) {
+      c.dispose();
+    }
     super.dispose();
   }
 
-  Future<void> onSave() async {
+  void _addDiscipline() {
+    setState(() => disciplineControllers.add(TextEditingController()));
+  }
+
+  Future<void> _onSave() async {
     if (!formKey.currentState!.validate()) return;
 
     setState(() => isLoading = true);
@@ -98,19 +107,23 @@ class IndependentConfigPageState extends State<IndependentConfigPage> {
 
                       const SectionLabel(label: 'DISCIPLINAS'),
                       const SizedBox(height: 8),
-                      ConfigTextField(controller: discipline1Controller),
-                      const SizedBox(height: 12),
-                      ConfigTextField(controller: discipline2Controller),
-                      const SizedBox(height: 12),
-                      ConfigTextField(controller: discipline3Controller),
 
-                      const AddDisciplineButton(),
+                      ...disciplineControllers.map(
+                        (controller) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: ConfigTextField(controller: controller),
+                        ),
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      AddDisciplineButton(onTap: _addDiscipline),
 
                       const SizedBox(height: 32),
 
                       PrimaryButton(
                         label: 'Salvar e continuar',
-                        onPressed: onSave,
+                        onPressed: _onSave,
                         isLoading: isLoading,
                       ),
                     ],
@@ -120,93 +133,6 @@ class IndependentConfigPageState extends State<IndependentConfigPage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class SectionLabel extends StatelessWidget {
-  final String label;
-  const SectionLabel({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(label, style: AppTextStyles.sectionLabel);
-  }
-}
-
-class ConfigTextField extends StatelessWidget {
-  final TextEditingController controller;
-  const ConfigTextField({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      style: AppTextStyles.bodyRegular.copyWith(color: AppColors.textDark),
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: AppColors.defaultFieldBackground,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 24,
-          vertical: 18,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(35),
-          borderSide: const BorderSide(
-            color: AppColors.defaultFieldBorder,
-            width: 1.5,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(35),
-          borderSide: const BorderSide(
-            color: AppColors.defaultFieldBorder,
-            width: 2.5,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(35),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(35),
-          borderSide: const BorderSide(color: Colors.red, width: 2.5),
-        ),
-      ),
-    );
-  }
-}
-
-class AddDisciplineButton extends StatelessWidget {
-  const AddDisciplineButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(35),
-        border: Border.all(
-          color: AppColors.primary.withOpacity(0.4),
-          width: 1.5,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.add, color: AppColors.primary, size: 20),
-          const SizedBox(width: 8),
-          Text(
-            'Adicionar Disciplina',
-            style: AppTextStyles.bodyRegular.copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }

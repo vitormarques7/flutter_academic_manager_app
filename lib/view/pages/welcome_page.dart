@@ -41,9 +41,7 @@ class WelcomePage extends StatelessWidget {
 
               PrimaryButton(
                 label: 'Login',
-                onPressed: () {
-                  // TODO: navegar para Tela Login
-                },
+                onPressed: () => AppRoutes.toLogin(context),
               ),
 
               const SizedBox(height: 20),
@@ -66,9 +64,7 @@ class WelcomePage extends StatelessWidget {
                   width: 30,
                   height: 30,
                 ),
-                onPressed: () {
-                  // TODO: autenticação com Google
-                },
+                onPressed: () => AppRoutes.toStudentProfile(context),
               ),
 
               const Spacer(flex: 1),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../../config/routes/app_routes.dart';
 import '../widgets/primary_button.dart';
 import '../widgets/auth_text_field.dart';
 import '../widgets/visibility_toggle.dart';
@@ -32,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
     try {
       await Future.delayed(const Duration(seconds: 2));
-      // TODO: implementar autenticação
+      if (mounted) AppRoutes.toStudentProfile(context);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -170,9 +171,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                             GestureDetector(
-                              onTap: () {
-                                // TODO: navegar para RegisterPage
-                              },
+                              onTap: () => AppRoutes.toRegister(context),
                               child: const Padding(
                                 padding: EdgeInsets.all(10),
                                 child: Text(

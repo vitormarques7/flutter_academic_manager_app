@@ -16,13 +16,12 @@ class StudentFilteringPage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 37),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-
             children: [
               const SizedBox(height: 60),
 
               RichText(
                 text: TextSpan(
-                  text: 'Qual oseu perfil de ',
+                  text: 'Qual o seu perfil de ',
                   style: AppTextStyles.headline2,
                   children: [
                     TextSpan(
