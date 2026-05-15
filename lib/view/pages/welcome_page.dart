@@ -1,4 +1,4 @@
-import 'package:academic_manager_app/view/pages/register_page.dart';
+import 'package:academic_manager_app/config/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
@@ -50,14 +50,7 @@ class WelcomePage extends StatelessWidget {
 
               SecondaryButton(
                 label: 'Cadastrar',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RegisterPage(),
-                    ),
-                  );
-                },
+                onPressed: () => AppRoutes.toRegister(context),
               ),
 
               const SizedBox(height: 24),

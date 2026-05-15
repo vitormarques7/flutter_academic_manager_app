@@ -1,5 +1,5 @@
+import 'package:academic_manager_app/config/routes/app_routes.dart';
 import 'package:flutter/material.dart';
-import 'view/pages/welcome_page.dart';
 import 'config/theme/app_theme.dart';
 
 void main() {
@@ -14,7 +14,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
-      home: const WelcomePage(),
+      initialRoute: AppRoutes.welcome,
+      routes: AppRoutes.routes,
     );
   }
 }
