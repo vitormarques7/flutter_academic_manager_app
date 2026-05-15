@@ -1,6 +1,5 @@
 import 'package:academic_manager_app/view/widgets/app_routes.dart';
 import 'package:flutter/material.dart';
-import 'view/pages/welcome_page.dart';
 import 'config/theme/app_theme.dart';
 
 void main() {

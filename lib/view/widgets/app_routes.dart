@@ -1,3 +1,4 @@
+import 'package:academic_manager_app/view/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import '../../view/pages/welcome_page.dart';
 import '../../config/register_page.dart';
@@ -15,6 +16,7 @@ class AppRoutes {
   static const String universityConfig = '/university-config';
   static const String highSchoolConfig = '/high-school-config';
   static const String independentConfig = '/independent-config';
+  static const String home = '/home';
 
   static final Map<String, WidgetBuilder> routes = {
     welcome: (_) => const WelcomePage(),
@@ -23,6 +25,7 @@ class AppRoutes {
     universityConfig: (_) => const UniversityConfigPage(),
     //highSchoolConfig:  (_) => const HighSchoolConfigPage(),
     independentConfig: (_) => const IndependentConfigPage(),
+    home: (_) => const HomePage(),
   };
 
   static void toRegister(BuildContext context) =>
@@ -39,4 +42,7 @@ class AppRoutes {
 
   static void toIndependentConfig(BuildContext context) =>
       Navigator.pushNamed(context, independentConfig);
+
+  static void toHome(BuildContext context) =>
+      Navigator.pushNamed(context, home);
 }

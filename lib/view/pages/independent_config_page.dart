@@ -1,3 +1,4 @@
+import 'package:academic_manager_app/view/widgets/app_routes.dart';
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
@@ -37,6 +38,7 @@ class IndependentConfigPageState extends State<IndependentConfigPage> {
 
     try {
       await Future.delayed(const Duration(seconds: 1));
+      if (mounted) AppRoutes.toHome(context);
     } finally {
       if (mounted) setState(() => isLoading = false);
     }

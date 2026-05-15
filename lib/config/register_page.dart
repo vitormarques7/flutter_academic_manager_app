@@ -1,6 +1,7 @@
 import 'package:academic_manager_app/config/theme/app_colors.dart';
 import 'package:academic_manager_app/config/theme/app_text_styles.dart';
 import 'package:academic_manager_app/view/pages/filtering_page.dart';
+import 'package:academic_manager_app/view/widgets/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import '../view/widgets/primary_button.dart';
@@ -43,13 +44,7 @@ class RegisterPageState extends State<RegisterPage> {
 
     try {
       await Future.delayed(const Duration(seconds: 2));
-
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const StudentFilteringPage()),
-        );
-      }
+      if (mounted) AppRoutes.toStudentProfile(context);
     } finally {
       if (mounted) setState(() => isLoading = false);
     }

@@ -1,4 +1,3 @@
-import 'package:academic_manager_app/config/register_page.dart';
 import 'package:academic_manager_app/view/widgets/app_routes.dart';
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
