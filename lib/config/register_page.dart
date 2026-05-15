@@ -3,43 +3,43 @@ import 'package:academic_manager_app/config/theme/app_text_styles.dart';
 import 'package:academic_manager_app/view/pages/filtering_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import '../widgets/primary_button.dart';
-import '../widgets/app_text_field.dart';
-import '../widgets/visibility_toggle.dart';
-import '../widgets/login_link.dart';
+import '../view/widgets/primary_button.dart';
+import '../view/widgets/app_text_field.dart';
+import '../view/widgets/visibility_toggle.dart';
+import '../view/widgets/login_link.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<RegisterPage> createState() => RegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+class RegisterPageState extends State<RegisterPage> {
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
-  final _formKey = GlobalKey<FormState>();
+  final formKey = GlobalKey<FormState>();
 
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
-  bool _isLoading = false;
+  bool obscurePassword = true;
+  bool obscureConfirmPassword = true;
+  bool isLoading = false;
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
+    nameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
     super.dispose();
   }
 
-  Future<void> _onRegister() async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> onRegister() async {
+    if (!formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    setState(() => isLoading = true);
 
     try {
       await Future.delayed(const Duration(seconds: 2));
@@ -51,7 +51,7 @@ class _RegisterPageState extends State<RegisterPage> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -63,7 +63,7 @@ class _RegisterPageState extends State<RegisterPage> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 37),
           child: Form(
-            key: _formKey,
+            key: formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -74,7 +74,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 40),
 
                 AppTextField(
-                  controller: _nameController,
+                  controller: nameController,
                   label: 'Nome',
                   hint: 'Nome',
                   keyboardType: TextInputType.name,
@@ -89,7 +89,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 16),
 
                 AppTextField(
-                  controller: _emailController,
+                  controller: emailController,
                   label: 'Email',
                   hint: 'Email',
                   keyboardType: TextInputType.emailAddress,
@@ -109,15 +109,15 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 16),
 
                 AppTextField(
-                  controller: _passwordController,
+                  controller: passwordController,
                   label: 'Senha',
                   hint: 'Senha',
                   keyboardType: TextInputType.text,
-                  obscureText: _obscurePassword,
+                  obscureText: obscurePassword,
                   suffixIcon: VisibilityToggle(
-                    isObscureText: _obscurePassword,
+                    isObscureText: obscurePassword,
                     onTap: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
+                        setState(() => obscurePassword = !obscurePassword),
                   ),
 
                   validator: (value) {
@@ -134,15 +134,15 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 16),
 
                 AppTextField(
-                  controller: _confirmPasswordController,
+                  controller: confirmPasswordController,
                   label: 'Confirmar Senha',
                   hint: 'Confirmar Senha',
                   keyboardType: TextInputType.text,
-                  obscureText: _obscureConfirmPassword,
+                  obscureText: obscureConfirmPassword,
                   suffixIcon: VisibilityToggle(
-                    isObscureText: _obscureConfirmPassword,
+                    isObscureText: obscureConfirmPassword,
                     onTap: () => setState(
-                      () => _obscureConfirmPassword = !_obscureConfirmPassword,
+                      () => obscureConfirmPassword = !obscureConfirmPassword,
                     ),
                   ),
 
@@ -150,7 +150,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     if (value == null || value.isEmpty) {
                       return 'Por favor, confirme sua senha';
                     }
-                    if (value != _passwordController.text) {
+                    if (value != passwordController.text) {
                       return 'As senhas não coincidem';
                     }
                     return null;
@@ -161,8 +161,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
                 PrimaryButton(
                   label: 'Entrar',
-                  isLoading: _isLoading,
-                  onPressed: _onRegister,
+                  isLoading: isLoading,
+                  onPressed: onRegister,
                 ),
 
                 const SizedBox(height: 28),

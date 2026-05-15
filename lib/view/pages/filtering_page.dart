@@ -1,8 +1,8 @@
 import 'package:academic_manager_app/config/theme/app_colors.dart';
 import 'package:academic_manager_app/config/theme/app_text_styles.dart';
+import 'package:academic_manager_app/view/widgets/app_routes.dart';
 import 'package:academic_manager_app/view/widgets/profile_card.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class StudentFilteringPage extends StatelessWidget {
   const StudentFilteringPage({super.key});
@@ -46,7 +46,7 @@ class StudentFilteringPage extends StatelessWidget {
               ProfileCard(
                 title: 'Estudante Universitário',
                 subtitle: 'Estudante de Graduação ou Pós-Graduação',
-                onTap: () {},
+                onTap: () => AppRoutes.toUniversityConfig(context),
               ),
 
               const SizedBox(height: 16),
@@ -54,7 +54,7 @@ class StudentFilteringPage extends StatelessWidget {
               ProfileCard(
                 title: 'Estudante de Ensino Médio',
                 subtitle: '1º, 2º ou 3º ano do Ensino Médio',
-                onTap: () {},
+                onTap: () => AppRoutes.toHighSchoolConfig(context),
               ),
 
               const SizedBox(height: 16),
@@ -63,7 +63,7 @@ class StudentFilteringPage extends StatelessWidget {
                 title: 'Estudante Independente',
                 subtitle:
                     'Estudando para Vestibular, Concursos ou Aprendizado Pessoal',
-                onTap: () {},
+                onTap: () => AppRoutes.toIndependentConfig(context),
               ),
             ],
           ),
