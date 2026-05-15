@@ -1,7 +1,7 @@
 import 'package:academic_manager_app/view/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import '../../view/pages/welcome_page.dart';
-import '../../config/register_page.dart';
+import '../../view/pages/register_page.dart';
 import '../../view/pages/filtering_page.dart';
 import '../../view/pages/university_config_page.dart';
 //import '../../view/pages/high_school_config_page.dart';
