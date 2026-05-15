@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
 import '../../config/routes/app_routes.dart';
-import '../widgets/primary_button.dart';
-import '../widgets/auth_text_field.dart';
-import '../widgets/visibility_toggle.dart';
+import '../widgets/buttons/primary_button.dart';
+import '../widgets/inputs/auth_text_field.dart';
+import '../widgets/inputs/visibility_toggle.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -33,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
     try {
       await Future.delayed(const Duration(seconds: 2));
-      if (mounted) AppRoutes.toStudentProfile(context);
+      if (mounted) AppRoutes.toHome(context);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

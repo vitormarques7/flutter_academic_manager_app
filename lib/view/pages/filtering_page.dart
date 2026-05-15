@@ -1,7 +1,7 @@
 import 'package:academic_manager_app/config/theme/app_colors.dart';
 import 'package:academic_manager_app/config/theme/app_text_styles.dart';
 import 'package:academic_manager_app/config/routes/app_routes.dart';
-import 'package:academic_manager_app/view/widgets/profile_card.dart';
+import 'package:academic_manager_app/view/widgets/selectors/profile_card.dart';
 import 'package:flutter/material.dart';
 
 class StudentFilteringPage extends StatelessWidget {

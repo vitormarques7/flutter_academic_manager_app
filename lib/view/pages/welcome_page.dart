@@ -2,10 +2,10 @@ import 'package:academic_manager_app/config/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
-import '../widgets/app_logo.dart';
-import '../widgets/primary_button.dart';
-import '../widgets/secondary_button.dart';
-import '../widgets/or_divider.dart';
+import '../widgets/common/app_logo.dart';
+import '../widgets/buttons/primary_button.dart';
+import '../widgets/buttons/secondary_button.dart';
+import '../widgets/common/or_divider.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});

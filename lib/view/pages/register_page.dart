@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:academic_manager_app/config/theme/app_colors.dart';
 import 'package:academic_manager_app/config/theme/app_text_styles.dart';
 import 'package:academic_manager_app/view/pages/filtering_page.dart';
-import '../widgets/primary_button.dart';
-import '../widgets/auth_text_field.dart';
-import '../widgets/visibility_toggle.dart';
+import '../widgets/buttons/primary_button.dart';
+import '../widgets/inputs/auth_text_field.dart';
+import '../widgets/inputs/visibility_toggle.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../config/theme/app_colors.dart';
+import '../../../config/theme/app_colors.dart';
 
 class AppLogo extends StatelessWidget {
   final double scale;

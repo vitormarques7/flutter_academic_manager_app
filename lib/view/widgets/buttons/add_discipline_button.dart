@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../config/theme/app_colors.dart';
-import '../../config/theme/app_text_styles.dart';
+import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_text_styles.dart';
 
 class AddDisciplineButton extends StatelessWidget {
   final VoidCallback? onTap;

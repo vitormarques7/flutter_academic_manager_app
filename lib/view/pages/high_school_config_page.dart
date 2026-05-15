@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import '../../config/routes/app_routes.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
-import '../widgets/primary_button.dart';
-import '../widgets/section_label.dart';
-import '../widgets/config_text_field.dart';
-import '../widgets/add_discipline_button.dart';
-import '../widgets/series_selector.dart';
+import '../widgets/buttons/primary_button.dart';
+import '../widgets/common/section_label.dart';
+import '../widgets/inputs/config_text_field.dart';
+import '../widgets/buttons/add_discipline_button.dart';
+import '../widgets/selectors/series_selector.dart';
 
 class HighSchoolConfigPage extends StatefulWidget {
   const HighSchoolConfigPage({super.key});
