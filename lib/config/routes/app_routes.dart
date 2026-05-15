@@ -5,7 +5,7 @@ import '../../view/pages/welcome_page.dart';
 import '../../view/pages/register_page.dart';
 import '../../view/pages/filtering_page.dart';
 import '../../view/pages/university_config_page.dart';
-// import '../../view/pages/high_school_config_page.dart';
+import '../../view/pages/high_school_config_page.dart';
 import '../../view/pages/independent_config_page.dart';
 
 class AppRoutes {
@@ -26,7 +26,7 @@ class AppRoutes {
     register: (_) => const RegisterPage(),
     studentProfile: (_) => const StudentFilteringPage(),
     universityConfig: (_) => const UniversityConfigPage(),
-    // highSchoolConfig: (_) => const HighSchoolConfigPage(),
+    highSchoolConfig: (_) => const HighSchoolConfigPage(),
     independentConfig: (_) => const IndependentConfigPage(),
     home: (_) => const HomePage(),
   };
