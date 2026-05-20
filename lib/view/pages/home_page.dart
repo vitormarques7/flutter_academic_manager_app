@@ -67,40 +67,6 @@ class HomePage extends StatelessWidget {
           ),
         ),
       ),
-
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        onTap: (_) {}, // sem funcionalidade por enquanto
-        backgroundColor: AppColors.background,
-        selectedItemColor: AppColors.navActive,
-        unselectedItemColor: AppColors.navInactive,
-        selectedLabelStyle: AppTextStyles.navLabel,
-        unselectedLabelStyle: AppTextStyles.navLabel,
-        type: BottomNavigationBarType.fixed,
-        elevation: 8,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Início',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu_book_outlined),
-            activeIcon: Icon(Icons.menu_book),
-            label: 'Disciplinas',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.check_box_outlined),
-            activeIcon: Icon(Icons.check_box),
-            label: 'Tarefas',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month_outlined),
-            activeIcon: Icon(Icons.calendar_month),
-            label: 'Horário',
-          ),
-        ],
-      ),
     );
   }
 }
