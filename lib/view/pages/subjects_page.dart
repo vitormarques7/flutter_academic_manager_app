@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'subject_details_page.dart';
 import '../widgets/common/page_header.dart';
 import '../widgets/common/section_label.dart';
 import '../widgets/inputs/search_field.dart';
@@ -22,18 +23,21 @@ class _SubjectsPageState extends State<SubjectsPage> {
       'teacher': 'Prof. Alguem',
       'frequency': 0.85,
       'average': 8.5,
+      'workload': 60,
     },
     {
       'name': 'Cálculo I',
       'teacher': 'Prof. Alguem',
       'frequency': 0.60,
       'average': 8.0,
+      'workload': 60,
     },
     {
       'name': 'Cálculo II',
       'teacher': 'Prof. Alguem',
       'frequency': 1.0,
       'average': 7.0,
+      'workload': 60,
     },
   ];
 
@@ -68,44 +72,60 @@ class _SubjectsPageState extends State<SubjectsPage> {
     return SafeArea(
       child: Stack(
         children: [
-          ScrollConfiguration(
-            behavior: ScrollConfiguration.of(
-              context,
-            ).copyWith(overscroll: false),
-            child: SingleChildScrollView(
-              physics: const ClampingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const PageHeader(title: 'Suas Disciplinas'),
+          Positioned.fill(
+            child: ScrollConfiguration(
+              behavior: ScrollConfiguration.of(
+                context,
+              ).copyWith(overscroll: false),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: ClampingScrollPhysics(),
+                ),
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const PageHeader(title: 'Suas Disciplinas'),
 
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                  SearchField(
-                    controller: _searchController,
-                    hint: 'Pesquise por disciplina',
-                    onChanged: _onSearch,
-                  ),
+                    SearchField(
+                      controller: _searchController,
+                      hint: 'Pesquise por disciplina',
+                      onChanged: _onSearch,
+                    ),
 
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                  const SectionLabel(label: 'MINHAS DISCIPLINAS'),
+                    const SectionLabel(label: 'MINHAS DISCIPLINAS'),
 
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-                  ..._filtered.map(
-                    (subject) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: SubjectCard(
-                        name: subject['name'],
-                        teacher: subject['teacher'],
-                        frequency: subject['frequency'],
-                        average: subject['average'],
+                    ..._filtered.map(
+                      (subject) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: SubjectCard(
+                          name: subject['name'],
+                          teacher: subject['teacher'],
+                          frequency: subject['frequency'],
+                          average: subject['average'],
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => SubjectDetailsPage(
+                                  name: subject['name'],
+                                  teacher: subject['teacher'],
+                                  average: subject['average'],
+                                  workload: subject['workload'],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

@@ -1,8 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:academic_manager_app/view/pages/login_page.dart';
-import 'package:academic_manager_app/view/pages/subjects_page.dart';
-import 'package:academic_manager_app/view/pages/tasks_page.dart';
-import 'package:academic_manager_app/view/pages/schedule_page.dart';
 import 'package:academic_manager_app/view/pages/user_profile_page.dart';
 import 'package:academic_manager_app/view/shell/main_shell.dart';
 import '../../view/pages/welcome_page.dart';
@@ -37,9 +34,9 @@ class AppRoutes {
     highSchoolConfig: (_) => const HighSchoolConfigPage(),
     independentConfig: (_) => const IndependentConfigPage(),
     home: (_) => const MainShell(),
-    subjects: (_) => const SubjectsPage(),
-    tasks: (_) => const TasksPage(),
-    schedule: (_) => const SchedulePage(),
+    subjects: (_) => const MainShell(initialIndex: 1),
+    tasks: (_) => const MainShell(initialIndex: 2),
+    schedule: (_) => const MainShell(initialIndex: 3),
     profile: (_) => const UserProfilePage(),
   };
 

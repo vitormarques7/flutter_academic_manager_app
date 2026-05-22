@@ -6,14 +6,16 @@ import '../pages/schedule_page.dart';
 import '../widgets/common/app_bottom_nav_bar.dart';
 
 class MainShell extends StatefulWidget {
-  const MainShell({super.key});
+  final int initialIndex;
+
+  const MainShell({super.key, this.initialIndex = 0});
 
   @override
   State<MainShell> createState() => _MainShellState();
 }
 
 class _MainShellState extends State<MainShell> {
-  int _currentIndex = 0;
+  late int _currentIndex;
 
   static const List<Widget> _pages = [
     HomePage(),
@@ -21,6 +23,12 @@ class _MainShellState extends State<MainShell> {
     TasksPage(),
     SchedulePage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
 
   @override
   Widget build(BuildContext context) {
