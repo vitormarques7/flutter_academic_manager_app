@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
-import '../../../config/theme/app_text_styles.dart';
 
 class ProfileCard extends StatelessWidget {
   final String title;
@@ -20,11 +19,12 @@ class ProfileCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         child: Ink(
+          height: 150,
           decoration: BoxDecoration(
             color: AppColors.primary,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
                 color: AppColors.shadowPrimary,
@@ -33,24 +33,47 @@ class ProfileCard extends StatelessWidget {
               ),
             ],
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          padding: const EdgeInsets.fromLTRB(28, 25, 28, 15),
           child: Row(
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Text(title, style: AppTextStyles.cardTitle),
-                    const SizedBox(height: 4),
-                    Text(subtitle, style: AppTextStyles.cardSubtitle),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Color(0xFFF5F5F5),
+                        fontSize: 28,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w500,
+                        height: 1,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: 190,
+                      child: Text(
+                        subtitle,
+                        style: const TextStyle(
+                          color: Color(0x7FE7E7E7),
+                          fontSize: 16,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w500,
+                          height: 1.38,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
               const Icon(
                 Icons.chevron_right,
-                color: AppColors.textOnPrimary,
-                size: 28,
+                color: Color(0xFFF5F5F5),
+                size: 36,
               ),
             ],
           ),

@@ -5,8 +5,14 @@ import '../../../config/theme/app_text_styles.dart';
 class ConfigTextField extends StatelessWidget {
   final TextEditingController controller;
   final String? Function(String?)? validator;
+  final Widget? suffixIcon;
 
-  const ConfigTextField({super.key, required this.controller, this.validator});
+  const ConfigTextField({
+    super.key,
+    required this.controller,
+    this.validator,
+    this.suffixIcon,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +27,7 @@ class ConfigTextField extends StatelessWidget {
           horizontal: 24,
           vertical: 18,
         ),
+        suffixIcon: suffixIcon,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(35),
           borderSide: const BorderSide(
