@@ -24,13 +24,13 @@ class _SubjectsPageState extends State<SubjectsPage> {
       'average': 8.5,
     },
     {
-      'name': 'Cálculo',
+      'name': 'Cálculo I',
       'teacher': 'Prof. Alguem',
       'frequency': 0.60,
       'average': 8.0,
     },
     {
-      'name': 'Cálculo',
+      'name': 'Cálculo II',
       'teacher': 'Prof. Alguem',
       'frequency': 1.0,
       'average': 7.0,
