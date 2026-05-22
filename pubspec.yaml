@@ -61,6 +61,7 @@ flutter:
     - lib/view/assets/devicon_google.webp
     - lib/view/assets/image_discipline_trash.png
     - lib/view/assets/image_white_back.webp
+    - lib/view/assets/image_profile_icon.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

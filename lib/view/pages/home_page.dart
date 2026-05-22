@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../widgets/common/page_header.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -16,7 +17,7 @@ class HomePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _GreetingHeader(name: 'Letícia'),
+              const PageHeader(title: 'Olá, Usuário'),
 
               const SizedBox(height: 24),
 
@@ -24,7 +25,6 @@ class HomePage extends StatelessWidget {
               const SizedBox(height: 12),
 
               const _PerformanceCard(
-                icon: Icons.bar_chart,
                 title: 'CARD DE DESEMPENHO',
                 subtitle: 'Média geral',
                 value: '8.5',
@@ -33,7 +33,6 @@ class HomePage extends StatelessWidget {
               const SizedBox(height: 12),
 
               const _FrequencyCard(
-                icon: Icons.trending_up,
                 title: 'CARD DE FREQUÊNCIA',
                 subtitle: 'Percentual total',
                 percent: 0.92,
@@ -45,16 +44,22 @@ class HomePage extends StatelessWidget {
               const _SectionTitle(title: 'PRÓXIMAS TAREFAS'),
               const SizedBox(height: 12),
 
-              const _TaskItem(
-                title: 'Entrega de trabalho - Programação',
-                date: '24/04',
-              ),
-              const SizedBox(height: 8),
-              const _TaskItem(title: 'Revisar matéria de BD', date: '26/04'),
-              const SizedBox(height: 8),
-              const _TaskItem(
-                title: 'Revisar matéria de Cálculo 1',
-                date: '30/04',
+              const _HomeCardBase(
+                child: Column(
+                  children: [
+                    _TaskRow(
+                      title: 'Entrega de trabalho - Programação',
+                      date: '24/04',
+                    ),
+                    _Divider(),
+                    _TaskRow(title: 'Revisar matéria de BD', date: '26/04'),
+                    _Divider(),
+                    _TaskRow(
+                      title: 'Revisar matéria de Cálculo 1',
+                      date: '30/04',
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 24),
@@ -62,7 +67,9 @@ class HomePage extends StatelessWidget {
               const _SectionTitle(title: 'ALERTAS'),
               const SizedBox(height: 12),
 
-              const _AlertItem(title: 'Prova de Cálculo'),
+              const _HomeCardBase(
+                child: Column(children: [_AlertRow(title: 'Prova de Cálculo')]),
+              ),
             ],
           ),
         ),
@@ -71,25 +78,7 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class _GreetingHeader extends StatelessWidget {
-  final String name;
-  const _GreetingHeader({required this.name});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        CircleAvatar(
-          radius: 28,
-          backgroundColor: AppColors.primary.withOpacity(0.15),
-          child: const Icon(Icons.person, color: AppColors.primary, size: 30),
-        ),
-        const SizedBox(width: 16),
-        Text('Olá, $name', style: AppTextStyles.headline2),
-      ],
-    );
-  }
-}
+// ——— Componentes privados da HomePage ———
 
 class _SectionTitle extends StatelessWidget {
   final String title;
@@ -97,27 +86,35 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(title, style: AppTextStyles.sectionLabel);
+    return Text(
+      title,
+      style: const TextStyle(
+        color: Color(0xFF191820),
+        fontSize: 15,
+        fontFamily: 'Inter',
+        fontWeight: FontWeight.w600,
+        height: 1.47,
+      ),
+    );
   }
 }
 
-class _CardBase extends StatelessWidget {
+class _HomeCardBase extends StatelessWidget {
   final Widget child;
-  const _CardBase({required this.child});
+  const _HomeCardBase({required this.child});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        color: const Color(0xFFEFF0FB),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: const [
           BoxShadow(
-            color: AppColors.shadowDark,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Color(0x66587DBD),
+            blurRadius: 4,
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -127,13 +124,11 @@ class _CardBase extends StatelessWidget {
 }
 
 class _PerformanceCard extends StatelessWidget {
-  final IconData icon;
   final String title;
   final String subtitle;
   final String value;
 
   const _PerformanceCard({
-    required this.icon,
     required this.title,
     required this.subtitle,
     required this.value,
@@ -141,36 +136,66 @@ class _PerformanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _CardBase(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: AppColors.primary, size: 20),
-              const SizedBox(width: 8),
-              Text(title, style: AppTextStyles.sectionLabel),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(subtitle, style: AppTextStyles.bodyRegular),
-          const SizedBox(height: 4),
-          Text(value, style: AppTextStyles.headline2),
-        ],
+    return _HomeCardBase(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.bar_chart, color: AppColors.primary, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Color(0xFF191820),
+                    fontSize: 16,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w600,
+                    height: 1.38,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                color: Color(0xFF191820),
+                fontSize: 14,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w500,
+                height: 1.57,
+                letterSpacing: -1,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Color(0xFF191820),
+                fontSize: 36,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w600,
+                height: 0.61,
+                letterSpacing: -1,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _FrequencyCard extends StatelessWidget {
-  final IconData icon;
   final String title;
   final String subtitle;
   final double percent;
   final String percentLabel;
 
   const _FrequencyCard({
-    required this.icon,
     required this.title,
     required this.subtitle,
     required this.percent,
@@ -179,104 +204,190 @@ class _FrequencyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _CardBase(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: AppColors.primary, size: 20),
-              const SizedBox(width: 8),
-              Text(title, style: AppTextStyles.sectionLabel),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(subtitle, style: AppTextStyles.bodyRegular),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Text(percentLabel, style: AppTextStyles.bodyBold),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: percent,
-                    minHeight: 8,
-                    backgroundColor: AppColors.primary.withOpacity(0.15),
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      AppColors.primary,
+    return _HomeCardBase(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.trending_up,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Color(0xFF191820),
+                    fontSize: 16,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w600,
+                    height: 1.38,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                color: Color(0xFF191820),
+                fontSize: 14,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w500,
+                height: 1.57,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(
+                  percentLabel,
+                  style: const TextStyle(
+                    color: Color(0xFF191820),
+                    fontSize: 36,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w600,
+                    height: 0.61,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(30),
+                    child: LinearProgressIndicator(
+                      value: percent,
+                      minHeight: 8,
+                      backgroundColor: const Color(0x7F514EB6),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.primary,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _TaskItem extends StatelessWidget {
+class _TaskRow extends StatelessWidget {
   final String title;
   final String date;
 
-  const _TaskItem({required this.title, required this.date});
+  const _TaskRow({required this.title, required this.date});
 
   @override
   Widget build(BuildContext context) {
-    return _CardBase(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+            padding: const EdgeInsets.all(10),
+            decoration: ShapeDecoration(
+              color: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: const Icon(
               Icons.description_outlined,
-              color: AppColors.primary,
-              size: 20,
+              color: Colors.white,
+              size: 24,
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(child: Text(title, style: AppTextStyles.bodyRegular)),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: Color(0xFF191820),
+                fontSize: 16,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w500,
+                height: 1.38,
+              ),
+            ),
+          ),
           const SizedBox(width: 8),
-          Text(date, style: AppTextStyles.bodyRegular),
+          Text(
+            date,
+            style: const TextStyle(
+              color: Color(0xFF191820),
+              fontSize: 15,
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w500,
+              height: 1.47,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _AlertItem extends StatelessWidget {
+class _AlertRow extends StatelessWidget {
   final String title;
 
-  const _AlertItem({required this.title});
+  const _AlertRow({required this.title});
 
   @override
   Widget build(BuildContext context) {
-    return _CardBase(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+            padding: const EdgeInsets.all(10),
+            decoration: ShapeDecoration(
+              color: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: const Icon(
               Icons.warning_amber_rounded,
-              color: Colors.orange,
-              size: 20,
+              color: Colors.white,
+              size: 24,
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(child: Text(title, style: AppTextStyles.bodyRegular)),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: Color(0xFF191820),
+                fontSize: 16,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w500,
+                height: 1.38,
+              ),
+            ),
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _Divider extends StatelessWidget {
+  const _Divider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Divider(
+      height: 1,
+      thickness: 1,
+      color: Color(0x4C514EB6),
+      indent: 16,
+      endIndent: 16,
     );
   }
 }
