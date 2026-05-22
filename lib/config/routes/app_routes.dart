@@ -3,6 +3,7 @@ import 'package:academic_manager_app/view/pages/login_page.dart';
 import 'package:academic_manager_app/view/pages/subjects_page.dart';
 import 'package:academic_manager_app/view/pages/tasks_page.dart';
 import 'package:academic_manager_app/view/pages/schedule_page.dart';
+import 'package:academic_manager_app/view/pages/user_profile_page.dart';
 import 'package:academic_manager_app/view/shell/main_shell.dart';
 import '../../view/pages/welcome_page.dart';
 import '../../view/pages/register_page.dart';
@@ -25,6 +26,7 @@ class AppRoutes {
   static const String subjects = '/subjects';
   static const String tasks = '/tasks';
   static const String schedule = '/schedule';
+  static const String profile = '/profile';
 
   static final Map<String, WidgetBuilder> routes = {
     welcome: (_) => const WelcomePage(),
@@ -38,6 +40,7 @@ class AppRoutes {
     subjects: (_) => const SubjectsPage(),
     tasks: (_) => const TasksPage(),
     schedule: (_) => const SchedulePage(),
+    profile: (_) => const UserProfilePage(),
   };
 
   static void toLogin(BuildContext context) =>
@@ -60,4 +63,10 @@ class AppRoutes {
 
   static void toHome(BuildContext context) =>
       Navigator.pushNamed(context, home);
+
+  static void toProfile(BuildContext context) =>
+      Navigator.pushNamed(context, profile);
+
+  static void toWelcomeClearingStack(BuildContext context) =>
+      Navigator.pushNamedAndRemoveUntil(context, welcome, (_) => false);
 }
