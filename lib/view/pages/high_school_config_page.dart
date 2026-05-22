@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../config/routes/app_routes.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../widgets/buttons/cancel_button.dart';
+import '../widgets/buttons/discipline_delete_button.dart';
 import '../widgets/buttons/primary_button.dart';
 import '../widgets/common/section_label.dart';
 import '../widgets/inputs/config_text_field.dart';
@@ -38,6 +40,12 @@ class _HighSchoolConfigPageState extends State<HighSchoolConfigPage> {
 
   void _addDiscipline() {
     setState(() => disciplineControllers.add(TextEditingController()));
+  }
+
+  void _removeDiscipline(int index) {
+    final controller = disciplineControllers.removeAt(index);
+    controller.dispose();
+    setState(() {});
   }
 
   Future<void> _onSave() async {
@@ -115,10 +123,15 @@ class _HighSchoolConfigPageState extends State<HighSchoolConfigPage> {
                       const SectionLabel(label: 'DISCIPLINAS'),
                       const SizedBox(height: 8),
 
-                      ...disciplineControllers.map(
-                        (controller) => Padding(
+                      ...disciplineControllers.asMap().entries.map(
+                        (entry) => Padding(
                           padding: const EdgeInsets.only(bottom: 12),
-                          child: ConfigTextField(controller: controller),
+                          child: ConfigTextField(
+                            controller: entry.value,
+                            suffixIcon: DisciplineDeleteButton(
+                              onPressed: () => _removeDiscipline(entry.key),
+                            ),
+                          ),
                         ),
                       ),
 
@@ -133,6 +146,10 @@ class _HighSchoolConfigPageState extends State<HighSchoolConfigPage> {
                         onPressed: _onSave,
                         isLoading: isLoading,
                       ),
+
+                      const SizedBox(height: 14),
+
+                      const CancelButton(),
                     ],
                   ),
                 ),
