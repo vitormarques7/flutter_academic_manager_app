@@ -5,9 +5,8 @@ import '../../config/theme/app_text_styles.dart';
 import '../widgets/buttons/cancel_button.dart';
 import '../widgets/buttons/primary_button.dart';
 import '../widgets/common/section_label.dart';
-import '../widgets/dialogs/schedule_dialog.dart';
 import '../widgets/inputs/config_text_field.dart';
-import '../widgets/inputs/discipline_setup_card.dart';
+import '../widgets/inputs/discipline_setup_list.dart';
 
 class UniversityConfigPage extends StatefulWidget {
   const UniversityConfigPage({super.key});
@@ -21,76 +20,12 @@ class _UniversityConfigPageState extends State<UniversityConfigPage> {
 
   final courseController = TextEditingController();
 
-  final List<_DisciplineDraft> disciplines = [
-    _DisciplineDraft(controller: TextEditingController()),
-  ];
-
   bool isLoading = false;
 
   @override
   void dispose() {
     courseController.dispose();
-    for (final discipline in disciplines) {
-      discipline.controller.dispose();
-    }
     super.dispose();
-  }
-
-  void _removeDiscipline(int index) {
-    setState(() {
-      if (index == 0) {
-        disciplines.first.controller.clear();
-        disciplines.first.isConfirmed = false;
-        _removeEmptyDraftsAfterFirst();
-        return;
-      }
-
-      final discipline = disciplines.removeAt(index);
-      discipline.controller.dispose();
-    });
-  }
-
-  void _removeEmptyDraftsAfterFirst() {
-    for (var i = disciplines.length - 1; i > 0; i--) {
-      final discipline = disciplines[i];
-      if (!discipline.isConfirmed &&
-          discipline.controller.text.trim().isEmpty) {
-        discipline.controller.dispose();
-        disciplines.removeAt(i);
-      }
-    }
-  }
-
-  void _completeDiscipline(int index) {
-    setState(() {
-      disciplines[index].isConfirmed = true;
-
-      final hasDraft = disciplines.any((discipline) => !discipline.isConfirmed);
-      if (!hasDraft) {
-        disciplines.add(_DisciplineDraft(controller: TextEditingController()));
-      }
-    });
-  }
-
-  Future<void> _onDisciplineOk(int index) async {
-    FocusScope.of(context).unfocus();
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        void closeAndComplete() {
-          Navigator.of(dialogContext).pop();
-          if (mounted && disciplines[index].controller.text.trim().isNotEmpty) {
-            _completeDiscipline(index);
-          }
-        }
-
-        return ScheduleDialog(
-          onContinue: closeAndComplete,
-          onSkip: closeAndComplete,
-        );
-      },
-    );
   }
 
   Future<void> _onSave() async {
@@ -158,18 +93,7 @@ class _UniversityConfigPageState extends State<UniversityConfigPage> {
 
                       const SectionLabel(label: 'DISCIPLINAS'),
                       const SizedBox(height: 8),
-
-                      ...disciplines.asMap().entries.map(
-                        (entry) => Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
-                          child: DisciplineSetupCard(
-                            controller: entry.value.controller,
-                            isConfirmed: entry.value.isConfirmed,
-                            onConfirm: () => _onDisciplineOk(entry.key),
-                            onDelete: () => _removeDiscipline(entry.key),
-                          ),
-                        ),
-                      ),
+                      const DisciplineSetupList(),
 
                       const SizedBox(height: 184),
 
@@ -192,11 +116,4 @@ class _UniversityConfigPageState extends State<UniversityConfigPage> {
       ),
     );
   }
-}
-
-class _DisciplineDraft {
-  final TextEditingController controller;
-  bool isConfirmed = false;
-
-  _DisciplineDraft({required this.controller});
 }
