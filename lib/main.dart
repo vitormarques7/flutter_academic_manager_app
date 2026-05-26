@@ -1,5 +1,6 @@
 import 'package:academic_manager_app/config/routes/app_routes.dart';
 import 'package:flutter/material.dart';
+import 'config/scroll/app_scroll_behavior.dart';
 import 'config/theme/app_theme.dart';
 
 void main() {
@@ -13,6 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const AppScrollBehavior(),
       theme: AppTheme.theme,
       initialRoute: AppRoutes.welcome,
       routes: AppRoutes.routes,
