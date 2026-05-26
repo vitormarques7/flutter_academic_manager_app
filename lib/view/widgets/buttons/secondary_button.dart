@@ -47,7 +47,7 @@ class SecondaryButton extends StatelessWidget {
             ),
             shadows: [
               BoxShadow(
-                color: borderColor.withOpacity(0.3),
+                color: borderColor.withValues(alpha: 0.3),
                 blurRadius: 4,
                 offset: const Offset(0, 4),
               ),

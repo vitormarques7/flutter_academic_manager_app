@@ -16,10 +16,10 @@ class AddDisciplineButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(35),
         child: Ink(
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.12),
+            color: AppColors.primary.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(35),
             border: Border.all(
-              color: AppColors.primary.withOpacity(0.4),
+              color: AppColors.primary.withValues(alpha: 0.4),
               width: 1.5,
             ),
           ),

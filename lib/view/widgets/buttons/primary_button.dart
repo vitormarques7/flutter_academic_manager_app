@@ -48,14 +48,14 @@ class PrimaryButton extends StatelessWidget {
           padding: padding,
           decoration: ShapeDecoration(
             color: effectiveDisabled
-                ? backgroundColor.withOpacity(0.5)
+                ? backgroundColor.withValues(alpha: 0.5)
                 : backgroundColor,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(borderRadius),
             ),
             shadows: [
               BoxShadow(
-                color: backgroundColor.withOpacity(0.3),
+                color: backgroundColor.withValues(alpha: 0.3),
                 blurRadius: 4,
                 offset: const Offset(0, 4),
               ),
