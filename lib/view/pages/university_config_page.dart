@@ -3,28 +3,26 @@ import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
 import '../widgets/buttons/cancel_button.dart';
-import '../widgets/buttons/discipline_delete_button.dart';
 import '../widgets/buttons/primary_button.dart';
 import '../widgets/common/section_label.dart';
+import '../widgets/dialogs/schedule_dialog.dart';
 import '../widgets/inputs/config_text_field.dart';
-import '../widgets/buttons/add_discipline_button.dart';
+import '../widgets/inputs/discipline_setup_card.dart';
 
 class UniversityConfigPage extends StatefulWidget {
   const UniversityConfigPage({super.key});
 
   @override
-  State<UniversityConfigPage> createState() => UniversityConfigPageState();
+  State<UniversityConfigPage> createState() => _UniversityConfigPageState();
 }
 
-class UniversityConfigPageState extends State<UniversityConfigPage> {
+class _UniversityConfigPageState extends State<UniversityConfigPage> {
   final formKey = GlobalKey<FormState>();
 
   final courseController = TextEditingController();
 
-  final List<TextEditingController> disciplineControllers = [
-    TextEditingController(),
-    TextEditingController(),
-    TextEditingController(),
+  final List<_DisciplineDraft> disciplines = [
+    _DisciplineDraft(controller: TextEditingController()),
   ];
 
   bool isLoading = false;
@@ -32,20 +30,67 @@ class UniversityConfigPageState extends State<UniversityConfigPage> {
   @override
   void dispose() {
     courseController.dispose();
-    for (final c in disciplineControllers) {
-      c.dispose();
+    for (final discipline in disciplines) {
+      discipline.controller.dispose();
     }
     super.dispose();
   }
 
-  void _addDiscipline() {
-    setState(() => disciplineControllers.add(TextEditingController()));
+  void _removeDiscipline(int index) {
+    setState(() {
+      if (index == 0) {
+        disciplines.first.controller.clear();
+        disciplines.first.isConfirmed = false;
+        _removeEmptyDraftsAfterFirst();
+        return;
+      }
+
+      final discipline = disciplines.removeAt(index);
+      discipline.controller.dispose();
+    });
   }
 
-  void _removeDiscipline(int index) {
-    final controller = disciplineControllers.removeAt(index);
-    controller.dispose();
-    setState(() {});
+  void _removeEmptyDraftsAfterFirst() {
+    for (var i = disciplines.length - 1; i > 0; i--) {
+      final discipline = disciplines[i];
+      if (!discipline.isConfirmed &&
+          discipline.controller.text.trim().isEmpty) {
+        discipline.controller.dispose();
+        disciplines.removeAt(i);
+      }
+    }
+  }
+
+  void _completeDiscipline(int index) {
+    setState(() {
+      disciplines[index].isConfirmed = true;
+
+      final hasDraft = disciplines.any((discipline) => !discipline.isConfirmed);
+      if (!hasDraft) {
+        disciplines.add(_DisciplineDraft(controller: TextEditingController()));
+      }
+    });
+  }
+
+  Future<void> _onDisciplineOk(int index) async {
+    FocusScope.of(context).unfocus();
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        void closeAndComplete() {
+          Navigator.of(dialogContext).pop();
+          if (mounted && disciplines[index].controller.text.trim().isNotEmpty) {
+            _completeDiscipline(index);
+          }
+        }
+
+        return ScheduleDialog(
+          onContinue: closeAndComplete,
+          onSkip: closeAndComplete,
+        );
+      },
+    );
   }
 
   Future<void> _onSave() async {
@@ -114,23 +159,19 @@ class UniversityConfigPageState extends State<UniversityConfigPage> {
                       const SectionLabel(label: 'DISCIPLINAS'),
                       const SizedBox(height: 8),
 
-                      ...disciplineControllers.asMap().entries.map(
+                      ...disciplines.asMap().entries.map(
                         (entry) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: ConfigTextField(
-                            controller: entry.value,
-                            suffixIcon: DisciplineDeleteButton(
-                              onPressed: () => _removeDiscipline(entry.key),
-                            ),
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: DisciplineSetupCard(
+                            controller: entry.value.controller,
+                            isConfirmed: entry.value.isConfirmed,
+                            onConfirm: () => _onDisciplineOk(entry.key),
+                            onDelete: () => _removeDiscipline(entry.key),
                           ),
                         ),
                       ),
 
-                      const SizedBox(height: 4),
-
-                      AddDisciplineButton(onTap: _addDiscipline),
-
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 184),
 
                       PrimaryButton(
                         label: 'Salvar e continuar',
@@ -151,4 +192,11 @@ class UniversityConfigPageState extends State<UniversityConfigPage> {
       ),
     );
   }
+}
+
+class _DisciplineDraft {
+  final TextEditingController controller;
+  bool isConfirmed = false;
+
+  _DisciplineDraft({required this.controller});
 }
