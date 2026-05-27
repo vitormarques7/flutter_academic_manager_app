@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyAf55_chpeC2Yq5ZR4T92ov6vVd_i477UA</string>
+	<key>GCM_SENDER_ID</key>
+	<string>433551615246</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.academicManagerApp</string>
+	<key>PROJECT_ID</key>
+	<string>gestao-academica-757ff</string>
+	<key>STORAGE_BUCKET</key>
+	<string>gestao-academica-757ff.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:433551615246:ios:233ffa3353dae85578e35f</string>
+</dict>
+</plist>

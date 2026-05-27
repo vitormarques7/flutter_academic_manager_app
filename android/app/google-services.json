@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "433551615246",
+    "project_id": "gestao-academica-757ff",
+    "storage_bucket": "gestao-academica-757ff.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:433551615246:android:7195295c5ea77cc678e35f",
+        "android_client_info": {
+          "package_name": "com.example.academic_manager_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbtPcWgLOpyiyXeIbMcNPRrkNTvu_toBg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
