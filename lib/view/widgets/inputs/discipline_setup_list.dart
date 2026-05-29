@@ -24,28 +24,26 @@ class _DisciplineSetupListState extends State<DisciplineSetupList> {
   }
 
   void _removeDiscipline(int index) {
+    if (index >= _disciplines.length) return;
+
     setState(() {
-      if (index == 0) {
-        _disciplines.first.controller.clear();
-        _disciplines.first.isConfirmed = false;
-        _removeEmptyDraftsAfterFirst();
+      final discipline = _disciplines[index];
+
+      if (!discipline.isConfirmed) {
+        discipline.controller.clear();
         return;
       }
 
-      final discipline = _disciplines.removeAt(index);
-      discipline.controller.dispose();
-    });
-  }
+      final removedDiscipline = _disciplines.removeAt(index);
+      removedDiscipline.controller.dispose();
 
-  void _removeEmptyDraftsAfterFirst() {
-    for (var i = _disciplines.length - 1; i > 0; i--) {
-      final discipline = _disciplines[i];
-      if (!discipline.isConfirmed &&
-          discipline.controller.text.trim().isEmpty) {
-        discipline.controller.dispose();
-        _disciplines.removeAt(i);
+      final hasDraft = _disciplines.any(
+        (discipline) => !discipline.isConfirmed,
+      );
+      if (!hasDraft) {
+        _disciplines.add(_DisciplineDraft(controller: TextEditingController()));
       }
-    }
+    });
   }
 
   void _completeDiscipline(int index) {

@@ -73,33 +73,9 @@ class DisciplineSetupCard extends StatelessWidget {
           right: 0,
           bottom: 0,
           child: Center(
-            child: SizedBox(
-              width: 149,
-              height: 24,
-              child: TextButton(
-                onPressed: onConfirm,
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  padding: EdgeInsets.zero,
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                child: const Text(
-                  'Ok',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 16,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                    height: 1.0,
-                    letterSpacing: -1,
-                  ),
-                ),
-              ),
+            child: _ReactiveConfirmButton(
+              controller: controller,
+              onPressed: onConfirm,
             ),
           ),
         ),
@@ -113,6 +89,60 @@ class DisciplineSetupCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ReactiveConfirmButton extends StatelessWidget {
+  final TextEditingController controller;
+  final VoidCallback onPressed;
+
+  const _ReactiveConfirmButton({
+    required this.controller,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, value, _) {
+        final hasText = value.text.trim().isNotEmpty;
+
+        return SizedBox(
+          width: 149,
+          height: 24,
+          child: Opacity(
+            opacity: hasText ? 1 : 0.45,
+            child: TextButton(
+              onPressed: hasText ? onPressed : null,
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                disabledBackgroundColor: Colors.white,
+                disabledForegroundColor: Colors.black,
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text(
+                'Ok',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w500,
+                  height: 1.0,
+                  letterSpacing: -1,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -171,6 +201,12 @@ class _DisciplineNameField extends StatelessWidget {
           height: textHeight,
         ),
         decoration: InputDecoration(
+          hintText: 'Digite o nome da disciplina',
+          hintStyle: AppTextStyles.bodyRegular.copyWith(
+            color: Colors.white.withValues(alpha: 0.55),
+            fontWeight: FontWeight.w500,
+            height: textHeight,
+          ),
           filled: true,
           fillColor: const Color(0xFF7B79BF),
           contentPadding: textPadding,
