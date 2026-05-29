@@ -46,8 +46,8 @@ class _SchedulePageState extends State<SchedulePage> {
                     _ScheduleHeader(
                       selectedDay: _selectedDay,
                       focusedDay: _focusedDay,
-                      onPreviousMonth: () => _changeFocusedMonth(-1),
-                      onNextMonth: () => _changeFocusedMonth(1),
+                      onPreviousDay: () => _changeSelectedDay(-1),
+                      onNextDay: () => _changeSelectedDay(1),
                     ),
                     const SizedBox(height: 31),
                     _CalendarCard(
@@ -88,15 +88,14 @@ class _SchedulePageState extends State<SchedulePage> {
     );
   }
 
-  void _changeFocusedMonth(int monthDelta) {
-    final updatedFocus = DateTime(
-      _focusedDay.year,
-      _focusedDay.month + monthDelta,
+  void _changeSelectedDay(int dayDelta) {
+    final updatedSelectedDay = _dateOnly(
+      _selectedDay.add(Duration(days: dayDelta)),
     );
 
     setState(() {
-      _focusedDay = updatedFocus;
-      _selectedDay = DateTime(updatedFocus.year, updatedFocus.month, 1);
+      _selectedDay = updatedSelectedDay;
+      _focusedDay = updatedSelectedDay;
     });
   }
 
@@ -114,14 +113,14 @@ class _SchedulePageState extends State<SchedulePage> {
 class _ScheduleHeader extends StatelessWidget {
   final DateTime selectedDay;
   final DateTime focusedDay;
-  final VoidCallback onPreviousMonth;
-  final VoidCallback onNextMonth;
+  final VoidCallback onPreviousDay;
+  final VoidCallback onNextDay;
 
   const _ScheduleHeader({
     required this.selectedDay,
     required this.focusedDay,
-    required this.onPreviousMonth,
-    required this.onNextMonth,
+    required this.onPreviousDay,
+    required this.onNextDay,
   });
 
   @override
@@ -169,15 +168,15 @@ class _ScheduleHeader extends StatelessWidget {
           child: Row(
             children: [
               _MonthButton(
-                tooltip: 'Mês anterior',
+                tooltip: 'Dia anterior',
                 icon: Icons.chevron_left,
-                onPressed: onPreviousMonth,
+                onPressed: onPreviousDay,
               ),
               const SizedBox(width: 24),
               _MonthButton(
-                tooltip: 'Próximo mês',
+                tooltip: 'Próximo dia',
                 icon: Icons.chevron_right,
-                onPressed: onNextMonth,
+                onPressed: onNextDay,
               ),
             ],
           ),
