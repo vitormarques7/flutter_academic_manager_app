@@ -12,7 +12,20 @@
           "package_name": "com.example.academic_manager_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "433551615246-d8236ft16i2rt89l7cdfk60r5pji3fa4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.academic_manager_app",
+            "certificate_hash": "ee8f5feca6679c3af3effd11a74ef5772e8cbd71"
+          }
+        },
+        {
+          "client_id": "433551615246-jr4hjfralcth8hjtnf0armt16lonchtb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDbtPcWgLOpyiyXeIbMcNPRrkNTvu_toBg"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "433551615246-jr4hjfralcth8hjtnf0armt16lonchtb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "433551615246-4a5d95mg5guv0drfmotgmu1sp1jb8goi.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.academicManagerApp"
+              }
+            }
+          ]
         }
       }
     }
