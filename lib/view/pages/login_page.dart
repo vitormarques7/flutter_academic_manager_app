@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:academic_manager_app/services/auth/auth_service.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
 import '../../config/routes/app_routes.dart';
@@ -15,12 +16,18 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  static final RegExp _emailRegex = RegExp(
+    r'^[\w-]+(\.[\w-]+)*@[\w-]+(\.[\w-]+)+$',
+  );
+
+  final _authService = AuthService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _isSendingPasswordReset = false;
 
   @override
   void dispose() {
@@ -31,13 +38,52 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _onLogin() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
     try {
-      await Future.delayed(const Duration(seconds: 2));
-      if (mounted) AppRoutes.toHome(context);
+      await _authService.signInWithEmail(
+        _emailController.text,
+        _passwordController.text,
+      );
+
+      if (mounted) AppRoutes.toHomeClearingStack(context);
+    } on AuthException catch (error) {
+      if (mounted) _showMessage(error.message);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _onPasswordReset() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      _showMessage('Informe seu e-mail para recuperar a senha.');
+      return;
+    }
+
+    if (!_emailRegex.hasMatch(email)) {
+      _showMessage('Informe um e-mail válido para recuperar a senha.');
+      return;
+    }
+
+    setState(() => _isSendingPasswordReset = true);
+    try {
+      await _authService.sendPasswordReset(email);
+      if (mounted) {
+        _showMessage('Enviamos um link de recuperação para seu e-mail.');
+      }
+    } on AuthException catch (error) {
+      if (mounted) _showMessage(error.message);
+    } finally {
+      if (mounted) setState(() => _isSendingPasswordReset = false);
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -96,9 +142,7 @@ class _LoginPageState extends State<LoginPage> {
                               if (value == null || value.isEmpty) {
                                 return 'Por favor, insira seu e-mail';
                               }
-                              if (!RegExp(
-                                r'^[\w-]+(\.[\w-]+)*@[\w-]+(\.[\w-]+)+$',
-                              ).hasMatch(value)) {
+                              if (!_emailRegex.hasMatch(value)) {
                                 return 'Por favor, insira um e-mail válido';
                               }
                               return null;
@@ -132,12 +176,14 @@ class _LoginPageState extends State<LoginPage> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: GestureDetector(
-                              onTap: () {
-                                // TODO: recuperação de senha
-                              },
-                              child: const Text(
-                                'Esqueceu a senha?',
-                                style: TextStyle(
+                              onTap: _isSendingPasswordReset
+                                  ? null
+                                  : _onPasswordReset,
+                              child: Text(
+                                _isSendingPasswordReset
+                                    ? 'Enviando...'
+                                    : 'Esqueceu a senha?',
+                                style: const TextStyle(
                                   color: Color(0x7FE7E7E7),
                                   fontSize: 20,
                                   fontFamily: 'Inter',

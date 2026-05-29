@@ -1,3 +1,4 @@
+import 'package:academic_manager_app/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../widgets/common/page_header.dart';
@@ -7,6 +8,10 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final firstName = _firstNameFromDisplayName(
+      AuthService().currentUser?.displayName,
+    );
+
     return SafeArea(
       child: ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(overscroll: false),
@@ -16,7 +21,7 @@ class HomePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const PageHeader(title: 'Olá, Usuário'),
+              PageHeader(title: 'Olá, $firstName'),
 
               const SizedBox(height: 24),
 
@@ -74,6 +79,13 @@ class HomePage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _firstNameFromDisplayName(String? displayName) {
+    final trimmedName = displayName?.trim();
+    if (trimmedName == null || trimmedName.isEmpty) return 'Usuário';
+
+    return trimmedName.split(RegExp(r'\s+')).first;
   }
 }
 

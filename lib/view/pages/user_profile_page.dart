@@ -1,3 +1,4 @@
+import 'package:academic_manager_app/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 import '../../config/routes/app_routes.dart';
 import '../../config/theme/app_colors.dart';
@@ -5,6 +6,19 @@ import '../../config/theme/app_text_styles.dart';
 
 class UserProfilePage extends StatelessWidget {
   const UserProfilePage({super.key});
+
+  Future<void> _onSignOut(BuildContext context) async {
+    try {
+      await AuthService().signOut();
+      if (context.mounted) AppRoutes.toWelcomeClearingStack(context);
+    } on AuthException catch (error) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(error.message)));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,10 +67,7 @@ class UserProfilePage extends StatelessWidget {
                   iconColor: const Color(0xFFED2B2B),
                   iconBackgroundColor: const Color(0x66FF8989),
                   textColor: const Color(0xFFED2B2B),
-                  onTap: () => Navigator.of(context).pushNamedAndRemoveUntil(
-                    AppRoutes.welcome,
-                    (route) => false,
-                  ),
+                  onTap: () => _onSignOut(context),
                 ),
               ],
             ),
@@ -72,6 +83,10 @@ class _ProfileSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = AuthService().currentUser;
+    final displayName = user?.displayName?.trim();
+    final email = user?.email?.trim();
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -99,7 +114,9 @@ class _ProfileSummaryCard extends StatelessWidget {
           const _ProfileAvatar(),
           const SizedBox(height: 56),
           Text(
-            'Letícia Oliveira',
+            displayName == null || displayName.isEmpty
+                ? 'Usuário'
+                : displayName,
             textAlign: TextAlign.center,
             style: AppTextStyles.headline2.copyWith(
               fontSize: 32,
@@ -113,7 +130,7 @@ class _ProfileSummaryCard extends StatelessWidget {
           const _ProfileInfoPill(label: '5° Periodo'),
           const SizedBox(height: 28),
           Text(
-            'email.exemplo@upe.br',
+            email == null || email.isEmpty ? 'E-mail não disponível' : email,
             textAlign: TextAlign.center,
             style: AppTextStyles.bodyRegular.copyWith(
               color: AppColors.textDark,

@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:academic_manager_app/view/pages/auth_gate_page.dart';
 import 'package:academic_manager_app/view/pages/login_page.dart';
 import 'package:academic_manager_app/view/pages/user_profile_page.dart';
 import 'package:academic_manager_app/view/shell/main_shell.dart';
@@ -12,6 +13,7 @@ import '../../view/pages/independent_config_page.dart';
 class AppRoutes {
   AppRoutes._();
 
+  static const String authGate = '/auth';
   static const String welcome = '/';
   static const String login = '/login';
   static const String register = '/register';
@@ -26,6 +28,7 @@ class AppRoutes {
   static const String profile = '/profile';
 
   static final Map<String, WidgetBuilder> routes = {
+    authGate: (_) => const AuthGatePage(),
     welcome: (_) => const WelcomePage(),
     login: (_) => const LoginPage(),
     register: (_) => const RegisterPage(),
@@ -49,6 +52,9 @@ class AppRoutes {
   static void toStudentProfile(BuildContext context) =>
       Navigator.pushReplacementNamed(context, studentProfile);
 
+  static void toStudentProfileClearingStack(BuildContext context) =>
+      Navigator.pushNamedAndRemoveUntil(context, studentProfile, (_) => false);
+
   static void toUniversityConfig(BuildContext context) =>
       Navigator.pushNamed(context, universityConfig);
 
@@ -60,6 +66,9 @@ class AppRoutes {
 
   static void toHome(BuildContext context) =>
       Navigator.pushNamed(context, home);
+
+  static void toHomeClearingStack(BuildContext context) =>
+      Navigator.pushNamedAndRemoveUntil(context, home, (_) => false);
 
   static void toProfile(BuildContext context) =>
       Navigator.pushNamed(context, profile);

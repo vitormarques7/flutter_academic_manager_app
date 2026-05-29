@@ -4,7 +4,7 @@ import '../../../config/theme/app_text_styles.dart';
 
 class SecondaryButton extends StatelessWidget {
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Widget? leading;
   final Color backgroundColor;
   final Color borderColor;
@@ -13,6 +13,8 @@ class SecondaryButton extends StatelessWidget {
   final double height;
   final EdgeInsets padding;
   final TextStyle? textStyle;
+  final bool isLoading;
+  final bool isDisabled;
 
   const SecondaryButton({
     super.key,
@@ -26,21 +28,30 @@ class SecondaryButton extends StatelessWidget {
     this.height = 65,
     this.padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
     this.textStyle,
+    this.isLoading = false,
+    this.isDisabled = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final bool effectiveDisabled = isDisabled || isLoading;
+    final VoidCallback? effectiveOnPressed = effectiveDisabled
+        ? null
+        : onPressed;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onPressed,
+        onTap: effectiveOnPressed,
         borderRadius: BorderRadius.circular(borderRadius),
         child: Container(
           width: double.infinity,
           height: height,
           padding: padding,
           decoration: ShapeDecoration(
-            color: backgroundColor,
+            color: effectiveDisabled
+                ? backgroundColor.withValues(alpha: 0.5)
+                : backgroundColor,
             shape: RoundedRectangleBorder(
               side: BorderSide(width: 2.5, color: borderColor),
               borderRadius: BorderRadius.circular(borderRadius),
@@ -57,12 +68,21 @@ class SecondaryButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (leading != null) ...[leading!, const SizedBox(width: 10)],
-              Text(
-                label,
-                style:
-                    textStyle ??
-                    AppTextStyles.button.copyWith(color: textColor),
-              ),
+              isLoading
+                  ? SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(textColor),
+                      ),
+                    )
+                  : Text(
+                      label,
+                      style:
+                          textStyle ??
+                          AppTextStyles.button.copyWith(color: textColor),
+                    ),
             ],
           ),
         ),

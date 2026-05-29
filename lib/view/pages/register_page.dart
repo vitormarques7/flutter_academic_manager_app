@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:academic_manager_app/services/auth/auth_service.dart';
 import 'package:academic_manager_app/config/theme/app_colors.dart';
 import 'package:academic_manager_app/config/theme/app_text_styles.dart';
-import 'package:academic_manager_app/view/pages/filtering_page.dart';
 import '../widgets/buttons/primary_button.dart';
 import '../../config/routes/app_routes.dart';
 import '../widgets/inputs/auth_text_field.dart';
@@ -16,6 +16,11 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  static final RegExp _emailRegex = RegExp(
+    r'^[\w-]+(\.[\w-]+)*@[\w-]+(\.[\w-]+)+$',
+  );
+
+  final _authService = AuthService();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -37,18 +42,27 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Future<void> _onRegister() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
     try {
-      await Future.delayed(const Duration(seconds: 2));
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const StudentFilteringPage()),
-        );
-      }
+      await _authService.registerWithEmail(
+        name: _nameController.text,
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      if (mounted) AppRoutes.toStudentProfileClearingStack(context);
+    } on AuthException catch (error) {
+      if (mounted) _showMessage(error.message);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -117,9 +131,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               if (value == null || value.isEmpty) {
                                 return 'Por favor, insira seu e-mail';
                               }
-                              if (!RegExp(
-                                r'^[\w-]+(\.[\w-]+)*@[\w-]+(\.[\w-]+)+$',
-                              ).hasMatch(value)) {
+                              if (!_emailRegex.hasMatch(value)) {
                                 return 'Por favor, insira um e-mail válido';
                               }
                               return null;
@@ -176,7 +188,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           const SizedBox(height: 40),
 
                           PrimaryButton(
-                            label: 'Entrar',
+                            label: 'Cadastrar',
                             isLoading: _isLoading,
                             onPressed: _onRegister,
                             backgroundColor: AppColors.background,

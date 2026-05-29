@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       scrollBehavior: const AppScrollBehavior(),
       theme: AppTheme.theme,
-      initialRoute: AppRoutes.welcome,
+      initialRoute: AppRoutes.authGate,
       routes: AppRoutes.routes,
     );
   }

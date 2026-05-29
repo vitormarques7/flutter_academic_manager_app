@@ -1,4 +1,5 @@
 import 'package:academic_manager_app/config/routes/app_routes.dart';
+import 'package:academic_manager_app/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
@@ -7,11 +8,49 @@ import '../widgets/buttons/primary_button.dart';
 import '../widgets/buttons/secondary_button.dart';
 import '../widgets/common/or_divider.dart';
 
-class WelcomePage extends StatelessWidget {
+class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
 
   @override
+  State<WelcomePage> createState() => _WelcomePageState();
+}
+
+class _WelcomePageState extends State<WelcomePage> {
+  final _authService = AuthService();
+
+  bool _isGoogleLoading = false;
+
+  Future<void> _onGoogleSignIn() async {
+    setState(() => _isGoogleLoading = true);
+    try {
+      final credential = await _authService.signInWithGoogle();
+      if (credential == null) return;
+
+      final isNewUser = credential.additionalUserInfo?.isNewUser ?? false;
+      if (!mounted) return;
+
+      if (isNewUser) {
+        AppRoutes.toStudentProfileClearingStack(context);
+      } else {
+        AppRoutes.toHomeClearingStack(context);
+      }
+    } on AuthException catch (error) {
+      if (mounted) _showMessage(error.message);
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final showGoogleSignIn = _authService.isGoogleSignInSupported;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -51,21 +90,24 @@ class WelcomePage extends StatelessWidget {
                 onPressed: () => AppRoutes.toRegister(context),
               ),
 
-              const SizedBox(height: 24),
+              if (showGoogleSignIn) ...[
+                const SizedBox(height: 24),
 
-              const OrDivider(),
+                const OrDivider(),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              SecondaryButton(
-                label: 'Continuar com Google',
-                leading: Image.asset(
-                  'lib/view/assets/devicon_google.webp',
-                  width: 30,
-                  height: 30,
+                SecondaryButton(
+                  label: 'Continuar com Google',
+                  leading: Image.asset(
+                    'lib/view/assets/devicon_google.webp',
+                    width: 30,
+                    height: 30,
+                  ),
+                  isLoading: _isGoogleLoading,
+                  onPressed: _onGoogleSignIn,
                 ),
-                onPressed: () => AppRoutes.toStudentProfile(context),
-              ),
+              ],
 
               const Spacer(flex: 1),
             ],
