@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_text_styles.dart';
 
@@ -6,21 +7,30 @@ class ConfigTextField extends StatelessWidget {
   final TextEditingController controller;
   final String? Function(String?)? validator;
   final Widget? suffixIcon;
+  final String? hint;
+  final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
 
   const ConfigTextField({
     super.key,
     required this.controller,
     this.validator,
     this.suffixIcon,
+    this.hint,
+    this.keyboardType,
+    this.inputFormatters,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       style: AppTextStyles.bodyRegular.copyWith(color: AppColors.textDark),
       validator: validator,
       decoration: InputDecoration(
+        hintText: hint,
         filled: true,
         fillColor: AppColors.defaultFieldBackground,
         contentPadding: const EdgeInsets.symmetric(

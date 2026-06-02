@@ -5,6 +5,7 @@ import '../widgets/common/section_label.dart';
 import '../widgets/inputs/search_field.dart';
 import '../widgets/common/floating_add_button.dart';
 import '../widgets/cards/subject_card.dart';
+import '../widgets/dialogs/subject_dialog.dart';
 
 class SubjectsPage extends StatefulWidget {
   const SubjectsPage({super.key});
@@ -41,23 +42,44 @@ class _SubjectsPageState extends State<SubjectsPage> {
     },
   ];
 
-  List<Map<String, dynamic>> _filtered = [];
+  List<Map<String, dynamic>> get _filteredSubjects {
+    final query = _searchController.text.trim().toLowerCase();
+
+    if (query.isEmpty) return _subjects;
+
+    return _subjects
+        .where(
+          (subject) =>
+              subject['name'].toLowerCase().contains(query) ||
+              subject['teacher'].toLowerCase().contains(query),
+        )
+        .toList();
+  }
 
   @override
   void initState() {
     super.initState();
-    _filtered = _subjects;
+    _searchController.addListener(() => setState(() {}));
   }
 
-  void _onSearch(String query) {
+  Future<void> _openSubjectDialog() async {
+    final result = await showDialog<SubjectDialogResult>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.28),
+      builder: (_) => const SubjectDialog(),
+    );
+
+    if (result == null || !mounted) return;
+
     setState(() {
-      _filtered = _subjects
-          .where(
-            (s) =>
-                s['name'].toLowerCase().contains(query.toLowerCase()) ||
-                s['teacher'].toLowerCase().contains(query.toLowerCase()),
-          )
-          .toList();
+      _subjects.insert(0, {
+        'name': result.name,
+        'teacher': result.teacher,
+        'frequency': 0.0,
+        'average': 0.0,
+        'workload': result.workload,
+        'schedule': result.schedule.map((entry) => entry.toMap()).toList(),
+      });
     });
   }
 
@@ -92,7 +114,6 @@ class _SubjectsPageState extends State<SubjectsPage> {
                     SearchField(
                       controller: _searchController,
                       hint: 'Pesquise por disciplina',
-                      onChanged: _onSearch,
                     ),
 
                     const SizedBox(height: 20),
@@ -101,7 +122,7 @@ class _SubjectsPageState extends State<SubjectsPage> {
 
                     const SizedBox(height: 12),
 
-                    ..._filtered.map(
+                    ..._filteredSubjects.map(
                       (subject) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: SubjectCard(
@@ -134,11 +155,7 @@ class _SubjectsPageState extends State<SubjectsPage> {
           Positioned(
             right: 24,
             bottom: 16,
-            child: FloatingAddButton(
-              onTap: () {
-                // TODO: abrir modal/tela de adicionar disciplina
-              },
-            ),
+            child: FloatingAddButton(onTap: _openSubjectDialog),
           ),
         ],
       ),

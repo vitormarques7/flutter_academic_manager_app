@@ -19,6 +19,7 @@ class _UniversityConfigPageState extends State<UniversityConfigPage> {
   final formKey = GlobalKey<FormState>();
 
   final courseController = TextEditingController();
+  int? selectedPeriod;
 
   bool isLoading = false;
 
@@ -48,69 +49,104 @@ class _UniversityConfigPageState extends State<UniversityConfigPage> {
       body: SafeArea(
         child: Form(
           key: formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(37, 60, 37, 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        text: 'Configure seus\n',
-                        style: AppTextStyles.headline2,
-                        children: [
-                          TextSpan(
-                            text: 'estudos',
-                            style: AppTextStyles.headline2.copyWith(
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Personalize seu ambiente de estudos para começar',
-                      style: AppTextStyles.bodyRegular,
-                    ),
-                  ],
-                ),
-              ),
-
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(37, 0, 37, 40),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(37, 60, 37, 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RichText(
+                  text: TextSpan(
+                    text: 'Configure seus\n',
+                    style: AppTextStyles.headline2,
                     children: [
-                      const SectionLabel(label: 'NOME DO CURSO'),
-                      const SizedBox(height: 8),
-                      ConfigTextField(controller: courseController),
-
-                      const SizedBox(height: 24),
-
-                      const SectionLabel(label: 'DISCIPLINAS'),
-                      const SizedBox(height: 8),
-                      const DisciplineSetupList(),
-
-                      const SizedBox(height: 184),
-
-                      PrimaryButton(
-                        label: 'Salvar e continuar',
-                        onPressed: _onSave,
-                        isLoading: isLoading,
+                      TextSpan(
+                        text: 'estudos',
+                        style: AppTextStyles.headline2.copyWith(
+                          color: AppColors.primary,
+                        ),
                       ),
-
-                      const SizedBox(height: 14),
-
-                      const CancelButton(),
                     ],
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  'Personalize seu ambiente de estudos para começar',
+                  style: AppTextStyles.bodyRegular,
+                ),
+
+                const SizedBox(height: 32),
+
+                const SectionLabel(label: 'NOME DO CURSO'),
+                const SizedBox(height: 8),
+                ConfigTextField(controller: courseController),
+
+                const SizedBox(height: 24),
+
+                const SectionLabel(label: 'PERÍODO DO CURSO'),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<int>(
+                  initialValue: selectedPeriod,
+                  menuMaxHeight: 280,
+                  hint: Text(
+                    'Selecione o período',
+                    style: AppTextStyles.bodyRegular.copyWith(
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  icon: const Icon(
+                    Icons.keyboard_arrow_down,
+                    color: AppColors.primary,
+                    size: 28,
+                  ),
+                  decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 18,
+                    ),
+                  ),
+                  items: [
+                    ...List.generate(12, (index) {
+                      final period = index + 1;
+                      return DropdownMenuItem(
+                        value: period,
+                        child: Text('$periodº período'),
+                      );
+                    }),
+                    const DropdownMenuItem(
+                      value: 0,
+                      child: Text('Prefiro não informar'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    setState(() => selectedPeriod = value);
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Selecione o período atual.';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 24),
+
+                const SectionLabel(label: 'DISCIPLINAS'),
+                const SizedBox(height: 8),
+                const DisciplineSetupList(),
+
+                const SizedBox(height: 190),
+
+                PrimaryButton(
+                  label: 'Salvar e continuar',
+                  onPressed: _onSave,
+                  isLoading: isLoading,
+                ),
+
+                const SizedBox(height: 14),
+
+                const CancelButton(),
+              ],
+            ),
           ),
         ),
       ),
