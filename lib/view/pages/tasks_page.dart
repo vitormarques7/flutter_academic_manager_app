@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../models/academic_task.dart';
+import '../../repositories/task_repository.dart';
+import '../../config/theme/app_colors.dart';
 import '../widgets/common/page_header.dart';
 import '../widgets/common/section_label.dart';
 import '../widgets/selectors/task_filter_chip.dart';
 import '../widgets/cards/task_card.dart';
 import '../widgets/common/floating_add_button.dart';
-import '../../config/theme/app_colors.dart';
+import '../widgets/dialogs/task_dialog.dart';
 
 class TasksPage extends StatefulWidget {
   const TasksPage({super.key});
@@ -15,22 +18,75 @@ class TasksPage extends StatefulWidget {
 
 class _TasksPageState extends State<TasksPage> {
   String _selectedFilter = 'Todas';
+  final TaskRepository _taskRepository = TaskRepository();
 
-  // Dados mockados — substituir por dados reais quando integrar Firebase
-  final List<Map<String, dynamic>> _tasks = [
-    {
-      'title': 'Atividade 1',
-      'subject': 'Programação',
-      'deadline': '20/04',
-      'isChecked': false,
-    },
-    {
-      'title': 'Atividade 1',
-      'subject': 'Programação',
-      'deadline': '20/04',
-      'isChecked': false,
-    },
+  final List<String> _subjects = const [
+    'Programação',
+    'Cálculo I',
+    'Banco de Dados',
+    'Inteligência Artificial',
   ];
+
+  List<AcademicTask> _filterTasks(List<AcademicTask> tasks) {
+    return tasks.where((task) {
+      final isChecked = task.isChecked;
+
+      if (_selectedFilter == 'Pendentes') return !isChecked;
+      if (_selectedFilter == 'Concluídas') return isChecked;
+
+      return true;
+    }).toList();
+  }
+
+  Future<void> _openTaskDialog({AcademicTask? task}) async {
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.28),
+      builder: (_) => TaskDialog(
+        subjects: _subjects,
+        initialTask: task == null
+            ? null
+            : TaskDialogResult(
+                title: task.title,
+                subject: task.subject,
+                deadline: task.deadline,
+                visualPriority: task.visualPriority,
+              ),
+        onSubmit: (result) {
+          final input = TaskInput(
+            title: result.title,
+            subject: result.subject,
+            deadline: result.deadline,
+            visualPriority: result.visualPriority,
+          );
+
+          if (task == null) {
+            return _taskRepository.createTask(input);
+          }
+
+          return _taskRepository.updateTask(id: task.id, input: input);
+        },
+      ),
+    );
+  }
+
+  Future<void> _updateTaskCompletion(AcademicTask task, bool value) async {
+    try {
+      await _taskRepository.updateCompletion(id: task.id, isChecked: value);
+    } on TaskRepositoryException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Não foi possível atualizar a tarefa. Tente novamente.');
+    }
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red.shade700),
+    );
+  }
 
   void _onFilterTap() {
     // TODO: implementar dropdown de filtro (Todas, Pendentes, Concluídas)
@@ -82,23 +138,56 @@ class _TasksPageState extends State<TasksPage> {
 
                     const SizedBox(height: 12),
 
-                    ...List.generate(_tasks.length, (index) {
-                      final task = _tasks[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: TaskCard(
-                          title: task['title'],
-                          subject: task['subject'],
-                          deadline: task['deadline'],
-                          isChecked: task['isChecked'],
-                          onChanged: (value) {
-                            setState(
-                              () => _tasks[index]['isChecked'] = value ?? false,
+                    StreamBuilder<List<AcademicTask>>(
+                      stream: _taskRepository.watchTasks(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                                ConnectionState.waiting &&
+                            !snapshot.hasData) {
+                          return const Padding(
+                            padding: EdgeInsets.only(top: 32),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          );
+                        }
+
+                        if (snapshot.hasError) {
+                          return const _TasksStateMessage(
+                            message:
+                                'Não foi possível carregar suas tarefas agora.',
+                          );
+                        }
+
+                        final tasks = _filterTasks(snapshot.data ?? []);
+
+                        if (tasks.isEmpty) {
+                          return const _TasksStateMessage(
+                            message: 'Nenhuma tarefa encontrada.',
+                          );
+                        }
+
+                        return Column(
+                          children: tasks.map((task) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: TaskCard(
+                                title: task.title,
+                                subject: task.subject,
+                                deadline: task.deadlineLabel,
+                                isChecked: task.isChecked,
+                                onChanged: (value) {
+                                  _updateTaskCompletion(task, value ?? false);
+                                },
+                                onTap: () => _openTaskDialog(task: task),
+                              ),
                             );
-                          },
-                        ),
-                      );
-                    }),
+                          }).toList(),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -108,13 +197,34 @@ class _TasksPageState extends State<TasksPage> {
             Positioned(
               right: 24,
               bottom: 16,
-              child: FloatingAddButton(
-                onTap: () {
-                  // TODO: abrir modal/tela de adicionar tarefa
-                },
-              ),
+              child: FloatingAddButton(onTap: () => _openTaskDialog()),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TasksStateMessage extends StatelessWidget {
+  final String message;
+
+  const _TasksStateMessage({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 32),
+      child: Center(
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Color(0xFF464552),
+            fontSize: 16,
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );
