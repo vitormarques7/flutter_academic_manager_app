@@ -48,71 +48,56 @@ class _IndependentConfigPageState extends State<IndependentConfigPage> {
       body: SafeArea(
         child: Form(
           key: formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(37, 60, 37, 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        text: 'Configure seus\n',
-                        style: AppTextStyles.headline2,
-                        children: [
-                          TextSpan(
-                            text: 'estudos',
-                            style: AppTextStyles.headline2.copyWith(
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Personalize seu ambiente de estudos para começar',
-                      style: AppTextStyles.bodyRegular,
-                    ),
-                  ],
-                ),
-              ),
-
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(37, 0, 37, 40),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(37, 60, 37, 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RichText(
+                  text: TextSpan(
+                    text: 'Configure seus\n',
+                    style: AppTextStyles.headline2,
                     children: [
-                      const SectionLabel(
-                        label: 'OBJETIVO (EX: OAB, CONCURSO...)',
+                      TextSpan(
+                        text: 'estudos',
+                        style: AppTextStyles.headline2.copyWith(
+                          color: AppColors.primary,
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      ConfigTextField(controller: goalController),
-
-                      const SizedBox(height: 24),
-
-                      const SectionLabel(label: 'DISCIPLINAS'),
-                      const SizedBox(height: 8),
-                      const DisciplineSetupList(),
-
-                      const SizedBox(height: 184),
-
-                      PrimaryButton(
-                        label: 'Salvar e continuar',
-                        onPressed: _onSave,
-                        isLoading: isLoading,
-                      ),
-
-                      const SizedBox(height: 14),
-
-                      const CancelButton(),
                     ],
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  'Personalize seu ambiente de estudos para começar',
+                  style: AppTextStyles.bodyRegular,
+                ),
+
+                const SizedBox(height: 32),
+
+                const SectionLabel(label: 'OBJETIVO (EX: OAB, CONCURSO...)'),
+                const SizedBox(height: 8),
+                ConfigTextField(controller: goalController),
+
+                const SizedBox(height: 24),
+
+                const SectionLabel(label: 'DISCIPLINAS'),
+                const SizedBox(height: 8),
+                const DisciplineSetupList(),
+
+                const SizedBox(height: 340),
+
+                PrimaryButton(
+                  label: 'Salvar e continuar',
+                  onPressed: _onSave,
+                  isLoading: isLoading,
+                ),
+
+                const SizedBox(height: 14),
+
+                const CancelButton(),
+              ],
+            ),
           ),
         ),
       ),

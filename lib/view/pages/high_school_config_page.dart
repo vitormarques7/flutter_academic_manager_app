@@ -45,75 +45,62 @@ class _HighSchoolConfigPageState extends State<HighSchoolConfigPage> {
       body: SafeArea(
         child: Form(
           key: formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(37, 60, 37, 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        text: 'Configure seus\n',
-                        style: AppTextStyles.headline2,
-                        children: [
-                          TextSpan(
-                            text: 'estudos',
-                            style: AppTextStyles.headline2.copyWith(
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Personalize seu ambiente de estudos para começar',
-                      style: AppTextStyles.bodyRegular,
-                    ),
-                  ],
-                ),
-              ),
-
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(37, 0, 37, 40),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(37, 60, 37, 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RichText(
+                  text: TextSpan(
+                    text: 'Configure seus\n',
+                    style: AppTextStyles.headline2,
                     children: [
-                      const SectionLabel(label: 'SÉRIE'),
-                      const SizedBox(height: 8),
-
-                      SeriesSelector(
-                        selectedIndex: _selectedSeriesIndex,
-                        onChanged: (index) {
-                          setState(() => _selectedSeriesIndex = index);
-                        },
+                      TextSpan(
+                        text: 'estudos',
+                        style: AppTextStyles.headline2.copyWith(
+                          color: AppColors.primary,
+                        ),
                       ),
-
-                      const SizedBox(height: 24),
-
-                      const SectionLabel(label: 'DISCIPLINAS'),
-                      const SizedBox(height: 8),
-                      const DisciplineSetupList(),
-
-                      const SizedBox(height: 184),
-
-                      PrimaryButton(
-                        label: 'Salvar e continuar',
-                        onPressed: _onSave,
-                        isLoading: isLoading,
-                      ),
-
-                      const SizedBox(height: 14),
-
-                      const CancelButton(),
                     ],
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  'Personalize seu ambiente de estudos para começar',
+                  style: AppTextStyles.bodyRegular,
+                ),
+
+                const SizedBox(height: 32),
+
+                const SectionLabel(label: 'SÉRIE'),
+                const SizedBox(height: 8),
+
+                SeriesSelector(
+                  selectedIndex: _selectedSeriesIndex,
+                  onChanged: (index) {
+                    setState(() => _selectedSeriesIndex = index);
+                  },
+                ),
+
+                const SizedBox(height: 24),
+
+                const SectionLabel(label: 'DISCIPLINAS'),
+                const SizedBox(height: 8),
+                const DisciplineSetupList(),
+
+                const SizedBox(height: 260),
+
+                PrimaryButton(
+                  label: 'Salvar e continuar',
+                  onPressed: _onSave,
+                  isLoading: isLoading,
+                ),
+
+                const SizedBox(height: 14),
+
+                const CancelButton(),
+              ],
+            ),
           ),
         ),
       ),
