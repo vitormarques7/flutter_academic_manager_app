@@ -27,10 +27,20 @@ class AcademicTask {
     DocumentSnapshot<Map<String, dynamic>> document,
     String userId,
   ) {
-    final data = document.data() ?? {};
-
-    return AcademicTask(
+    return AcademicTask.fromMap(
       id: document.id,
+      userId: userId,
+      data: document.data() ?? {},
+    );
+  }
+
+  factory AcademicTask.fromMap({
+    required String id,
+    required String userId,
+    required Map<String, dynamic> data,
+  }) {
+    return AcademicTask(
+      id: id,
       title: data['title'] as String? ?? '',
       subject: data['subject'] as String? ?? '',
       deadline: data['deadline'] as String? ?? '',
@@ -62,4 +72,22 @@ class TaskInput {
     required this.deadline,
     required this.visualPriority,
   });
+
+  Map<String, dynamic> toCreateMap() {
+    return {
+      ...toUpdateMap(),
+      'isChecked': false,
+      'createdAt': FieldValue.serverTimestamp(),
+    };
+  }
+
+  Map<String, dynamic> toUpdateMap() {
+    return {
+      'title': title,
+      'subject': subject,
+      'deadline': deadline,
+      'visualPriority': visualPriority,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+  }
 }

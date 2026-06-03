@@ -51,15 +51,7 @@ class TaskRepository {
     final uid = _currentUserId;
 
     await _guardFirestoreCall(() {
-      return _tasksCollection(uid).add({
-        'title': input.title,
-        'subject': input.subject,
-        'deadline': input.deadline,
-        'visualPriority': input.visualPriority,
-        'isChecked': false,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      return _tasksCollection(uid).add(input.toCreateMap());
     });
   }
 
@@ -67,13 +59,7 @@ class TaskRepository {
     final uid = _currentUserId;
 
     return _guardFirestoreCall(() {
-      return _tasksCollection(uid).doc(id).update({
-        'title': input.title,
-        'subject': input.subject,
-        'deadline': input.deadline,
-        'visualPriority': input.visualPriority,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      return _tasksCollection(uid).doc(id).update(input.toUpdateMap());
     });
   }
 
@@ -85,6 +71,14 @@ class TaskRepository {
         'isChecked': isChecked,
         'updatedAt': FieldValue.serverTimestamp(),
       });
+    });
+  }
+
+  Future<void> deleteTask(String id) {
+    final uid = _currentUserId;
+
+    return _guardFirestoreCall(() {
+      return _tasksCollection(uid).doc(id).delete();
     });
   }
 
