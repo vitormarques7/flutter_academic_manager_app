@@ -25,8 +25,8 @@ class AppBottomNavBar extends StatelessWidget {
     ),
     _NavItemData(
       label: 'Tarefas',
-      icon: Icons.check_box_outlined,
-      activeIcon: Icons.check_box,
+      icon: Icons.pending_actions_outlined,
+      activeIcon: Icons.pending_actions,
     ),
     _NavItemData(
       label: 'Horário',
@@ -39,16 +39,17 @@ class AppBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
-    return Material(
-      color: AppColors.background,
-      elevation: 10,
-      shadowColor: AppColors.shadowPrimary,
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        border: Border(top: BorderSide(color: Color(0x33514EB6))),
+      ),
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(12, 8, 12, bottomInset > 0 ? 8 : 10),
+          padding: EdgeInsets.fromLTRB(20, 6, 20, bottomInset > 0 ? 6 : 8),
           child: SizedBox(
-            height: 62,
+            height: 58,
             child: Row(
               children: List.generate(_items.length, (index) {
                 final item = _items[index];
@@ -89,6 +90,7 @@ class _AnimatedNavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isSelected ? AppColors.navActive : AppColors.navInactive;
+    final activeBackground = AppColors.navActive.withValues(alpha: 0.1);
 
     return Semantics(
       button: true,
@@ -100,86 +102,57 @@ class _AnimatedNavItem extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(18),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 260),
+            duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
             margin: const EdgeInsets.symmetric(horizontal: 4),
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.navActive.withValues(alpha: 0.12)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(18),
+              color: isSelected ? activeBackground : Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: TweenAnimationBuilder<double>(
-              tween: Tween<double>(end: isSelected ? 1 : 0),
-              duration: const Duration(milliseconds: 280),
-              curve: Curves.easeOutBack,
-              builder: (context, value, child) {
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Transform.translate(
-                      offset: Offset(0, -2 * value),
-                      child: Transform.scale(
-                        scale: 1 + (0.08 * value),
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 180),
-                          switchInCurve: Curves.easeOutCubic,
-                          switchOutCurve: Curves.easeInCubic,
-                          transitionBuilder: (child, animation) {
-                            return FadeTransition(
-                              opacity: animation,
-                              child: ScaleTransition(
-                                scale: Tween<double>(
-                                  begin: 0.82,
-                                  end: 1,
-                                ).animate(animation),
-                                child: child,
-                              ),
-                            );
-                          },
-                          child: Icon(
-                            isSelected ? activeIcon : icon,
-                            key: ValueKey('$label-$isSelected'),
-                            color: color,
-                            size: 25,
-                          ),
-                        ),
-                      ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedScale(
+                  scale: isSelected ? 1.08 : 1,
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 160),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(scale: animation, child: child),
+                      );
+                    },
+                    child: Icon(
+                      isSelected ? activeIcon : icon,
+                      key: ValueKey('$label-$isSelected'),
+                      color: color,
+                      size: 25,
                     ),
-                    const SizedBox(height: 3),
-                    AnimatedDefaultTextStyle(
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeOutCubic,
-                      style: AppTextStyles.navLabel.copyWith(
-                        color: color,
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        letterSpacing: 0,
-                        height: 1.2,
-                      ),
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 260),
-                      curve: Curves.easeOutCubic,
-                      width: 18 + (10 * value),
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: AppColors.navActive.withValues(alpha: value),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                    ),
-                  ],
-                );
-              },
+                  ),
+                ),
+                const SizedBox(height: 2),
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  style: AppTextStyles.navLabel.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0,
+                    height: 1.2,
+                  ),
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
