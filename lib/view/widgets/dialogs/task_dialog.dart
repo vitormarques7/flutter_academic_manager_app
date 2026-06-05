@@ -21,11 +21,13 @@ class TaskDialog extends StatefulWidget {
   final List<String> subjects;
   final TaskDialogResult? initialTask;
   final Future<void> Function(TaskDialogResult task) onSubmit;
+  final Future<void> Function()? onDelete;
 
   const TaskDialog({
     super.key,
     required this.subjects,
     required this.onSubmit,
+    this.onDelete,
     this.initialTask,
   });
 
@@ -40,6 +42,7 @@ class _TaskDialogState extends State<TaskDialog> {
   late String? _selectedSubject;
   late String _selectedVisualPriority;
   bool _isSaving = false;
+  bool _isDeleting = false;
   String? _errorMessage;
 
   bool get _isEditing => widget.initialTask != null;
@@ -87,6 +90,53 @@ class _TaskDialogState extends State<TaskDialog> {
       setState(() {
         _errorMessage = error.toString();
         _isSaving = false;
+      });
+    }
+  }
+
+  Future<void> _confirmDelete() async {
+    final onDelete = widget.onDelete;
+    if (onDelete == null) return;
+
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Excluir tarefa?'),
+          content: const Text(
+            'Essa ação remove a tarefa permanentemente. Deseja continuar?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Excluir'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true || !mounted) return;
+
+    setState(() {
+      _isDeleting = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await onDelete();
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = error.toString();
+        _isDeleting = false;
       });
     }
   }
@@ -169,7 +219,7 @@ class _TaskDialogState extends State<TaskDialog> {
                           ),
                         ),
                         IconButton(
-                          onPressed: _isSaving
+                          onPressed: _isSaving || _isDeleting
                               ? null
                               : () => Navigator.of(context).maybePop(),
                           icon: const Icon(
@@ -200,7 +250,7 @@ class _TaskDialogState extends State<TaskDialog> {
                             decoration: _inputDecoration(
                               hintText: 'Ex: Entrega de Trabalho de IA',
                             ),
-                            enabled: !_isSaving,
+                            enabled: !_isSaving && !_isDeleting,
                             validator: (value) {
                               if ((value?.trim() ?? '').isEmpty) {
                                 return 'Informe o título.';
@@ -229,7 +279,7 @@ class _TaskDialogState extends State<TaskDialog> {
                                   ),
                                 )
                                 .toList(),
-                            onChanged: _isSaving
+                            onChanged: _isSaving || _isDeleting
                                 ? null
                                 : (value) {
                                     setState(() => _selectedSubject = value);
@@ -255,7 +305,7 @@ class _TaskDialogState extends State<TaskDialog> {
                             decoration: _inputDecoration(
                               hintText: 'dd/mm/yyyy',
                             ),
-                            enabled: !_isSaving,
+                            enabled: !_isSaving && !_isDeleting,
                             validator: _validateDeadline,
                           ),
                         ),
@@ -270,7 +320,7 @@ class _TaskDialogState extends State<TaskDialog> {
                                 icon: Icons.assignment_outlined,
                                 isSelected:
                                     _selectedVisualPriority == 'Trabalho',
-                                onTap: _isSaving
+                                onTap: _isSaving || _isDeleting
                                     ? null
                                     : () {
                                         setState(
@@ -286,7 +336,7 @@ class _TaskDialogState extends State<TaskDialog> {
                                 label: 'Prova',
                                 icon: Icons.edit_square,
                                 isSelected: _selectedVisualPriority == 'Prova',
-                                onTap: _isSaving
+                                onTap: _isSaving || _isDeleting
                                     ? null
                                     : () {
                                         setState(
@@ -334,7 +384,7 @@ class _TaskDialogState extends State<TaskDialog> {
                           width: double.infinity,
                           height: 40,
                           child: OutlinedButton(
-                            onPressed: _isSaving
+                            onPressed: _isSaving || _isDeleting
                                 ? null
                                 : () => Navigator.of(context).maybePop(),
                             style: OutlinedButton.styleFrom(
@@ -361,7 +411,7 @@ class _TaskDialogState extends State<TaskDialog> {
                           width: double.infinity,
                           height: 48,
                           child: ElevatedButton(
-                            onPressed: _isSaving ? null : _save,
+                            onPressed: _isSaving || _isDeleting ? null : _save,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
@@ -403,6 +453,38 @@ class _TaskDialogState extends State<TaskDialog> {
                                   ),
                           ),
                         ),
+                        if (_isEditing && widget.onDelete != null) ...[
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 40,
+                            child: TextButton.icon(
+                              onPressed: _isSaving || _isDeleting
+                                  ? null
+                                  : _confirmDelete,
+                              icon: _isDeleting
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.red,
+                                            ),
+                                      ),
+                                    )
+                                  : const Icon(Icons.delete_outline, size: 22),
+                              label: const Text('Excluir tarefa'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import '../../config/scroll/app_scroll_behavior.dart';
 import 'subject_details_page.dart';
 import '../widgets/common/page_header.dart';
-import '../widgets/common/section_label.dart';
 import '../widgets/inputs/search_field.dart';
 import '../widgets/common/floating_add_button.dart';
 import '../widgets/cards/subject_card.dart';
 import '../widgets/dialogs/subject_dialog.dart';
+import '../widgets/common/empty_state_card.dart';
+import '../widgets/common/list_section_header.dart';
+import '../widgets/common/summary_metric_tile.dart';
 
 class SubjectsPage extends StatefulWidget {
   const SubjectsPage({super.key});
@@ -17,32 +20,31 @@ class SubjectsPage extends StatefulWidget {
 class _SubjectsPageState extends State<SubjectsPage> {
   final _searchController = TextEditingController();
 
-  // Dados mockados — substituir por dados reais quando integrar Firebase
-  final List<Map<String, dynamic>> _subjects = [
-    {
-      'name': 'Programação',
-      'teacher': 'Prof. Alguem',
-      'frequency': 0.85,
-      'average': 8.5,
-      'workload': 60,
-    },
-    {
-      'name': 'Cálculo I',
-      'teacher': 'Prof. Alguem',
-      'frequency': 0.60,
-      'average': 8.0,
-      'workload': 60,
-    },
-    {
-      'name': 'Cálculo II',
-      'teacher': 'Prof. Alguem',
-      'frequency': 1.0,
-      'average': 7.0,
-      'workload': 60,
-    },
+  final List<_SubjectSummary> _subjects = const [
+    _SubjectSummary(
+      name: 'Programação',
+      teacher: 'Prof. Alguem',
+      frequency: 0.85,
+      average: 8.5,
+      workload: 60,
+    ),
+    _SubjectSummary(
+      name: 'Cálculo I',
+      teacher: 'Prof. Alguem',
+      frequency: 0.60,
+      average: 8.0,
+      workload: 60,
+    ),
+    _SubjectSummary(
+      name: 'Cálculo II',
+      teacher: 'Prof. Alguem',
+      frequency: 1.0,
+      average: 7.0,
+      workload: 60,
+    ),
   ];
 
-  List<Map<String, dynamic>> get _filteredSubjects {
+  List<_SubjectSummary> get _filteredSubjects {
     final query = _searchController.text.trim().toLowerCase();
 
     if (query.isEmpty) return _subjects;
@@ -50,10 +52,32 @@ class _SubjectsPageState extends State<SubjectsPage> {
     return _subjects
         .where(
           (subject) =>
-              subject['name'].toLowerCase().contains(query) ||
-              subject['teacher'].toLowerCase().contains(query),
+              subject.name.toLowerCase().contains(query) ||
+              subject.teacher.toLowerCase().contains(query),
         )
         .toList();
+  }
+
+  double get _averageGrade {
+    if (_subjects.isEmpty) return 0;
+
+    final total = _subjects.fold<double>(
+      0,
+      (sum, subject) => sum + subject.average,
+    );
+
+    return total / _subjects.length;
+  }
+
+  double get _averageFrequency {
+    if (_subjects.isEmpty) return 0;
+
+    final total = _subjects.fold<double>(
+      0,
+      (sum, subject) => sum + subject.frequency,
+    );
+
+    return total / _subjects.length;
   }
 
   @override
@@ -72,14 +96,17 @@ class _SubjectsPageState extends State<SubjectsPage> {
     if (result == null || !mounted) return;
 
     setState(() {
-      _subjects.insert(0, {
-        'name': result.name,
-        'teacher': result.teacher,
-        'frequency': 0.0,
-        'average': 0.0,
-        'workload': result.workload,
-        'schedule': result.schedule.map((entry) => entry.toMap()).toList(),
-      });
+      _subjects.insert(
+        0,
+        _SubjectSummary(
+          name: result.name,
+          teacher: result.teacher,
+          frequency: 0,
+          average: 0,
+          workload: result.workload,
+          schedule: result.schedule.map((entry) => entry.toMap()).toList(),
+        ),
+      );
     });
   }
 
@@ -96,9 +123,7 @@ class _SubjectsPageState extends State<SubjectsPage> {
         children: [
           Positioned.fill(
             child: ScrollConfiguration(
-              behavior: ScrollConfiguration.of(
-                context,
-              ).copyWith(overscroll: false),
+              behavior: const AppScrollBehavior(),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: ClampingScrollPhysics(),
@@ -111,6 +136,14 @@ class _SubjectsPageState extends State<SubjectsPage> {
 
                     const SizedBox(height: 24),
 
+                    _SubjectsOverview(
+                      total: _subjects.length,
+                      averageGrade: _averageGrade,
+                      averageFrequency: _averageFrequency,
+                    ),
+
+                    const SizedBox(height: 18),
+
                     SearchField(
                       controller: _searchController,
                       hint: 'Pesquise por disciplina',
@@ -118,33 +151,43 @@ class _SubjectsPageState extends State<SubjectsPage> {
 
                     const SizedBox(height: 20),
 
-                    const SectionLabel(label: 'MINHAS DISCIPLINAS'),
+                    ListSectionHeader(
+                      label: 'MINHAS DISCIPLINAS',
+                      count: _filteredSubjects.length,
+                    ),
 
                     const SizedBox(height: 12),
 
-                    ..._filteredSubjects.map(
-                      (subject) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: SubjectCard(
-                          name: subject['name'],
-                          teacher: subject['teacher'],
-                          frequency: subject['frequency'],
-                          average: subject['average'],
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => SubjectDetailsPage(
-                                  name: subject['name'],
-                                  teacher: subject['teacher'],
-                                  average: subject['average'],
-                                  workload: subject['workload'],
+                    if (_filteredSubjects.isEmpty)
+                      const EmptyStateCard(
+                        message: 'Nenhuma disciplina encontrada.',
+                        icon: Icons.search_off_outlined,
+                      )
+                    else
+                      ..._filteredSubjects.map(
+                        (subject) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: SubjectCard(
+                            name: subject.name,
+                            teacher: subject.teacher,
+                            frequency: subject.frequency,
+                            average: subject.average,
+                            workload: subject.workload,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => SubjectDetailsPage(
+                                    name: subject.name,
+                                    teacher: subject.teacher,
+                                    average: subject.average,
+                                    workload: subject.workload,
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -161,4 +204,65 @@ class _SubjectsPageState extends State<SubjectsPage> {
       ),
     );
   }
+}
+
+class _SubjectsOverview extends StatelessWidget {
+  final int total;
+  final double averageGrade;
+  final double averageFrequency;
+
+  const _SubjectsOverview({
+    required this.total,
+    required this.averageGrade,
+    required this.averageFrequency,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: SummaryMetricTile(
+            label: 'Disciplinas',
+            value: '$total',
+            icon: Icons.menu_book_outlined,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: SummaryMetricTile(
+            label: 'Média',
+            value: averageGrade.toStringAsFixed(1),
+            icon: Icons.bar_chart_outlined,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: SummaryMetricTile(
+            label: 'Freq.',
+            value: '${(averageFrequency * 100).round()}%',
+            icon: Icons.trending_up,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SubjectSummary {
+  final String name;
+  final String teacher;
+  final double frequency;
+  final double average;
+  final int workload;
+  final List<Map<String, dynamic>> schedule;
+
+  const _SubjectSummary({
+    required this.name,
+    required this.teacher,
+    required this.frequency,
+    required this.average,
+    required this.workload,
+    this.schedule = const [],
+  });
 }
