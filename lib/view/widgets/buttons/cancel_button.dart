@@ -20,10 +20,10 @@ class CancelButton extends StatelessWidget {
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 20,
-                fontFamily: 'Inter',
+                fontFamily: 'Roboto',
                 fontWeight: FontWeight.w700,
                 height: 1.10,
-                letterSpacing: -1,
+                letterSpacing: 0,
               ),
             ),
           ),

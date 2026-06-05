@@ -130,7 +130,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                         style: TextStyle(
                           color: Colors.black,
                           fontSize: 24,
-                          fontFamily: 'Inter',
+                          fontFamily: 'Roboto',
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -144,7 +144,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 18,
-                    fontFamily: 'Inter',
+                    fontFamily: 'Roboto',
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -154,7 +154,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                   style: TextStyle(
                     color: Color(0xFF8E8888),
                     fontSize: 15,
-                    fontFamily: 'Inter',
+                    fontFamily: 'Roboto',
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -164,7 +164,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 16,
-                    fontFamily: 'Inter',
+                    fontFamily: 'Roboto',
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -179,7 +179,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 16,
-                    fontFamily: 'Inter',
+                    fontFamily: 'Roboto',
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -216,7 +216,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                       '+ Adicionar novo horário',
                       style: TextStyle(
                         fontSize: 12,
-                        fontFamily: 'Inter',
+                        fontFamily: 'Roboto',
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -245,7 +245,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                             'Continuar',
                             style: TextStyle(
                               fontSize: 16,
-                              fontFamily: 'Inter',
+                              fontFamily: 'Roboto',
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -277,7 +277,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                         'Deixar sem horário',
                         style: TextStyle(
                           fontSize: 12,
-                          fontFamily: 'Inter',
+                          fontFamily: 'Roboto',
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -396,7 +396,7 @@ class _TimeLabel extends StatelessWidget {
           style: const TextStyle(
             color: AppColors.textMuted,
             fontSize: 6,
-            fontFamily: 'Inter',
+            fontFamily: 'Roboto',
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -405,7 +405,7 @@ class _TimeLabel extends StatelessWidget {
           style: const TextStyle(
             color: Colors.black,
             fontSize: 8,
-            fontFamily: 'Inter',
+            fontFamily: 'Roboto',
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -476,7 +476,7 @@ class _TimeWheelPickerState extends State<_TimeWheelPicker> {
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 18,
-                      fontFamily: 'Inter',
+                      fontFamily: 'Roboto',
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -507,7 +507,7 @@ class _TimeWheelPickerState extends State<_TimeWheelPicker> {
                     ':',
                     style: TextStyle(
                       fontSize: 24,
-                      fontFamily: 'Inter',
+                      fontFamily: 'Roboto',
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -552,7 +552,7 @@ class _TimeWheelPickerState extends State<_TimeWheelPicker> {
               index.toString().padLeft(2, '0'),
               style: const TextStyle(
                 fontSize: 24,
-                fontFamily: 'Inter',
+                fontFamily: 'Roboto',
                 fontWeight: FontWeight.w600,
               ),
             ),

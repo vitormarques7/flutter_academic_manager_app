@@ -32,7 +32,7 @@ class EmptyStateCard extends StatelessWidget {
             style: const TextStyle(
               color: Color(0xFF464552),
               fontSize: 15,
-              fontFamily: 'Inter',
+              fontFamily: 'Roboto',
               fontWeight: FontWeight.w700,
               height: 1.3,
             ),

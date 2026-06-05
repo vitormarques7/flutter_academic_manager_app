@@ -4,8 +4,8 @@ import 'app_colors.dart';
 class AppTextStyles {
   AppTextStyles._();
 
-  static const String _font = 'Inter';
-  static const double _letterSpacing = -1;
+  static const String _font = 'Roboto';
+  static const double _letterSpacing = 0;
 
   // Headlines
   static const TextStyle headline1 = TextStyle(

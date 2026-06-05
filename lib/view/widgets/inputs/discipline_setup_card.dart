@@ -133,10 +133,10 @@ class _ReactiveConfirmButton extends StatelessWidget {
                 style: TextStyle(
                   color: Colors.black,
                   fontSize: 16,
-                  fontFamily: 'Inter',
+                  fontFamily: 'Roboto',
                   fontWeight: FontWeight.w500,
                   height: 1.0,
-                  letterSpacing: -1,
+                  letterSpacing: 0,
                 ),
               ),
             ),

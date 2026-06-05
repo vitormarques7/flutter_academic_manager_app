@@ -44,7 +44,7 @@ class SeriesSelector extends StatelessWidget {
                 options[index],
                 style: AppTextStyles.bodyRegular.copyWith(
                   color: isSelected ? Colors.white : AppColors.textDark,
-                  fontFamily: 'Inter',
+                  fontFamily: 'Roboto',
                 ),
               ),
             ),

@@ -34,7 +34,7 @@ class SearchField extends StatelessWidget {
         style: const TextStyle(
           color: Color(0xFF191820),
           fontSize: 15,
-          fontFamily: 'Inter',
+          fontFamily: 'Roboto',
           fontWeight: FontWeight.w600,
         ),
         decoration: InputDecoration(
@@ -42,7 +42,7 @@ class SearchField extends StatelessWidget {
           hintStyle: const TextStyle(
             color: Color(0x7F514EB6),
             fontSize: 15,
-            fontFamily: 'Inter',
+            fontFamily: 'Roboto',
             fontWeight: FontWeight.w600,
             height: 1.47,
           ),

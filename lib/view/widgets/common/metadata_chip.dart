@@ -41,7 +41,7 @@ class MetadataChip extends StatelessWidget {
               style: const TextStyle(
                 color: Color(0xFF464552),
                 fontSize: 12,
-                fontFamily: 'Inter',
+                fontFamily: 'Roboto',
                 fontWeight: FontWeight.w700,
                 height: 1.2,
               ),

@@ -6,7 +6,7 @@ class AppTheme {
   AppTheme._();
 
   static ThemeData get theme => ThemeData(
-    fontFamily: 'Inter',
+    fontFamily: 'Roboto',
     scaffoldBackgroundColor: AppColors.background,
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.primary,

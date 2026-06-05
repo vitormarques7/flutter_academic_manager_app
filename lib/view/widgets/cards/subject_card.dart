@@ -80,7 +80,7 @@ class SubjectCard extends StatelessWidget {
                       style: const TextStyle(
                         color: Color(0xFF191820),
                         fontSize: 17,
-                        fontFamily: 'Inter',
+                        fontFamily: 'Roboto',
                         fontWeight: FontWeight.w700,
                         height: 1.26,
                       ),
@@ -93,7 +93,7 @@ class SubjectCard extends StatelessWidget {
                       style: const TextStyle(
                         color: Color(0xFF464552),
                         fontSize: 13,
-                        fontFamily: 'Inter',
+                        fontFamily: 'Roboto',
                         fontWeight: FontWeight.w600,
                         height: 1.35,
                       ),
@@ -106,7 +106,7 @@ class SubjectCard extends StatelessWidget {
                           style: TextStyle(
                             color: Color(0xFF464552),
                             fontSize: 12,
-                            fontFamily: 'Inter',
+                            fontFamily: 'Roboto',
                             fontWeight: FontWeight.w700,
                             height: 1.2,
                           ),
@@ -117,7 +117,7 @@ class SubjectCard extends StatelessWidget {
                           style: const TextStyle(
                             color: Color(0xFF464552),
                             fontSize: 12,
-                            fontFamily: 'Inter',
+                            fontFamily: 'Roboto',
                             fontWeight: FontWeight.w700,
                             height: 1.2,
                           ),
@@ -168,7 +168,7 @@ class SubjectCard extends StatelessWidget {
                       style: TextStyle(
                         color: Color(0xFF464552),
                         fontSize: 12,
-                        fontFamily: 'Inter',
+                        fontFamily: 'Roboto',
                         fontWeight: FontWeight.w700,
                         height: 1.2,
                       ),
@@ -179,7 +179,7 @@ class SubjectCard extends StatelessWidget {
                       style: TextStyle(
                         color: _averageColor,
                         fontSize: 32,
-                        fontFamily: 'Inter',
+                        fontFamily: 'Roboto',
                         fontWeight: FontWeight.w700,
                         height: 1,
                       ),

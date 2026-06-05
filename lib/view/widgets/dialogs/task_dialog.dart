@@ -211,10 +211,10 @@ class _TaskDialogState extends State<TaskDialog> {
                             style: const TextStyle(
                               color: AppColors.primary,
                               fontSize: 24,
-                              fontFamily: 'Inter',
+                              fontFamily: 'Roboto',
                               fontWeight: FontWeight.w700,
                               height: 1.33,
-                              letterSpacing: -0.36,
+                              letterSpacing: 0,
                             ),
                           ),
                         ),
@@ -372,7 +372,7 @@ class _TaskDialogState extends State<TaskDialog> {
                               style: const TextStyle(
                                 color: Color(0xFF991B1B),
                                 fontSize: 13,
-                                fontFamily: 'Inter',
+                                fontFamily: 'Roboto',
                                 fontWeight: FontWeight.w500,
                                 height: 1.35,
                               ),
@@ -399,7 +399,7 @@ class _TaskDialogState extends State<TaskDialog> {
                               'Cancelar',
                               style: TextStyle(
                                 fontSize: 16,
-                                fontFamily: 'Inter',
+                                fontFamily: 'Roboto',
                                 fontWeight: FontWeight.w400,
                                 height: 1.50,
                               ),
@@ -444,7 +444,7 @@ class _TaskDialogState extends State<TaskDialog> {
                                         'Salvar',
                                         style: TextStyle(
                                           fontSize: 16,
-                                          fontFamily: 'Inter',
+                                          fontFamily: 'Roboto',
                                           fontWeight: FontWeight.w400,
                                           height: 1.50,
                                         ),
@@ -503,7 +503,7 @@ class _TaskDialogState extends State<TaskDialog> {
       hintStyle: const TextStyle(
         color: Color(0xFF6B7280),
         fontSize: 16,
-        fontFamily: 'Inter',
+        fontFamily: 'Roboto',
         fontWeight: FontWeight.w400,
       ),
       filled: true,
@@ -559,7 +559,7 @@ class _FieldLabel extends StatelessWidget {
       style: const TextStyle(
         color: Color(0xFF464552),
         fontSize: 12,
-        fontFamily: 'Inter',
+        fontFamily: 'Roboto',
         fontWeight: FontWeight.w700,
         height: 1.50,
         letterSpacing: 0.72,
@@ -611,7 +611,7 @@ class _PriorityOption extends StatelessWidget {
                   style: const TextStyle(
                     color: Color(0xFF464552),
                     fontSize: 16,
-                    fontFamily: 'Inter',
+                    fontFamily: 'Roboto',
                     fontWeight: FontWeight.w400,
                     height: 1.50,
                   ),

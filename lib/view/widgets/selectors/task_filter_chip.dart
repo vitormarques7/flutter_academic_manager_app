@@ -33,7 +33,7 @@ class TaskFilterChip extends StatelessWidget {
               style: const TextStyle(
                 color: Color(0xFF191820),
                 fontSize: 15,
-                fontFamily: 'Inter',
+                fontFamily: 'Roboto',
                 fontWeight: FontWeight.w600,
                 height: 1.47,
               ),

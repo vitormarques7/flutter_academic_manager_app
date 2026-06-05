@@ -283,7 +283,7 @@ class _TasksOverview extends StatelessWidget {
                   style: const TextStyle(
                     color: Color(0xFF191820),
                     fontSize: 16,
-                    fontFamily: 'Inter',
+                    fontFamily: 'Roboto',
                     fontWeight: FontWeight.w800,
                     height: 1,
                   ),
@@ -303,7 +303,7 @@ class _TasksOverview extends StatelessWidget {
                   style: const TextStyle(
                     color: Color(0xFF191820),
                     fontSize: 18,
-                    fontFamily: 'Inter',
+                    fontFamily: 'Roboto',
                     fontWeight: FontWeight.w800,
                     height: 1.18,
                   ),
@@ -318,7 +318,7 @@ class _TasksOverview extends StatelessWidget {
                   style: const TextStyle(
                     color: Color(0xFF464552),
                     fontSize: 12,
-                    fontFamily: 'Inter',
+                    fontFamily: 'Roboto',
                     fontWeight: FontWeight.w700,
                     height: 1.28,
                   ),
@@ -412,7 +412,7 @@ class _TaskInsightPill extends StatelessWidget {
                   ? const Color(0xFF7C2D12)
                   : const Color(0xFF464552),
               fontSize: 11,
-              fontFamily: 'Inter',
+              fontFamily: 'Roboto',
               fontWeight: FontWeight.w800,
               height: 1.1,
             ),
@@ -479,7 +479,7 @@ class _TaskFilterTabs extends StatelessWidget {
                   style: TextStyle(
                     color: isSelected ? Colors.white : const Color(0xFF464552),
                     fontSize: 12,
-                    fontFamily: 'Inter',
+                    fontFamily: 'Roboto',
                     fontWeight: FontWeight.w800,
                     height: 1.1,
                   ),

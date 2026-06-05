@@ -143,7 +143,7 @@ class _ScheduleHeader extends StatelessWidget {
                   style: const TextStyle(
                     color: Colors.black,
                     fontSize: 20,
-                    fontFamily: 'Inter',
+                    fontFamily: 'Roboto',
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -155,7 +155,7 @@ class _ScheduleHeader extends StatelessWidget {
                   style: const TextStyle(
                     color: Colors.black,
                     fontSize: 15,
-                    fontFamily: 'Inter',
+                    fontFamily: 'Roboto',
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -236,7 +236,7 @@ class _DateTile extends StatelessWidget {
             style: const TextStyle(
               color: Colors.black,
               fontSize: 20,
-              fontFamily: 'Inter',
+              fontFamily: 'Roboto',
               fontWeight: FontWeight.w400,
             ),
           ),
@@ -245,7 +245,7 @@ class _DateTile extends StatelessWidget {
             style: const TextStyle(
               color: Colors.black,
               fontSize: 60,
-              fontFamily: 'Inter',
+              fontFamily: 'Roboto',
               fontWeight: FontWeight.w400,
               height: 0.95,
             ),
@@ -379,7 +379,7 @@ class _CalendarCard extends StatelessWidget {
     return const TextStyle(
       color: Colors.black,
       fontSize: 15,
-      fontFamily: 'Inter',
+      fontFamily: 'Roboto',
       fontWeight: FontWeight.w400,
     );
   }
@@ -388,7 +388,7 @@ class _CalendarCard extends StatelessWidget {
     return TextStyle(
       color: color,
       fontSize: 15,
-      fontFamily: 'Inter',
+      fontFamily: 'Roboto',
       fontWeight: FontWeight.w400,
     );
   }
@@ -430,7 +430,7 @@ class _ScheduleActionButton extends StatelessWidget {
                 style: const TextStyle(
                   color: Color(0xFFF5F5F5),
                   fontSize: 15,
-                  fontFamily: 'Inter',
+                  fontFamily: 'Roboto',
                   fontWeight: FontWeight.w800,
                 ),
               ),

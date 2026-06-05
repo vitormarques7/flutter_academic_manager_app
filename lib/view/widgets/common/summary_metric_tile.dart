@@ -33,7 +33,7 @@ class SummaryMetricTile extends StatelessWidget {
             style: const TextStyle(
               color: Color(0xFF191820),
               fontSize: 22,
-              fontFamily: 'Inter',
+              fontFamily: 'Roboto',
               fontWeight: FontWeight.w800,
               height: 1,
             ),
@@ -46,7 +46,7 @@ class SummaryMetricTile extends StatelessWidget {
             style: const TextStyle(
               color: Color(0xFF464552),
               fontSize: 11,
-              fontFamily: 'Inter',
+              fontFamily: 'Roboto',
               fontWeight: FontWeight.w700,
               height: 1.2,
             ),

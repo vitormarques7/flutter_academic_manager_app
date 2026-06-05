@@ -186,9 +186,9 @@ class _LoginPageState extends State<LoginPage> {
                                 style: const TextStyle(
                                   color: Color(0x7FE7E7E7),
                                   fontSize: 20,
-                                  fontFamily: 'Inter',
+                                  fontFamily: 'Roboto',
                                   fontWeight: FontWeight.w500,
-                                  letterSpacing: -1,
+                                  letterSpacing: 0,
                                 ),
                               ),
                             ),
@@ -216,9 +216,9 @@ class _LoginPageState extends State<LoginPage> {
                                   style: TextStyle(
                                     color: Color(0x7FE7E7E7),
                                     fontSize: 20,
-                                    fontFamily: 'Inter',
+                                    fontFamily: 'Roboto',
                                     fontWeight: FontWeight.w500,
-                                    letterSpacing: -1,
+                                    letterSpacing: 0,
                                   ),
                                 ),
                                 GestureDetector(
@@ -230,9 +230,9 @@ class _LoginPageState extends State<LoginPage> {
                                       style: TextStyle(
                                         color: Color(0xFFF5F5F5),
                                         fontSize: 20,
-                                        fontFamily: 'Inter',
+                                        fontFamily: 'Roboto',
                                         fontWeight: FontWeight.w700,
-                                        letterSpacing: -1,
+                                        letterSpacing: 0,
                                       ),
                                     ),
                                   ),

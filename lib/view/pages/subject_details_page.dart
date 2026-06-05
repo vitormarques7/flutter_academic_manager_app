@@ -196,7 +196,7 @@ class _SubjectSummaryCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.bodyRegular.copyWith(
                     color: AppColors.textDark,
-                    letterSpacing: -1,
+                    letterSpacing: 0,
                   ),
                 ),
                 const Spacer(),
@@ -215,7 +215,7 @@ class _SubjectSummaryCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.bodyRegular.copyWith(
                           color: AppColors.textDark,
-                          letterSpacing: -1,
+                          letterSpacing: 0,
                         ),
                       ),
                     ),
@@ -236,7 +236,7 @@ class _SubjectSummaryCard extends StatelessWidget {
                   maxLines: 1,
                   style: AppTextStyles.bodyRegular.copyWith(
                     color: AppColors.textDark,
-                    letterSpacing: -1,
+                    letterSpacing: 0,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -245,10 +245,10 @@ class _SubjectSummaryCard extends StatelessWidget {
                   style: const TextStyle(
                     color: AppColors.textDark,
                     fontSize: 40,
-                    fontFamily: 'Inter',
+                    fontFamily: 'Roboto',
                     fontWeight: FontWeight.w500,
                     height: 0.55,
-                    letterSpacing: -1,
+                    letterSpacing: 0,
                   ),
                 ),
               ],
@@ -272,7 +272,7 @@ class _SectionTitle extends StatelessWidget {
       style: const TextStyle(
         color: AppColors.textDark,
         fontSize: 20,
-        fontFamily: 'Inter',
+        fontFamily: 'Roboto',
         fontWeight: FontWeight.w700,
         height: 1.1,
       ),
@@ -370,7 +370,7 @@ class _AddEntryButton extends StatelessWidget {
             style: const TextStyle(
               color: AppColors.background,
               fontSize: 20,
-              fontFamily: 'Inter',
+              fontFamily: 'Roboto',
               fontWeight: FontWeight.w700,
               height: 1.1,
             ),

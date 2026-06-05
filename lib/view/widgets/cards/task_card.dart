@@ -107,7 +107,7 @@ class TaskCard extends StatelessWidget {
                                 style: TextStyle(
                                   color: const Color(0xFF191820),
                                   fontSize: 16,
-                                  fontFamily: 'Inter',
+                                  fontFamily: 'Roboto',
                                   fontWeight: FontWeight.w700,
                                   height: 1.28,
                                   decoration: isChecked
@@ -124,7 +124,7 @@ class TaskCard extends StatelessWidget {
                                       ? const Color(0xFF27724D)
                                       : AppColors.primary,
                                   fontSize: 12,
-                                  fontFamily: 'Inter',
+                                  fontFamily: 'Roboto',
                                   fontWeight: FontWeight.w700,
                                   height: 1.20,
                                 ),

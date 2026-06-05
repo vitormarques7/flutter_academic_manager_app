@@ -28,18 +28,18 @@ class AuthTextField extends StatelessWidget {
       style: const TextStyle(
         color: Color(0xFFE7E7E7),
         fontSize: 20,
-        fontFamily: 'Inter',
+        fontFamily: 'Roboto',
         fontWeight: FontWeight.w400,
-        letterSpacing: -1,
+        letterSpacing: 0,
       ),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(
           color: Color(0x7FE7E7E7),
           fontSize: 20,
-          fontFamily: 'Inter',
+          fontFamily: 'Roboto',
           fontWeight: FontWeight.w400,
-          letterSpacing: -1,
+          letterSpacing: 0,
         ),
         suffixIcon: suffixIcon,
         filled: true,

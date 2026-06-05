@@ -45,7 +45,7 @@ class UserProfilePage extends StatelessWidget {
                   style: TextStyle(
                     color: AppColors.textDark,
                     fontSize: 15,
-                    fontFamily: 'Inter',
+                    fontFamily: 'Roboto',
                     fontWeight: FontWeight.w500,
                     height: 1.47,
                   ),
@@ -121,7 +121,7 @@ class _ProfileSummaryCard extends StatelessWidget {
             style: AppTextStyles.headline2.copyWith(
               fontSize: 32,
               height: 0.69,
-              letterSpacing: -1,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 42),

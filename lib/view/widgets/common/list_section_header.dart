@@ -22,7 +22,7 @@ class ListSectionHeader extends StatelessWidget {
           style: const TextStyle(
             color: Color(0xFF464552),
             fontSize: 13,
-            fontFamily: 'Inter',
+            fontFamily: 'Roboto',
             fontWeight: FontWeight.w700,
           ),
         ),

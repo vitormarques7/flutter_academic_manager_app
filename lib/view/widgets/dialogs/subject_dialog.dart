@@ -230,10 +230,10 @@ class _SubjectDialogState extends State<SubjectDialog> {
                             style: TextStyle(
                               color: AppColors.primary,
                               fontSize: 24,
-                              fontFamily: 'Inter',
+                              fontFamily: 'Roboto',
                               fontWeight: FontWeight.w700,
                               height: 1.33,
-                              letterSpacing: -0.36,
+                              letterSpacing: 0,
                             ),
                           ),
                         ),
@@ -350,7 +350,7 @@ class _SubjectDialogState extends State<SubjectDialog> {
                             style: const TextStyle(
                               color: Colors.red,
                               fontSize: 12,
-                              fontFamily: 'Inter',
+                              fontFamily: 'Roboto',
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -380,7 +380,7 @@ class _SubjectDialogState extends State<SubjectDialog> {
                               'Cancelar',
                               style: TextStyle(
                                 fontSize: 16,
-                                fontFamily: 'Inter',
+                                fontFamily: 'Roboto',
                                 fontWeight: FontWeight.w400,
                                 height: 1.50,
                               ),
@@ -414,7 +414,7 @@ class _SubjectDialogState extends State<SubjectDialog> {
                                   'Salvar',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    fontFamily: 'Inter',
+                                    fontFamily: 'Roboto',
                                     fontWeight: FontWeight.w400,
                                     height: 1.50,
                                   ),
@@ -441,7 +441,7 @@ class _SubjectDialogState extends State<SubjectDialog> {
       hintStyle: const TextStyle(
         color: Color(0xFF6B7280),
         fontSize: 16,
-        fontFamily: 'Inter',
+        fontFamily: 'Roboto',
         fontWeight: FontWeight.w400,
       ),
       filled: true,
@@ -487,7 +487,7 @@ class _LabeledField extends StatelessWidget {
             style: const TextStyle(
               color: Color(0xFF464552),
               fontSize: 12,
-              fontFamily: 'Inter',
+              fontFamily: 'Roboto',
               fontWeight: FontWeight.w700,
               height: 1.50,
               letterSpacing: 0.72,
@@ -515,7 +515,7 @@ class _FieldLabel extends StatelessWidget {
         style: const TextStyle(
           color: Color(0xFF464552),
           fontSize: 12,
-          fontFamily: 'Inter',
+          fontFamily: 'Roboto',
           fontWeight: FontWeight.w700,
           height: 1.50,
           letterSpacing: 0.72,
@@ -557,7 +557,7 @@ class _ScheduleTimeRow extends StatelessWidget {
             style: TextStyle(
               color: Color(0xFF464552),
               fontSize: 13,
-              fontFamily: 'Inter',
+              fontFamily: 'Roboto',
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -608,7 +608,7 @@ class _TimeButton extends StatelessWidget {
           label,
           style: const TextStyle(
             fontSize: 16,
-            fontFamily: 'Inter',
+            fontFamily: 'Roboto',
             fontWeight: FontWeight.w400,
           ),
         ),
