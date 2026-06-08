@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../../config/routes/app_routes.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../../models/study_cycle.dart';
+import '../../repositories/study_cycle_repository.dart';
+import '../../repositories/user_profile_repository.dart';
 
 class UserProfilePage extends StatelessWidget {
   const UserProfilePage({super.key});
@@ -38,7 +41,7 @@ class UserProfilePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _ProfileSummaryCard(),
+                _ProfileSummaryCard(),
                 const SizedBox(height: 28),
                 const Text(
                   'CONFIGURAÇÕES',
@@ -79,7 +82,10 @@ class UserProfilePage extends StatelessWidget {
 }
 
 class _ProfileSummaryCard extends StatelessWidget {
-  const _ProfileSummaryCard();
+  _ProfileSummaryCard();
+
+  final UserProfileRepository _userProfileRepository = UserProfileRepository();
+  final StudyCycleRepository _studyCycleRepository = StudyCycleRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -125,9 +131,10 @@ class _ProfileSummaryCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 42),
-          const _ProfileInfoPill(label: 'Engenharia de software'),
-          const SizedBox(height: 18),
-          const _ProfileInfoPill(label: '5° Periodo'),
+          _ProfileAcademicInfo(
+            userProfileRepository: _userProfileRepository,
+            studyCycleRepository: _studyCycleRepository,
+          ),
           const SizedBox(height: 28),
           Text(
             email == null || email.isEmpty ? 'E-mail não disponível' : email,
@@ -141,6 +148,125 @@ class _ProfileSummaryCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _ProfileAcademicInfo extends StatefulWidget {
+  final UserProfileRepository userProfileRepository;
+  final StudyCycleRepository studyCycleRepository;
+
+  const _ProfileAcademicInfo({
+    required this.userProfileRepository,
+    required this.studyCycleRepository,
+  });
+
+  @override
+  State<_ProfileAcademicInfo> createState() => _ProfileAcademicInfoState();
+}
+
+class _ProfileAcademicInfoState extends State<_ProfileAcademicInfo> {
+  late Future<_AcademicInfoLabels> _academicInfoFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _academicInfoFuture = _loadAcademicInfo();
+  }
+
+  Future<_AcademicInfoLabels> _loadAcademicInfo() async {
+    final activeStudyCycleId = await widget.userProfileRepository
+        .resolveActiveStudyCycleId();
+
+    if (activeStudyCycleId == null) {
+      return const _AcademicInfoLabels(
+        primary: 'Ciclo acadêmico não configurado',
+        secondary: 'Configure seus estudos',
+      );
+    }
+
+    final studyCycles = await widget.studyCycleRepository.fetchStudyCycles();
+    final activeStudyCycle = studyCycles.where(
+      (cycle) => cycle.id == activeStudyCycleId,
+    );
+
+    if (activeStudyCycle.isEmpty) {
+      return const _AcademicInfoLabels(
+        primary: 'Ciclo acadêmico não encontrado',
+        secondary: 'Configure seus estudos',
+      );
+    }
+
+    return _AcademicInfoLabels.fromStudyCycle(activeStudyCycle.first);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<_AcademicInfoLabels>(
+      future: _academicInfoFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Column(
+            children: [
+              _ProfileInfoPill(label: 'Carregando dados acadêmicos...'),
+              SizedBox(height: 18),
+              _ProfileInfoPill(label: 'Aguarde um instante'),
+            ],
+          );
+        }
+
+        if (snapshot.hasError) {
+          return const Column(
+            children: [
+              _ProfileInfoPill(label: 'Dados acadêmicos indisponíveis'),
+              SizedBox(height: 18),
+              _ProfileInfoPill(label: 'Tente novamente mais tarde'),
+            ],
+          );
+        }
+
+        final labels = snapshot.data;
+
+        return Column(
+          children: [
+            _ProfileInfoPill(
+              label: labels?.primary ?? 'Ciclo acadêmico não configurado',
+            ),
+            const SizedBox(height: 18),
+            _ProfileInfoPill(
+              label: labels?.secondary ?? 'Configure seus estudos',
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _AcademicInfoLabels {
+  final String primary;
+  final String secondary;
+
+  const _AcademicInfoLabels({required this.primary, required this.secondary});
+
+  factory _AcademicInfoLabels.fromStudyCycle(StudyCycle studyCycle) {
+    return switch (studyCycle.type) {
+      StudyCycleType.university => _AcademicInfoLabels(
+        primary: studyCycle.courseName ?? 'Curso não informado',
+        secondary: studyCycle.period == null
+            ? 'Período não informado'
+            : '${studyCycle.period}º período',
+      ),
+      StudyCycleType.highSchool => _AcademicInfoLabels(
+        primary: 'Ensino médio',
+        secondary: studyCycle.schoolYear == null
+            ? 'Ano letivo não informado'
+            : '${studyCycle.schoolYear}º ano',
+      ),
+      StudyCycleType.independent => _AcademicInfoLabels(
+        primary: studyCycle.goal ?? 'Objetivo não informado',
+        secondary: 'Estudo independente',
+      ),
+    };
   }
 }
 
