@@ -24,6 +24,10 @@ service cloud.firestore {
       match /studyCycles/{cycleId} {
         allow read, create, update, delete: if isOwner(userId);
       }
+
+      match /disciplines/{disciplineId} {
+        allow read, create, update, delete: if isOwner(userId);
+      }
     }
   }
 }

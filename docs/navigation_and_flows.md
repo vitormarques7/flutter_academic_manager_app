@@ -73,8 +73,18 @@ Campos:
 As telas de configuracao possuem rolagem unica: cabecalho, campos, disciplinas
 e botoes rolam juntos.
 
-Estado atual: as configuracoes de perfil academico ainda nao sao persistidas no
-Firestore. Ao salvar, o fluxo segue para a home.
+Ao salvar, o app cria o ciclo academico, disciplinas e horarios no Firestore,
+atualiza `users/{uid}.activeStudyCycleId` e so entao segue para a home.
+
+Persistencia:
+
+```txt
+AcademicSetupService
+  -> StudyCycleRepository.createStudyCycle
+  -> UserProfileRepository.setActiveStudyCycleId
+  -> DisciplineRepository.createDiscipline
+  -> ScheduleRepository.createSchedule
+```
 
 ## Fluxo de tarefas
 
@@ -101,6 +111,9 @@ TaskDialog valida campos
   -> TaskRepository.createTask
   -> Firestore users/{uid}/tasks/{taskId}
 ```
+
+Quando existe ciclo academico ativo, `TaskRepository` inclui `studyCycleId` no
+documento criado.
 
 Edicao:
 
@@ -140,8 +153,10 @@ O modal permite preencher:
 - Dias da semana.
 - Horarios.
 
-Estado atual: disciplinas sao mantidas em memoria local na `SubjectsPage`.
-Elas ainda nao persistem no Firestore.
+Estado atual: disciplinas criadas diretamente na `SubjectsPage` ainda sao
+mantidas em memoria local. Disciplinas criadas no setup inicial ja persistem em
+`users/{uid}/disciplines`, mas a tela ainda nao consome o
+`DisciplineRepository`.
 
 ## Fluxo de agenda
 

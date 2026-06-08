@@ -14,7 +14,8 @@ flutter run -d chrome
 ```
 
 Observacao: os testes automatizados atuais cobrem `AuthException`,
-`AcademicTask` e `TaskInput`.
+`AcademicTask`, `TaskInput`, `Schedule`, `Discipline`, `StudyCycle` e
+`UserProfile`.
 
 ## Autenticacao
 
@@ -28,6 +29,7 @@ Observacao: os testes automatizados atuais cobrem `AuthException`,
 Resultado esperado:
 
 - Usuario e criado no Firebase Auth.
+- Documento raiz e criado/atualizado em `users/{uid}`.
 - App navega para selecao de perfil.
 
 ### Cadastro invalido
@@ -49,6 +51,8 @@ Resultado esperado:
 Resultado esperado:
 
 - App navega para home.
+- Documento raiz do usuario existe em `users/{uid}` com `displayName`, `email`,
+  `createdAt` e `updatedAt` quando esses dados estiverem disponiveis.
 
 ### Recuperacao de senha
 
@@ -74,7 +78,12 @@ Resultado esperado:
 
 - Campos rolam junto com o cabecalho.
 - Dropdown de periodo mostra lista limitada e rolavel.
-- Botao salvar navega para home.
+- Botao salvar mostra loading e navega para home apenas apos sucesso.
+- Documento e criado em `users/{uid}/studyCycles/{cycleId}`.
+- `users/{uid}` recebe `activeStudyCycleId`.
+- Disciplinas sao criadas em `users/{uid}/disciplines`.
+- Horarios informados sao criados em `users/{uid}/schedules` com
+  `studyCycleId`.
 
 ### Ensino medio
 
@@ -87,6 +96,7 @@ Resultado esperado:
 
 - Layout permanece responsivo.
 - Cabecalho rola junto com conteudo quando ha muitas disciplinas.
+- Serie, disciplinas e horarios sao persistidos no Firestore.
 
 ### Independente
 
@@ -98,6 +108,7 @@ Resultado esperado:
 Resultado esperado:
 
 - Layout permanece responsivo.
+- Objetivo, disciplinas e horarios sao persistidos no Firestore.
 
 ## Tarefas
 
@@ -116,6 +127,8 @@ Resultado esperado:
 
 - Modal mostra loading.
 - Documento e criado em `users/{uid}/tasks/{taskId}`.
+- Documento recebe `studyCycleId` quando ha ciclo academico ativo.
+- Modal so fecha como sucesso depois que a escrita e confirmada no servidor.
 - Tarefa aparece na lista.
 - Resumo de progresso e contadores sao atualizados.
 
@@ -197,7 +210,9 @@ Resultado esperado:
 
 - Disciplina aparece localmente na lista.
 - Resumo de total/media/frequencia reflete a lista local.
-- Dados ainda nao persistem depois de reiniciar o app.
+- Dados criados diretamente nessa tela ainda nao persistem depois de reiniciar
+  o app. Disciplinas do setup inicial ja persistem no Firestore, mas essa tela
+  ainda nao le o `DisciplineRepository`.
 
 ## Agenda
 

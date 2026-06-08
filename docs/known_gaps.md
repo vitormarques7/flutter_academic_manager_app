@@ -15,8 +15,8 @@ prototipo e fluxo real.
 
 - A lista de disciplinas da `SubjectsPage` e local/mockada.
 - O modal cria disciplina em memoria, sem Firestore.
-- Dias e horarios da disciplina sao coletados localmente, mas ainda nao
-  alimentam a agenda.
+- O setup inicial ja persiste disciplinas e horarios no Firestore, mas a
+  `SubjectsPage` ainda nao consome esses dados reais.
 - Media, frequencia e carga horaria das disciplinas criadas localmente ainda
   usam valores iniciais simples.
 
@@ -28,8 +28,8 @@ prototipo e fluxo real.
   - Banco de Dados
   - Inteligencia Artificial
 
-Proximo passo recomendado: criar `SubjectRepository` e alimentar o dropdown com
-disciplinas reais do usuario.
+Proximo passo recomendado: alimentar o dropdown com `DisciplineRepository` e
+filtrar pelo ciclo academico ativo.
 
 ### Agenda
 
@@ -42,15 +42,18 @@ disciplinas reais do usuario.
 
 - Curso e periodo da tela de perfil sao mockados.
 - O tile "Dados pessoais" ainda nao abre fluxo de edicao.
-- As configuracoes iniciais de estudante nao sao persistidas.
+- As configuracoes iniciais de estudante ja sao persistidas em `studyCycles`,
+  `disciplines`, `schedules` e no `activeStudyCycleId` do documento do usuario,
+  mas a tela de perfil ainda nao le esses dados reais.
 
 ## Persistencia pendente
 
-Criar repositories futuros:
+Repositories ja criados e ainda pendentes de integracao completa na UI:
 
 ```txt
-SubjectRepository
+DisciplineRepository
 ScheduleRepository
+StudyCycleRepository
 UserProfileRepository
 ```
 
@@ -60,7 +63,6 @@ Possiveis caminhos:
 
 ```txt
 users/{uid}/subjects/{subjectId}
-users/{uid}/schedules/{scheduleId}
 users/{uid}/activityReminders/{reminderId}
 ```
 
@@ -70,8 +72,8 @@ locais. Inclua essas subcolecoes em `firestore.rules` antes de usar.
 ## Regras futuras
 
 As regras atuais liberam leitura/escrita para o documento `users/{uid}` e para
-as subcolecoes `tasks` e `schedules` quando o usuario autenticado e dono
-daquele `uid`.
+as subcolecoes `tasks`, `schedules`, `studyCycles` e `disciplines` quando o
+usuario autenticado e dono daquele `uid`.
 
 Quando os schemas amadurecerem, uma melhoria possivel e validar tipos e campos
 obrigatorios nas regras.

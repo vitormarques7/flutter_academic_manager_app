@@ -31,7 +31,9 @@ tela de configuracao:
 - Ensino medio: serie e disciplinas.
 - Independente: objetivo e disciplinas.
 
-As telas de configuracao ainda nao persistem esses dados no Firestore.
+As telas de configuracao persistem o ciclo academico, disciplinas e horarios no
+Firestore. O ciclo criado tambem passa a ser salvo como `activeStudyCycleId` em
+`users/{uid}`.
 
 ### Home
 
@@ -72,6 +74,7 @@ Ela permite:
 - Validar titulo obrigatorio.
 - Validar disciplina obrigatoria.
 - Validar prazo quando informado.
+- Vincular novas tarefas ao ciclo academico ativo quando ele existe.
 
 ### Agenda
 
@@ -95,10 +98,9 @@ A tela de perfil mostra:
 
 ## Funcionalidades ainda pendentes
 
-- Persistir disciplinas no Firestore.
-- Persistir horarios em `users/{uid}/schedules/{scheduleId}`.
+- Integrar a `SubjectsPage` com `DisciplineRepository`.
+- Integrar a `SchedulePage` com `ScheduleRepository`.
 - Integrar disciplinas reais ao dropdown de tarefas.
 - Trocar cards mockados da home por dados reais.
-- Persistir a grade de horarios.
 - Implementar lembretes de atividade.
-- Persistir perfil academico e usar esses dados na tela de perfil.
+- Usar dados reais de perfil academico na tela de perfil.
