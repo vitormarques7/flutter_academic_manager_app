@@ -8,6 +8,7 @@ class Schedule {
   static const int lastWeekdayIndex = 6;
 
   final String id;
+  final String? studyCycleId;
   final String disciplineName;
   final List<int> weekdays;
   final int startTimeMinutes;
@@ -18,6 +19,7 @@ class Schedule {
 
   const Schedule({
     required this.id,
+    this.studyCycleId,
     required this.disciplineName,
     required this.weekdays,
     required this.startTimeMinutes,
@@ -39,6 +41,7 @@ class Schedule {
   }) {
     return Schedule(
       id: id,
+      studyCycleId: _readString(data['studyCycleId']),
       disciplineName: data['disciplineName'] as String? ?? '',
       weekdays: _normalizeWeekdays(data['weekdays']),
       startTimeMinutes: _normalizeTimeMinutes(data['startTimeMinutes']),
@@ -51,6 +54,7 @@ class Schedule {
 
   Map<String, dynamic> toFirestore() {
     return {
+      if (studyCycleId != null) 'studyCycleId': studyCycleId,
       'disciplineName': disciplineName,
       'weekdays': weekdays,
       'startTimeMinutes': startTimeMinutes,
@@ -122,9 +126,17 @@ class Schedule {
     if (value is Timestamp) return value.toDate();
     return null;
   }
+
+  static String? _readString(Object? value) {
+    if (value is! String) return null;
+
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
 }
 
 class ScheduleInput {
+  final String? studyCycleId;
   final String disciplineName;
   final List<int> weekdays;
   final int startTimeMinutes;
@@ -132,6 +144,7 @@ class ScheduleInput {
   final int colorValue;
 
   const ScheduleInput({
+    this.studyCycleId,
     required this.disciplineName,
     required this.weekdays,
     required this.startTimeMinutes,
@@ -139,12 +152,33 @@ class ScheduleInput {
     required this.colorValue,
   });
 
+  ScheduleInput copyWith({
+    String? studyCycleId,
+    String? disciplineName,
+    List<int>? weekdays,
+    int? startTimeMinutes,
+    int? endTimeMinutes,
+    int? colorValue,
+  }) {
+    return ScheduleInput(
+      studyCycleId: studyCycleId ?? this.studyCycleId,
+      disciplineName: disciplineName ?? this.disciplineName,
+      weekdays: weekdays ?? this.weekdays,
+      startTimeMinutes: startTimeMinutes ?? this.startTimeMinutes,
+      endTimeMinutes: endTimeMinutes ?? this.endTimeMinutes,
+      colorValue: colorValue ?? this.colorValue,
+    );
+  }
+
   Map<String, dynamic> toCreateMap() {
     return {...toUpdateMap(), 'createdAt': FieldValue.serverTimestamp()};
   }
 
   Map<String, dynamic> toUpdateMap() {
+    final normalizedStudyCycleId = Schedule._readString(studyCycleId);
+
     return {
+      'studyCycleId': ?normalizedStudyCycleId,
       'disciplineName': disciplineName,
       'weekdays': Schedule._normalizeWeekdays(weekdays),
       'startTimeMinutes': Schedule._normalizeTimeMinutes(startTimeMinutes),

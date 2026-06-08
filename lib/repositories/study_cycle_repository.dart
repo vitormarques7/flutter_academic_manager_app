@@ -48,12 +48,14 @@ class StudyCycleRepository {
     );
   }
 
-  Future<void> createStudyCycle(StudyCycleInput input) async {
+  Future<String> createStudyCycle(StudyCycleInput input) async {
     final uid = _currentUserId;
 
-    await _guardFirestoreCall(() {
+    final document = await _guardFirestoreCall(() {
       return _studyCyclesCollection(uid).add(input.toCreateMap());
     });
+
+    return document.id;
   }
 
   Future<void> updateStudyCycle({

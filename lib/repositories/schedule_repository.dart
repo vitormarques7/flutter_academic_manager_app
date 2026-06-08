@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/schedule.dart';
+import 'user_profile_repository.dart';
 
 class ScheduleRepositoryException implements Exception {
   final String message;
@@ -13,30 +14,54 @@ class ScheduleRepositoryException implements Exception {
 }
 
 class ScheduleRepository {
-  ScheduleRepository({FirebaseFirestore? firestore, FirebaseAuth? firebaseAuth})
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
+  ScheduleRepository({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? firebaseAuth,
+    UserProfileRepository? userProfileRepository,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+       _userProfileRepository =
+           userProfileRepository ??
+           UserProfileRepository(
+             firestore: firestore,
+             firebaseAuth: firebaseAuth,
+           );
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _firebaseAuth;
+  final UserProfileRepository _userProfileRepository;
 
   CollectionReference<Map<String, dynamic>> _schedulesCollection(String uid) {
     return _firestore.collection('users').doc(uid).collection('schedules');
   }
 
-  Stream<List<Schedule>> watchSchedules() {
+  Query<Map<String, dynamic>> _schedulesQuery(
+    String uid, {
+    String? studyCycleId,
+  }) {
+    final collection = _schedulesCollection(uid);
+    final normalizedStudyCycleId = _normalizeString(studyCycleId);
+
+    if (normalizedStudyCycleId == null) return collection;
+
+    return collection.where('studyCycleId', isEqualTo: normalizedStudyCycleId);
+  }
+
+  Stream<List<Schedule>> watchSchedules({String? studyCycleId}) {
     final uid = _currentUserId;
 
-    return _schedulesCollection(uid).snapshots().map((snapshot) {
+    return _schedulesQuery(uid, studyCycleId: studyCycleId).snapshots().map((
+      snapshot,
+    ) {
       return _sortSchedules(snapshot.docs.map(Schedule.fromFirestore).toList());
     });
   }
 
-  Future<List<Schedule>> fetchSchedules() async {
+  Future<List<Schedule>> fetchSchedules({String? studyCycleId}) async {
     final uid = _currentUserId;
 
     final snapshot = await _guardFirestoreCall(() {
-      return _schedulesCollection(uid).get();
+      return _schedulesQuery(uid, studyCycleId: studyCycleId).get();
     });
 
     return _sortSchedules(snapshot.docs.map(Schedule.fromFirestore).toList());
@@ -44,9 +69,10 @@ class ScheduleRepository {
 
   Future<void> createSchedule(ScheduleInput input) async {
     final uid = _currentUserId;
+    final scheduleInput = await _withActiveStudyCycle(input);
 
     await _guardFirestoreCall(() {
-      return _schedulesCollection(uid).add(input.toCreateMap());
+      return _schedulesCollection(uid).add(scheduleInput.toCreateMap());
     });
   }
 
@@ -61,6 +87,35 @@ class ScheduleRepository {
     });
   }
 
+  Future<void> backfillStudyCycleId(String studyCycleId) {
+    final uid = _currentUserId;
+    final normalizedStudyCycleId = _normalizeString(studyCycleId);
+    if (normalizedStudyCycleId == null) return Future.value();
+
+    return _guardFirestoreCall(() async {
+      final snapshot = await _schedulesCollection(uid).get();
+      final batch = _firestore.batch();
+      var hasWrites = false;
+
+      for (final document in snapshot.docs) {
+        final currentStudyCycleId = _normalizeString(
+          document.data()['studyCycleId'],
+        );
+        if (currentStudyCycleId != null) continue;
+
+        batch.update(document.reference, {
+          'studyCycleId': normalizedStudyCycleId,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        hasWrites = true;
+      }
+
+      if (hasWrites) {
+        await batch.commit();
+      }
+    });
+  }
+
   Future<void> deleteSchedule(String id) {
     final uid = _currentUserId;
 
@@ -72,6 +127,23 @@ class ScheduleRepository {
   List<Schedule> _sortSchedules(List<Schedule> schedules) {
     schedules.sort(Schedule.compareByStartTime);
     return schedules;
+  }
+
+  Future<ScheduleInput> _withActiveStudyCycle(ScheduleInput input) async {
+    if (_normalizeString(input.studyCycleId) != null) return input;
+
+    final activeStudyCycleId = await _resolveActiveStudyCycleId();
+    if (activeStudyCycleId == null) return input;
+
+    return input.copyWith(studyCycleId: activeStudyCycleId);
+  }
+
+  Future<String?> _resolveActiveStudyCycleId() async {
+    try {
+      return await _userProfileRepository.resolveActiveStudyCycleId();
+    } on UserProfileRepositoryException catch (error) {
+      throw ScheduleRepositoryException(error.message);
+    }
   }
 
   String get _currentUserId {
@@ -108,5 +180,12 @@ class ScheduleRepository {
       'not-found' => 'Não encontramos esse horário para atualizar.',
       _ => error.message ?? 'Não foi possível salvar o horário.',
     };
+  }
+
+  static String? _normalizeString(Object? value) {
+    if (value is! String) return null;
+
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
   }
 }
