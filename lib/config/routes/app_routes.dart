@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:academic_manager_app/view/pages/auth_gate_page.dart';
 import 'package:academic_manager_app/view/pages/login_page.dart';
+import 'package:academic_manager_app/view/pages/study_cycle_setup_page.dart';
 import 'package:academic_manager_app/view/pages/user_profile_page.dart';
 import 'package:academic_manager_app/view/shell/main_shell.dart';
 import '../../view/pages/welcome_page.dart';
@@ -25,6 +26,7 @@ class AppRoutes {
   static const String subjects = '/subjects';
   static const String tasks = '/tasks';
   static const String schedule = '/schedule';
+  static const String studyCycleSetup = '/study-cycle-setup';
   static const String profile = '/profile';
 
   static final Map<String, WidgetBuilder> routes = {
@@ -40,6 +42,7 @@ class AppRoutes {
     subjects: (_) => const MainShell(initialIndex: 1),
     tasks: (_) => const MainShell(initialIndex: 2),
     schedule: (_) => const MainShell(initialIndex: 3),
+    studyCycleSetup: (_) => const StudyCycleSetupPage(),
     profile: (_) => const UserProfilePage(),
   };
 
@@ -69,6 +72,9 @@ class AppRoutes {
 
   static void toHomeClearingStack(BuildContext context) =>
       Navigator.pushNamedAndRemoveUntil(context, home, (_) => false);
+
+  static void toStudyCycleSetup(BuildContext context) =>
+      Navigator.pushNamed(context, studyCycleSetup);
 
   static void toProfile(BuildContext context) =>
       Navigator.pushNamed(context, profile);

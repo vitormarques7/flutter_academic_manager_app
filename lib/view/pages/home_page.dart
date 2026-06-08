@@ -1,6 +1,7 @@
 import 'package:academic_manager_app/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 
+import '../../config/routes/app_routes.dart';
 import '../../config/scroll/app_scroll_behavior.dart';
 import '../../config/theme/app_colors.dart';
 import '../widgets/common/list_section_header.dart';
@@ -52,6 +53,25 @@ class HomePage extends StatelessWidget {
     ),
   ];
 
+  static const _studyCycles = [
+    _StudyCycle(
+      title: 'Engenharia de Software',
+      label: '5º período',
+      detail: 'Manhã e tarde • 7 aulas',
+      isCurrent: true,
+    ),
+    _StudyCycle(
+      title: 'Engenharia de Software',
+      label: '4º período',
+      detail: 'Encerrado • 6 disciplinas',
+    ),
+    _StudyCycle(
+      title: 'Engenharia de Software',
+      label: '3º período',
+      detail: 'Encerrado • 5 disciplinas',
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final firstName = _firstNameFromDisplayName(
@@ -67,7 +87,12 @@ class HomePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              PageHeader(title: 'Olá, $firstName'),
+              PageHeader(
+                title: 'Olá, $firstName',
+                trailing: _StudyCycleMenuButton(
+                  onTap: () => _openStudyCycleMenu(context),
+                ),
+              ),
               const SizedBox(height: 24),
               const _StudyFocusCard(overview: _overview),
               const SizedBox(height: 18),
@@ -95,6 +120,343 @@ class HomePage extends StatelessWidget {
     if (trimmedName == null || trimmedName.isEmpty) return 'Usuário';
 
     return trimmedName.split(RegExp(r'\s+')).first;
+  }
+
+  void _openStudyCycleMenu(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return _StudyCycleSheet(
+          cycles: _studyCycles,
+          onCreateCycle: () {
+            Navigator.of(sheetContext).pop();
+            AppRoutes.toStudyCycleSetup(context);
+          },
+        );
+      },
+    );
+  }
+}
+
+class _StudyCycleMenuButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _StudyCycleMenuButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Períodos',
+      child: Material(
+        color: const Color(0xFFEDE8FB),
+        borderRadius: BorderRadius.circular(16),
+        shadowColor: const Color(0x33587DBD),
+        elevation: 2,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: const SizedBox(
+            width: 48,
+            height: 48,
+            child: Icon(Icons.menu_rounded, color: AppColors.primary, size: 30),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StudyCycleSheet extends StatelessWidget {
+  final List<_StudyCycle> cycles;
+  final VoidCallback onCreateCycle;
+
+  const _StudyCycleSheet({required this.cycles, required this.onCreateCycle});
+
+  @override
+  Widget build(BuildContext context) {
+    final currentCycle = cycles.firstWhere((cycle) => cycle.isCurrent);
+    final previousCycles = cycles.where((cycle) => !cycle.isCurrent).toList();
+
+    return SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0x33514EB6)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x33000000),
+              blurRadius: 18,
+              offset: Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Períodos',
+                    style: TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: 22,
+                      fontFamily: 'Roboto',
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Fechar',
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close, color: AppColors.textMuted),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _CurrentCycleCard(cycle: currentCycle),
+            const SizedBox(height: 12),
+            _PreviousCyclesTile(cycles: previousCycles),
+            const SizedBox(height: 14),
+            Material(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(16),
+              shadowColor: const Color(0x33587DBD),
+              elevation: 3,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: onCreateCycle,
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add, color: Colors.white, size: 22),
+                      SizedBox(width: 8),
+                      Text(
+                        'Criar novo período',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontFamily: 'Roboto',
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CurrentCycleCard extends StatelessWidget {
+  final _StudyCycle cycle;
+
+  const _CurrentCycleCard({required this.cycle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF0FB),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0x33514EB6)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: const Icon(Icons.school_outlined, color: Colors.white),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        cycle.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.textDark,
+                          fontSize: 16,
+                          fontFamily: 'Roboto',
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    const _CurrentBadge(),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  cycle.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textDark,
+                    fontSize: 13,
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  cycle.detail,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 12,
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PreviousCyclesTile extends StatelessWidget {
+  final List<_StudyCycle> cycles;
+
+  const _PreviousCyclesTile({required this.cycles});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0x1F514EB6)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 14),
+        childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+        iconColor: AppColors.primary,
+        collapsedIconColor: AppColors.primary,
+        leading: const Icon(Icons.history_outlined, color: AppColors.primary),
+        title: const Text(
+          'Períodos anteriores',
+          style: TextStyle(
+            color: AppColors.textDark,
+            fontSize: 15,
+            fontFamily: 'Roboto',
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        children: cycles
+            .map(
+              (cycle) => Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: _PreviousCycleRow(cycle: cycle),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _PreviousCycleRow extends StatelessWidget {
+  final _StudyCycle cycle;
+
+  const _PreviousCycleRow({required this.cycle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: const BoxDecoration(
+            color: AppColors.primary,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                cycle.label,
+                style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontSize: 14,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                cycle.detail,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 12,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CurrentBadge extends StatelessWidget {
+  const _CurrentBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: const Text(
+        'Atual',
+        style: TextStyle(
+          color: AppColors.primary,
+          fontSize: 11,
+          fontFamily: 'Roboto',
+          fontWeight: FontWeight.w800,
+          height: 1,
+        ),
+      ),
+    );
   }
 }
 
@@ -543,6 +905,20 @@ class _HomeAlert {
     required this.title,
     required this.description,
     required this.level,
+  });
+}
+
+class _StudyCycle {
+  final String title;
+  final String label;
+  final String detail;
+  final bool isCurrent;
+
+  const _StudyCycle({
+    required this.title,
+    required this.label,
+    required this.detail,
+    this.isCurrent = false,
   });
 }
 

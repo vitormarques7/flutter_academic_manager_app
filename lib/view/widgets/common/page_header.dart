@@ -5,8 +5,9 @@ import '../../../config/theme/app_text_styles.dart';
 
 class PageHeader extends StatelessWidget {
   final String title;
+  final Widget? trailing;
 
-  const PageHeader({super.key, required this.title});
+  const PageHeader({super.key, required this.title, this.trailing});
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +37,15 @@ class PageHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 16),
-        Text(title, style: AppTextStyles.headline2),
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.headline2,
+          ),
+        ),
+        if (trailing != null) ...[const SizedBox(width: 12), trailing!],
       ],
     );
   }
