@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/academic_task.dart';
+import 'user_profile_repository.dart';
 
 class TaskRepositoryException implements Exception {
   final String message;
@@ -13,12 +14,22 @@ class TaskRepositoryException implements Exception {
 }
 
 class TaskRepository {
-  TaskRepository({FirebaseFirestore? firestore, FirebaseAuth? firebaseAuth})
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
+  TaskRepository({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? firebaseAuth,
+    UserProfileRepository? userProfileRepository,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+       _userProfileRepository =
+           userProfileRepository ??
+           UserProfileRepository(
+             firestore: firestore,
+             firebaseAuth: firebaseAuth,
+           );
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _firebaseAuth;
+  final UserProfileRepository _userProfileRepository;
 
   CollectionReference<Map<String, dynamic>> _tasksCollection(String uid) {
     return _firestore.collection('users').doc(uid).collection('tasks');
@@ -49,9 +60,10 @@ class TaskRepository {
 
   Future<void> createTask(TaskInput input) async {
     final uid = _currentUserId;
+    final taskInput = await _withActiveStudyCycle(input);
 
     await _guardFirestoreCall(() {
-      return _tasksCollection(uid).add(input.toCreateMap());
+      return _tasksCollection(uid).add(taskInput.toCreateMap());
     });
   }
 
@@ -82,6 +94,52 @@ class TaskRepository {
     });
   }
 
+  Future<void> backfillStudyCycleId(String studyCycleId) {
+    final uid = _currentUserId;
+    final normalizedStudyCycleId = _normalizeString(studyCycleId);
+    if (normalizedStudyCycleId == null) return Future.value();
+
+    return _guardFirestoreCall(() async {
+      final snapshot = await _tasksCollection(uid).get();
+      final batch = _firestore.batch();
+      var hasWrites = false;
+
+      for (final document in snapshot.docs) {
+        final currentStudyCycleId = _normalizeString(
+          document.data()['studyCycleId'],
+        );
+        if (currentStudyCycleId != null) continue;
+
+        batch.update(document.reference, {
+          'studyCycleId': normalizedStudyCycleId,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        hasWrites = true;
+      }
+
+      if (hasWrites) {
+        await batch.commit();
+      }
+    });
+  }
+
+  Future<TaskInput> _withActiveStudyCycle(TaskInput input) async {
+    if (_normalizeString(input.studyCycleId) != null) return input;
+
+    final activeStudyCycleId = await _resolveActiveStudyCycleId();
+    if (activeStudyCycleId == null) return input;
+
+    return input.copyWith(studyCycleId: activeStudyCycleId);
+  }
+
+  Future<String?> _resolveActiveStudyCycleId() async {
+    try {
+      return await _userProfileRepository.resolveActiveStudyCycleId();
+    } on UserProfileRepositoryException catch (error) {
+      throw TaskRepositoryException(error.message);
+    }
+  }
+
   String get _currentUserId {
     final user = _firebaseAuth.currentUser;
     if (user == null) {
@@ -93,9 +151,9 @@ class TaskRepository {
     return user.uid;
   }
 
-  Future<void> _guardFirestoreCall(Future<Object?> Function() action) async {
+  Future<T> _guardFirestoreCall<T>(Future<T> Function() action) async {
     try {
-      await action();
+      return await action();
     } on TaskRepositoryException {
       rethrow;
     } on FirebaseException catch (error) {
@@ -116,5 +174,12 @@ class TaskRepository {
       'not-found' => 'Não encontramos essa tarefa para atualizar.',
       _ => error.message ?? 'Não foi possível salvar a tarefa.',
     };
+  }
+
+  static String? _normalizeString(Object? value) {
+    if (value is! String) return null;
+
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
   }
 }

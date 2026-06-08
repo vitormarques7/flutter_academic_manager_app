@@ -8,6 +8,7 @@ class AcademicTask {
   final String visualPriority;
   final bool isChecked;
   final String userId;
+  final String? studyCycleId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -19,6 +20,7 @@ class AcademicTask {
     required this.visualPriority,
     required this.isChecked,
     required this.userId,
+    this.studyCycleId,
     this.createdAt,
     this.updatedAt,
   });
@@ -47,6 +49,7 @@ class AcademicTask {
       visualPriority: data['visualPriority'] as String? ?? 'Trabalho',
       isChecked: data['isChecked'] as bool? ?? false,
       userId: userId,
+      studyCycleId: _readString(data['studyCycleId']),
       createdAt: _readTimestamp(data['createdAt']),
       updatedAt: _readTimestamp(data['updatedAt']),
     );
@@ -58,6 +61,13 @@ class AcademicTask {
     if (value is Timestamp) return value.toDate();
     return null;
   }
+
+  static String? _readString(Object? value) {
+    if (value is! String) return null;
+
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
 }
 
 class TaskInput {
@@ -65,13 +75,31 @@ class TaskInput {
   final String subject;
   final String deadline;
   final String visualPriority;
+  final String? studyCycleId;
 
   const TaskInput({
     required this.title,
     required this.subject,
     required this.deadline,
     required this.visualPriority,
+    this.studyCycleId,
   });
+
+  TaskInput copyWith({
+    String? title,
+    String? subject,
+    String? deadline,
+    String? visualPriority,
+    String? studyCycleId,
+  }) {
+    return TaskInput(
+      title: title ?? this.title,
+      subject: subject ?? this.subject,
+      deadline: deadline ?? this.deadline,
+      visualPriority: visualPriority ?? this.visualPriority,
+      studyCycleId: studyCycleId ?? this.studyCycleId,
+    );
+  }
 
   Map<String, dynamic> toCreateMap() {
     return {
@@ -82,7 +110,10 @@ class TaskInput {
   }
 
   Map<String, dynamic> toUpdateMap() {
+    final normalizedStudyCycleId = AcademicTask._readString(studyCycleId);
+
     return {
+      'studyCycleId': ?normalizedStudyCycleId,
       'title': title,
       'subject': subject,
       'deadline': deadline,
