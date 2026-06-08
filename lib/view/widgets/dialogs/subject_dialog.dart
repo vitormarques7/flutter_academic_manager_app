@@ -29,12 +29,28 @@ class SubjectScheduleEntry {
     required this.endTime,
   });
 
+  int get startTimeMinutes => _parseMinutes(startTime);
+
+  int get endTimeMinutes => _parseMinutes(endTime);
+
   Map<String, dynamic> toMap() {
     return {
       'weekdayIndex': weekdayIndex,
       'startTime': startTime,
       'endTime': endTime,
     };
+  }
+
+  static int _parseMinutes(String time) {
+    final parts = time.split(':');
+    if (parts.length != 2) return 0;
+
+    final hour = int.tryParse(parts[0]) ?? 0;
+    final minute = int.tryParse(parts[1]) ?? 0;
+    final minutes = hour * 60 + minute;
+
+    if (minutes < 0 || minutes > 1439) return 0;
+    return minutes;
   }
 }
 

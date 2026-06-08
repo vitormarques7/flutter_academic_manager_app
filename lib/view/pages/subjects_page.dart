@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../config/scroll/app_scroll_behavior.dart';
+import '../../models/discipline.dart';
+import '../../models/schedule.dart';
+import '../../repositories/discipline_repository.dart';
+import '../../repositories/schedule_repository.dart';
+import '../../repositories/user_profile_repository.dart';
 import 'subject_details_page.dart';
 import '../widgets/common/page_header.dart';
 import '../widgets/inputs/search_field.dart';
@@ -19,70 +24,27 @@ class SubjectsPage extends StatefulWidget {
 
 class _SubjectsPageState extends State<SubjectsPage> {
   final _searchController = TextEditingController();
+  final DisciplineRepository _disciplineRepository = DisciplineRepository();
+  final ScheduleRepository _scheduleRepository = ScheduleRepository();
+  final UserProfileRepository _userProfileRepository = UserProfileRepository();
+  late Future<String?> _activeStudyCycleIdFuture;
 
-  final List<_SubjectSummary> _subjects = const [
-    _SubjectSummary(
-      name: 'Programação',
-      teacher: 'Prof. Alguem',
-      frequency: 0.85,
-      average: 8.5,
-      workload: 60,
-    ),
-    _SubjectSummary(
-      name: 'Cálculo I',
-      teacher: 'Prof. Alguem',
-      frequency: 0.60,
-      average: 8.0,
-      workload: 60,
-    ),
-    _SubjectSummary(
-      name: 'Cálculo II',
-      teacher: 'Prof. Alguem',
-      frequency: 1.0,
-      average: 7.0,
-      workload: 60,
-    ),
-  ];
-
-  List<_SubjectSummary> get _filteredSubjects {
+  List<Discipline> _filterDisciplines(List<Discipline> disciplines) {
     final query = _searchController.text.trim().toLowerCase();
 
-    if (query.isEmpty) return _subjects;
+    if (query.isEmpty) return disciplines;
 
-    return _subjects
-        .where(
-          (subject) =>
-              subject.name.toLowerCase().contains(query) ||
-              subject.teacher.toLowerCase().contains(query),
-        )
-        .toList();
-  }
-
-  double get _averageGrade {
-    if (_subjects.isEmpty) return 0;
-
-    final total = _subjects.fold<double>(
-      0,
-      (sum, subject) => sum + subject.average,
-    );
-
-    return total / _subjects.length;
-  }
-
-  double get _averageFrequency {
-    if (_subjects.isEmpty) return 0;
-
-    final total = _subjects.fold<double>(
-      0,
-      (sum, subject) => sum + subject.frequency,
-    );
-
-    return total / _subjects.length;
+    return disciplines.where((discipline) {
+      return discipline.name.toLowerCase().contains(query) ||
+          discipline.teacher.toLowerCase().contains(query);
+    }).toList();
   }
 
   @override
   void initState() {
     super.initState();
+    _activeStudyCycleIdFuture = _userProfileRepository
+        .resolveActiveStudyCycleId();
     _searchController.addListener(() => setState(() {}));
   }
 
@@ -95,19 +57,86 @@ class _SubjectsPageState extends State<SubjectsPage> {
 
     if (result == null || !mounted) return;
 
-    setState(() {
-      _subjects.insert(
-        0,
-        _SubjectSummary(
+    final activeStudyCycleId = await _activeStudyCycleIdFuture;
+    if (activeStudyCycleId == null) {
+      _showError('Configure um ciclo de estudos antes de criar disciplinas.');
+      return;
+    }
+
+    try {
+      await _disciplineRepository.createDiscipline(
+        DisciplineInput(
           name: result.name,
           teacher: result.teacher,
-          frequency: 0,
-          average: 0,
           workload: result.workload,
-          schedule: result.schedule.map((entry) => entry.toMap()).toList(),
+          colorValue: Discipline.defaultColorValue,
+          studyCycleId: activeStudyCycleId,
         ),
       );
-    });
+
+      for (final schedule in _groupScheduleEntries(result.schedule)) {
+        await _scheduleRepository.createSchedule(
+          ScheduleInput(
+            studyCycleId: activeStudyCycleId,
+            disciplineName: result.name,
+            weekdays: schedule.sortedWeekdays,
+            startTimeMinutes: schedule.startTimeMinutes,
+            endTimeMinutes: schedule.endTimeMinutes,
+            colorValue: Schedule.defaultColorValue,
+          ),
+        );
+      }
+
+      _showSuccess('Disciplina salva com sucesso.');
+    } on DisciplineRepositoryException catch (error) {
+      _showError(error.message);
+    } on ScheduleRepositoryException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Não foi possível salvar a disciplina. Tente novamente.');
+    }
+  }
+
+  List<_GroupedScheduleEntry> _groupScheduleEntries(
+    List<SubjectScheduleEntry> entries,
+  ) {
+    final groupedEntries = <String, _GroupedScheduleEntry>{};
+
+    for (final entry in entries) {
+      final key = '${entry.startTimeMinutes}:${entry.endTimeMinutes}';
+      final group = groupedEntries.putIfAbsent(
+        key,
+        () => _GroupedScheduleEntry(
+          weekdays: <int>{},
+          startTimeMinutes: entry.startTimeMinutes,
+          endTimeMinutes: entry.endTimeMinutes,
+        ),
+      );
+
+      group.weekdays.add(entry.weekdayIndex);
+    }
+
+    return groupedEntries.values.toList();
+  }
+
+  void _showSuccess(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.shade700,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -136,58 +165,112 @@ class _SubjectsPageState extends State<SubjectsPage> {
 
                     const SizedBox(height: 24),
 
-                    _SubjectsOverview(
-                      total: _subjects.length,
-                      averageGrade: _averageGrade,
-                      averageFrequency: _averageFrequency,
-                    ),
+                    FutureBuilder<String?>(
+                      future: _activeStudyCycleIdFuture,
+                      builder: (context, activeCycleSnapshot) {
+                        if (activeCycleSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const _SubjectsLoadingState();
+                        }
 
-                    const SizedBox(height: 18),
+                        if (activeCycleSnapshot.hasError) {
+                          return const EmptyStateCard(
+                            message:
+                                'Não foi possível carregar seu ciclo de estudos.',
+                          );
+                        }
 
-                    SearchField(
-                      controller: _searchController,
-                      hint: 'Pesquise por disciplina',
-                    ),
+                        final activeStudyCycleId = activeCycleSnapshot.data;
 
-                    const SizedBox(height: 20),
-
-                    ListSectionHeader(
-                      label: 'MINHAS DISCIPLINAS',
-                      count: _filteredSubjects.length,
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    if (_filteredSubjects.isEmpty)
-                      const EmptyStateCard(
-                        message: 'Nenhuma disciplina encontrada.',
-                        icon: Icons.search_off_outlined,
-                      )
-                    else
-                      ..._filteredSubjects.map(
-                        (subject) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: SubjectCard(
-                            name: subject.name,
-                            teacher: subject.teacher,
-                            frequency: subject.frequency,
-                            average: subject.average,
-                            workload: subject.workload,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => SubjectDetailsPage(
-                                    name: subject.name,
-                                    teacher: subject.teacher,
-                                    average: subject.average,
-                                    workload: subject.workload,
-                                  ),
-                                ),
-                              );
-                            },
+                        return StreamBuilder<List<Discipline>>(
+                          stream: _disciplineRepository.watchDisciplines(
+                            studyCycleId: activeStudyCycleId,
                           ),
-                        ),
-                      ),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                    ConnectionState.waiting &&
+                                !snapshot.hasData) {
+                              return const _SubjectsLoadingState();
+                            }
+
+                            if (snapshot.hasError) {
+                              return const EmptyStateCard(
+                                message:
+                                    'Não foi possível carregar suas disciplinas agora.',
+                              );
+                            }
+
+                            final allDisciplines = snapshot.data ?? [];
+                            final disciplines = _filterDisciplines(
+                              allDisciplines,
+                            );
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _SubjectsOverview(
+                                  total: allDisciplines.length,
+                                  averageGrade: 0,
+                                  averageFrequency: 0,
+                                ),
+                                const SizedBox(height: 18),
+                                SearchField(
+                                  controller: _searchController,
+                                  hint: 'Pesquise por disciplina',
+                                ),
+                                const SizedBox(height: 20),
+                                ListSectionHeader(
+                                  label: 'MINHAS DISCIPLINAS',
+                                  count: disciplines.length,
+                                ),
+                                const SizedBox(height: 12),
+                                if (disciplines.isEmpty)
+                                  EmptyStateCard(
+                                    message: allDisciplines.isEmpty
+                                        ? 'Nenhuma disciplina criada ainda.'
+                                        : 'Nenhuma disciplina encontrada.',
+                                    icon: allDisciplines.isEmpty
+                                        ? Icons.menu_book_outlined
+                                        : Icons.search_off_outlined,
+                                  )
+                                else
+                                  ...disciplines.map(
+                                    (discipline) => Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 12,
+                                      ),
+                                      child: SubjectCard(
+                                        name: discipline.name,
+                                        teacher: discipline.teacher.isEmpty
+                                            ? 'Professor não informado'
+                                            : discipline.teacher,
+                                        frequency: 0,
+                                        average: 0,
+                                        workload: discipline.workload,
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) => SubjectDetailsPage(
+                                                name: discipline.name,
+                                                teacher:
+                                                    discipline.teacher.isEmpty
+                                                    ? 'Professor não informado'
+                                                    : discipline.teacher,
+                                                average: 0,
+                                                workload: discipline.workload,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -249,20 +332,28 @@ class _SubjectsOverview extends StatelessWidget {
   }
 }
 
-class _SubjectSummary {
-  final String name;
-  final String teacher;
-  final double frequency;
-  final double average;
-  final int workload;
-  final List<Map<String, dynamic>> schedule;
+class _SubjectsLoadingState extends StatelessWidget {
+  const _SubjectsLoadingState();
 
-  const _SubjectSummary({
-    required this.name,
-    required this.teacher,
-    required this.frequency,
-    required this.average,
-    required this.workload,
-    this.schedule = const [],
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 36),
+      child: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+class _GroupedScheduleEntry {
+  final Set<int> weekdays;
+  final int startTimeMinutes;
+  final int endTimeMinutes;
+
+  const _GroupedScheduleEntry({
+    required this.weekdays,
+    required this.startTimeMinutes,
+    required this.endTimeMinutes,
   });
+
+  List<int> get sortedWeekdays => weekdays.toList()..sort();
 }

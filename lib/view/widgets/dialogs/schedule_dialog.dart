@@ -3,16 +3,19 @@ import '../../../config/theme/app_colors.dart';
 import '../selectors/weekday_selector.dart';
 
 class ScheduleDialogResult {
+  final String? disciplineName;
   final List<int> weekdays;
   final List<ScheduleTimeRangeResult> timeRanges;
 
   const ScheduleDialogResult({
+    this.disciplineName,
     required this.weekdays,
     required this.timeRanges,
   });
 
   const ScheduleDialogResult.empty()
-    : weekdays = const [],
+    : disciplineName = null,
+      weekdays = const [],
       timeRanges = const [];
 }
 
@@ -31,13 +34,16 @@ class ScheduleTimeRangeResult {
 }
 
 class ScheduleDialog extends StatefulWidget {
-  const ScheduleDialog({super.key});
+  final bool showDisciplineNameField;
+
+  const ScheduleDialog({super.key, this.showDisciplineNameField = false});
 
   @override
   State<ScheduleDialog> createState() => _ScheduleDialogState();
 }
 
 class _ScheduleDialogState extends State<ScheduleDialog> {
+  final _disciplineNameController = TextEditingController();
   final Set<int> _selectedWeekdays = {2, 4};
   final List<_ScheduleTimeRange> _timeRanges = [
     _ScheduleTimeRange(
@@ -46,6 +52,12 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
     ),
   ];
   String? _errorMessage;
+
+  @override
+  void dispose() {
+    _disciplineNameController.dispose();
+    super.dispose();
+  }
 
   void _toggleWeekday(int index) {
     setState(() {
@@ -126,12 +138,21 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
       );
     }).toList();
 
-    Navigator.of(
-      context,
-    ).pop(ScheduleDialogResult(weekdays: weekdays, timeRanges: timeRanges));
+    Navigator.of(context).pop(
+      ScheduleDialogResult(
+        disciplineName: _disciplineNameController.text.trim(),
+        weekdays: weekdays,
+        timeRanges: timeRanges,
+      ),
+    );
   }
 
   String? _validateSchedule() {
+    if (widget.showDisciplineNameField &&
+        _disciplineNameController.text.trim().isEmpty) {
+      return 'Informe o nome da disciplina.';
+    }
+
     if (_selectedWeekdays.isEmpty) return 'Selecione pelo menos um dia.';
 
     for (final range in _timeRanges) {
@@ -196,6 +217,49 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                   ],
                 ),
                 const SizedBox(height: 38),
+                if (widget.showDisciplineNameField) ...[
+                  const Text(
+                    'Disciplina',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontFamily: 'Roboto',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _disciplineNameController,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      hintText: 'Ex: Programação Mobile',
+                      filled: true,
+                      fillColor: const Color(0xFFF7F7FD),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 13,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Color(0xFFE2E4F0)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Color(0xFFE2E4F0)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: AppColors.primary),
+                      ),
+                    ),
+                    onChanged: (_) {
+                      if (_errorMessage != null) {
+                        setState(() => _errorMessage = null);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 26),
+                ],
                 const Text(
                   'Quando acontece?',
                   style: TextStyle(

@@ -150,7 +150,7 @@ class _EmptyScheduleMessage extends StatelessWidget {
         borderRadius: BorderRadius.circular(9),
       ),
       child: const Text(
-        'Nenhuma aula cadastrada para este dia.',
+        'Nenhum horário para este dia',
         style: TextStyle(
           color: Color(0xFF656565),
           fontSize: 13,

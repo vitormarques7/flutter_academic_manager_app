@@ -111,10 +111,8 @@ class ScheduleHeader extends StatelessWidget {
         day.year == today.year &&
         day.month == today.month &&
         day.day == today.day;
-    final isMockToday =
-        day.year == 2026 && day.month == DateTime.may && day.day == 14;
 
-    if (isToday || isMockToday) return 'Hoje';
+    if (isToday) return 'Hoje';
 
     final weekday = DateFormat.EEEE('pt_BR').format(day);
     return '${weekday[0].toUpperCase()}${weekday.substring(1)}';
