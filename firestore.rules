@@ -20,6 +20,10 @@ service cloud.firestore {
       match /schedules/{scheduleId} {
         allow read, create, update, delete: if isOwner(userId);
       }
+
+      match /studyCycles/{cycleId} {
+        allow read, create, update, delete: if isOwner(userId);
+      }
     }
   }
 }
