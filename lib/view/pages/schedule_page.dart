@@ -77,6 +77,9 @@ class _SchedulePageState extends State<SchedulePage> {
                       focusedDay: _focusedDay,
                       onPreviousDay: () => _changeSelectedDay(-1),
                       onNextDay: () => _changeSelectedDay(1),
+                      onCourseScheduleTap: () {
+                        setState(() => _isShowingCourseSchedule = true);
+                      },
                     ),
                     const SizedBox(height: 31),
                     _MonthCalendar(
@@ -97,12 +100,6 @@ class _SchedulePageState extends State<SchedulePage> {
                     _SelectedDayScheduleCard(
                       selectedDay: _selectedDay,
                       classes: selectedClasses,
-                    ),
-                    const SizedBox(height: 10),
-                    _CourseScheduleCard(
-                      onTap: () {
-                        setState(() => _isShowingCourseSchedule = true);
-                      },
                     ),
                   ],
                 ),
@@ -141,75 +138,94 @@ class _ScheduleHeader extends StatelessWidget {
   final DateTime focusedDay;
   final VoidCallback onPreviousDay;
   final VoidCallback onNextDay;
+  final VoidCallback onCourseScheduleTap;
 
   const _ScheduleHeader({
     required this.selectedDay,
     required this.focusedDay,
     required this.onPreviousDay,
     required this.onNextDay,
+    required this.onCourseScheduleTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _DateTile(date: selectedDay),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _monthTitle(focusedDay),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontFamily: 'Roboto',
-                    fontWeight: FontWeight.w700,
-                    height: 1.16,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  _selectedDayLabel(selectedDay),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 15,
-                    fontFamily: 'Roboto',
-                    fontWeight: FontWeight.w400,
-                    height: 1.1,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 19),
-          child: Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final shortcutWidth = (constraints.maxWidth - 134).clamp(156.0, 224.0);
+
+        return SizedBox(
+          height: 128,
+          child: Stack(
+            clipBehavior: Clip.none,
             children: [
-              _MonthButton(
-                tooltip: 'Dia anterior',
-                icon: Icons.chevron_left,
-                onPressed: onPreviousDay,
+              Positioned(left: 0, top: 0, child: _DateTile(date: selectedDay)),
+              Positioned(
+                left: 134,
+                right: 118,
+                top: 4,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _monthTitle(focusedDay),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 20,
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.w700,
+                        height: 1.16,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _selectedDayLabel(selectedDay),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 15,
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.w400,
+                        height: 1.1,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(width: 18),
-              _MonthButton(
-                tooltip: 'Próximo dia',
-                icon: Icons.chevron_right,
-                onPressed: onNextDay,
+              Positioned(
+                right: 0,
+                top: 19,
+                child: Row(
+                  children: [
+                    _MonthButton(
+                      tooltip: 'Dia anterior',
+                      icon: Icons.chevron_left,
+                      onPressed: onPreviousDay,
+                    ),
+                    const SizedBox(width: 18),
+                    _MonthButton(
+                      tooltip: 'Próximo dia',
+                      icon: Icons.chevron_right,
+                      onPressed: onNextDay,
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                right: 0,
+                top: 78,
+                child: _CourseScheduleShortcut(
+                  width: shortcutWidth,
+                  onTap: onCourseScheduleTap,
+                ),
               ),
             ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -480,8 +496,8 @@ class _SelectedDayScheduleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _RaisedCard(
-      minHeight: 164,
-      padding: const EdgeInsets.fromLTRB(17, 22, 17, 20),
+      minHeight: 218,
+      padding: const EdgeInsets.fromLTRB(17, 24, 17, 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -625,90 +641,55 @@ class _EmptyScheduleMessage extends StatelessWidget {
   }
 }
 
-class _CourseScheduleCard extends StatelessWidget {
+class _CourseScheduleShortcut extends StatelessWidget {
+  final double width;
   final VoidCallback onTap;
 
-  const _CourseScheduleCard({required this.onTap});
+  const _CourseScheduleShortcut({required this.width, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return _RaisedCard(
-      minHeight: 80,
-      padding: EdgeInsets.zero,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(15),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(11, 10, 11, 10),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF2F0F7),
-                  borderRadius: BorderRadius.circular(9),
-                  border: Border.all(color: const Color(0x2ED1D1D1)),
-                ),
-                child: const Icon(
-                  Icons.event_note_outlined,
-                  color: Color(0xFF8A38F5),
-                  size: 31,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+    return Tooltip(
+      message: 'Abrir grade de horário',
+      child: Material(
+        color: const Color(0xFFF2F0FF),
+        borderRadius: BorderRadius.circular(14),
+        elevation: 2,
+        shadowColor: const Color(0x33587DBD),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: SizedBox(
+            width: width,
+            height: 44,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.event_note_outlined,
+                    color: Color(0xFF8A38F5),
+                    size: 22,
+                  ),
+                  const SizedBox(width: 7),
+                  Flexible(
+                    child: Text(
                       'Grade de Horário',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Color(0xFF8A38F5),
                         fontSize: 12,
                         fontFamily: 'Roboto',
-                        fontWeight: FontWeight.w500,
-                        height: 1,
-                      ),
-                    ),
-                    SizedBox(height: 3),
-                    Text(
-                      'Engenharia de Software',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 15,
-                        fontFamily: 'Roboto',
                         fontWeight: FontWeight.w700,
-                        height: 1.08,
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      '5° Período',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Color(0xFF656565),
-                        fontSize: 12,
-                        fontFamily: 'Roboto',
-                        fontWeight: FontWeight.w400,
                         height: 1,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const Icon(
-                Icons.chevron_right,
-                color: Color(0xFF8A38F5),
-                size: 28,
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -917,7 +898,7 @@ class _CourseScheduleHeader extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           const Text(
-            '5º período • 2026.1',
+            '5º período',
             style: TextStyle(
               color: Color(0xFF656565),
               fontSize: 16,
