@@ -13,12 +13,8 @@ prototipo e fluxo real.
 
 ### Disciplinas
 
-- A lista de disciplinas da `SubjectsPage` e local/mockada.
-- O modal cria disciplina em memoria, sem Firestore.
-- O setup inicial ja persiste disciplinas e horarios no Firestore, mas a
-  `SubjectsPage` ainda nao consome esses dados reais.
-- Media, frequencia e carga horaria das disciplinas criadas localmente ainda
-  usam valores iniciais simples.
+- Media e frequencia das disciplinas ainda usam valores iniciais simples.
+- A tela de detalhes da disciplina ainda nao le dados completos do Firestore.
 
 ### Dropdown de disciplinas em tarefas
 
@@ -33,29 +29,19 @@ filtrar pelo ciclo academico ativo.
 
 ### Agenda
 
-- Aulas do calendario sao mockadas.
-- A grade de horarios existe como visualizacao local/mockada, sem Firestore.
-- A grade nao e alimentada pelas disciplinas criadas no app.
 - Editar grade exibe mensagem de "em desenvolvimento".
 
 ### Perfil
 
-- Curso e periodo da tela de perfil sao mockados.
 - O tile "Dados pessoais" ainda nao abre fluxo de edicao.
-- As configuracoes iniciais de estudante ja sao persistidas em `studyCycles`,
-  `disciplines`, `schedules` e no `activeStudyCycleId` do documento do usuario,
-  mas a tela de perfil ainda nao le esses dados reais.
 
 ## Persistencia pendente
 
-Repositories ja criados e ainda pendentes de integracao completa na UI:
+As principais colecoes academicas ja possuem repositories e parte da UI
+integrada. Ainda falta consumir dados reais em telas especificas:
 
-```txt
-DisciplineRepository
-ScheduleRepository
-StudyCycleRepository
-UserProfileRepository
-```
+- Tarefas: alimentar o dropdown de disciplinas com `DisciplineRepository`.
+- Detalhes de disciplina: carregar dados completos do Firestore.
 
 ## Firestore futuro
 

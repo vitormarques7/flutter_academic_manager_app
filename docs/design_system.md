@@ -98,8 +98,9 @@ Padrao visual:
 - Acoes no rodape.
 - Estados de loading/erro dentro do modal quando ha operacao assincrona.
 
-Observacao: `ScheduleDialog` existe como componente, mas a `SchedulePage`
-atual usa uma grade mockada e nao abre esse dialog no fluxo principal.
+Observacao: `ScheduleDialog` e usado tanto no setup academico quanto na
+`SchedulePage`. Na agenda, ele exibe tambem o campo de disciplina para criar
+horarios reais em `users/{uid}/schedules`.
 
 ## Observacoes de consistencia
 

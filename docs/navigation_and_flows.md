@@ -153,10 +153,9 @@ O modal permite preencher:
 - Dias da semana.
 - Horarios.
 
-Estado atual: disciplinas criadas diretamente na `SubjectsPage` ainda sao
-mantidas em memoria local. Disciplinas criadas no setup inicial ja persistem em
-`users/{uid}/disciplines`, mas a tela ainda nao consome o
-`DisciplineRepository`.
+Estado atual: disciplinas criadas diretamente na `SubjectsPage` sao salvas em
+`users/{uid}/disciplines`. Quando o usuario informa dias e horarios, a tela
+tambem cria documentos em `users/{uid}/schedules`.
 
 ## Fluxo de agenda
 
@@ -165,11 +164,12 @@ grade de horario.
 
 Estado atual:
 
-- As aulas do calendario estao mockadas.
-- O calendario inicia em 14/05/2026 para demonstrar aulas mockadas.
-- O card "Grade de Horario" alterna para uma visualizacao local da grade do
-  curso Engenharia de Software, 5o periodo, 2026.1.
-- A grade exibida ainda e mockada e nao vem das disciplinas cadastradas.
+- As aulas do calendario vem de `ScheduleRepository.watchSchedules`.
+- O calendario inicia no dia atual e usa `pt_BR`.
+- Marcadores sao derivados dos dias recorrentes de cada horario.
+- O card "Grade de Horario" alterna para uma visualizacao semanal com os
+  horarios reais cadastrados.
+- O botao `+` abre o modal real de horario e salva em `users/{uid}/schedules`.
 - A acao de editar grade mostra mensagem de "em desenvolvimento".
 
 ## Fluxo de perfil
@@ -182,6 +182,9 @@ PageHeader/avatar ou rota /profile
 Estado atual:
 
 - Nome e e-mail vem do usuario autenticado.
-- Curso e periodo sao textos mockados.
+- Dados academicos sao carregados a partir do ciclo ativo:
+  - universitario mostra curso e periodo;
+  - ensino medio mostra ano letivo;
+  - independente mostra meta.
 - "Dados pessoais" ainda nao abre edicao.
 - "Sair" chama `AuthService.signOut` e limpa a pilha para a welcome.

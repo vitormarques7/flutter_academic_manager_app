@@ -207,25 +207,27 @@ Resultado esperado:
 
 Resultado esperado:
 
-- Disciplina aparece localmente na lista.
-- Resumo de total/media/frequencia reflete a lista local.
-- Dados criados diretamente nessa tela ainda nao persistem depois de reiniciar
-  o app. Disciplinas do setup inicial ja persistem no Firestore, mas essa tela
-  ainda nao le o `DisciplineRepository`.
+- Disciplina aparece na lista via stream do Firestore.
+- Documento e criado em `users/{uid}/disciplines/{disciplineId}`.
+- Horarios informados sao criados em `users/{uid}/schedules`.
+- Ao reiniciar ou fazer logout/login, a disciplina continua aparecendo.
 
 ## Agenda
 
 1. Ir para agenda.
 2. Navegar entre dias usando setas, swipe ou selecao no calendario.
-3. Selecionar 14/05/2026.
+3. Selecionar hoje, o dia anterior/proximo e trocar de mes.
 4. Abrir o card "Grade de Horario".
-5. Clicar em editar grade.
+5. Clicar no botao `+` e criar um novo horario.
 
 Resultado esperado:
 
-- Calendario responde a selecao.
-- O dia 14/05/2026 mostra aulas mockadas.
-- A grade de horario mockada abre em uma nova visualizacao dentro da tela.
+- Calendario responde a selecao e permanece em `pt_BR`.
+- Dias recorrentes com horarios salvos exibem marcador no calendario.
+- Ao trocar de dia, a lista mostra apenas horarios daquele dia da semana.
+- Dias sem horario mostram "Nenhum horário para este dia".
+- A grade semanal abre em uma nova visualizacao dentro da tela com dados reais.
+- Novo horario e salvo em `users/{uid}/schedules`.
 - Editar grade mostra mensagem de fluxo em desenvolvimento.
 
 ## Perfil
@@ -233,12 +235,13 @@ Resultado esperado:
 1. Fazer login.
 2. Abrir a tela de perfil.
 3. Conferir nome e e-mail.
-4. Tocar em "Dados pessoais".
-5. Tocar em "Sair".
+4. Conferir curso/periodo, ano letivo ou meta conforme o perfil cadastrado.
+5. Tocar em "Dados pessoais".
+6. Tocar em "Sair".
 
 Resultado esperado:
 
 - Nome e e-mail refletem o usuario autenticado quando disponiveis.
-- Curso e periodo ainda aparecem como dados mockados.
+- Dados academicos refletem o ciclo ativo salvo no Firestore.
 - "Dados pessoais" ainda nao executa acao visivel.
 - "Sair" desloga e volta para a tela inicial.

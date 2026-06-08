@@ -47,16 +47,16 @@ A home mostra:
 
 ### Disciplinas
 
-A tela de disciplinas mostra uma lista local/mockada de disciplinas.
+A tela de disciplinas usa Firestore em tempo real.
 
 Ela permite:
 
 - Buscar disciplina por nome ou professor.
-- Ver resumo com total, media e frequencia das disciplinas locais.
+- Ver resumo com total de disciplinas do ciclo ativo.
 - Abrir detalhes da disciplina.
-- Criar uma nova disciplina localmente por modal.
-- Informar dias e horarios da disciplina no modal, preparando dados para a
-  futura grade de horarios.
+- Criar uma nova disciplina no Firestore por modal.
+- Informar dias e horarios da disciplina no modal, criando horarios em
+  `users/{uid}/schedules`.
 
 ### Tarefas
 
@@ -82,9 +82,10 @@ A tela de agenda mostra um calendario mensal com `table_calendar`.
 
 Estado atual:
 
-- O calendario inicia em 14/05/2026 para exibir dados mockados.
-- Aulas mockadas aparecem no dia selecionado quando existem.
-- O card "Grade de Horario" abre uma visualizacao local da grade do curso.
+- O calendario inicia no dia atual.
+- Horarios reais do Firestore marcam os dias recorrentes no calendario.
+- O card "Grade de Horario" abre uma visualizacao semanal com horarios reais.
+- O botao `+` abre o modal real de horario e salva em `users/{uid}/schedules`.
 - A edicao da grade ainda exibe mensagem de "em desenvolvimento".
 
 ### Perfil
@@ -92,15 +93,15 @@ Estado atual:
 A tela de perfil mostra:
 
 - Nome e e-mail vindos do usuario autenticado no Firebase Auth.
-- Curso e periodo mockados.
+- Dados academicos vindos do ciclo ativo:
+  - curso e periodo para universitario;
+  - ano letivo para ensino medio;
+  - meta para estudante independente.
 - Acao de logout real via `AuthService.signOut`.
 - Tile "Dados pessoais" ainda sem fluxo implementado.
 
 ## Funcionalidades ainda pendentes
 
-- Integrar a `SubjectsPage` com `DisciplineRepository`.
-- Integrar a `SchedulePage` com `ScheduleRepository`.
 - Integrar disciplinas reais ao dropdown de tarefas.
 - Trocar cards mockados da home por dados reais.
 - Implementar lembretes de atividade.
-- Usar dados reais de perfil academico na tela de perfil.

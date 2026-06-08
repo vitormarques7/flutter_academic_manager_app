@@ -23,12 +23,13 @@ evitar conhecimento espalhado entre telas, comentarios e memoria de implementaca
   edicao, conclusao e exclusao, vinculando `studyCycleId` quando ha ciclo ativo.
 - Setup academico inicial persiste `studyCycles`, `disciplines`, `schedules` e
   `activeStudyCycleId`.
-- Disciplinas ainda ficam em memoria local na tela `SubjectsPage`, apesar de ja
-  existirem dados persistidos do setup.
-- A tela de agenda/calendario possui dados mockados e uma visualizacao local
-  de grade de horario, ainda sem ler o `ScheduleRepository`.
-- A tela de perfil usa nome/e-mail do Firebase Auth, mas curso e periodo ainda
-  sao mockados.
+- Disciplinas sao lidas do Firestore na tela `SubjectsPage`; criar disciplina
+  pela tela tambem persiste a disciplina e seus horarios.
+- A tela de agenda/calendario le horarios reais via `ScheduleRepository`,
+  marca dias recorrentes, filtra a grade diaria pelo dia selecionado e permite
+  criar novos horarios.
+- A tela de perfil usa nome/e-mail do Firebase Auth e dados academicos reais do
+  ciclo ativo.
 - Regras locais do Firestore ficam em `firestore.rules`.
 
 ## Comandos mais usados

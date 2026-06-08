@@ -178,8 +178,8 @@ Observacoes:
   usado para filtrar horarios do ciclo academico ativo.
 - Documentos antigos sem `studyCycleId` continuam validos; o bootstrap tenta
   preencher esse campo quando encontra um ciclo ativo.
-- A tela de agenda ainda precisa ser integrada ao `ScheduleRepository` para
-  abandonar os dados mockados.
+- A tela de agenda usa `ScheduleRepository.watchSchedules` para observar os
+  horarios do ciclo academico ativo.
 
 Exemplo:
 
