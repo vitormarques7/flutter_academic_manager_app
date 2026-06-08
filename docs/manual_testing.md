@@ -13,6 +13,9 @@ flutter test
 flutter run -d chrome
 ```
 
+Observacao: os testes automatizados atuais cobrem `AuthException`,
+`AcademicTask` e `TaskInput`.
+
 ## Autenticacao
 
 ### Cadastro valido
@@ -114,6 +117,7 @@ Resultado esperado:
 - Modal mostra loading.
 - Documento e criado em `users/{uid}/tasks/{taskId}`.
 - Tarefa aparece na lista.
+- Resumo de progresso e contadores sao atualizados.
 
 ### Criacao invalida
 
@@ -137,6 +141,18 @@ Resultado esperado:
 
 - Documento existente e atualizado.
 - A tarefa permanece no mesmo usuario.
+
+### Exclusao
+
+1. Tocar em uma tarefa existente.
+2. Clicar em "Excluir tarefa".
+3. Confirmar a exclusao.
+
+Resultado esperado:
+
+- Documento e removido de `users/{uid}/tasks/{taskId}`.
+- Modal fecha.
+- Tarefa deixa de aparecer na lista.
 
 ### Cancelamento
 
@@ -180,15 +196,35 @@ Resultado esperado:
 Resultado esperado:
 
 - Disciplina aparece localmente na lista.
+- Resumo de total/media/frequencia reflete a lista local.
 - Dados ainda nao persistem depois de reiniciar o app.
 
 ## Agenda
 
 1. Ir para agenda.
-2. Navegar entre dias.
-3. Clicar em botoes de adicionar lembrete e ver grade.
+2. Navegar entre dias usando setas, swipe ou selecao no calendario.
+3. Selecionar 14/05/2026.
+4. Abrir o card "Grade de Horario".
+5. Clicar em editar grade.
 
 Resultado esperado:
 
 - Calendario responde a selecao.
-- Botoes mostram mensagem de fluxo em desenvolvimento.
+- O dia 14/05/2026 mostra aulas mockadas.
+- A grade de horario mockada abre em uma nova visualizacao dentro da tela.
+- Editar grade mostra mensagem de fluxo em desenvolvimento.
+
+## Perfil
+
+1. Fazer login.
+2. Abrir a tela de perfil.
+3. Conferir nome e e-mail.
+4. Tocar em "Dados pessoais".
+5. Tocar em "Sair".
+
+Resultado esperado:
+
+- Nome e e-mail refletem o usuario autenticado quando disponiveis.
+- Curso e periodo ainda aparecem como dados mockados.
+- "Dados pessoais" ainda nao executa acao visivel.
+- "Sair" desloga e volta para a tela inicial.

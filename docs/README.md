@@ -19,9 +19,13 @@ evitar conhecimento espalhado entre telas, comentarios e memoria de implementaca
 
 - Autenticacao com Firebase Auth.
 - Firestore configurado para tarefas em `users/{uid}/tasks/{taskId}`.
-- Tarefas persistem no Firestore via `TaskRepository`.
+- Tarefas persistem no Firestore via `TaskRepository`, com criacao,
+  edicao, conclusao e exclusao.
 - Disciplinas ainda ficam em memoria local na tela `SubjectsPage`.
-- A tela de agenda/calendario ainda possui dados mockados e botoes de fluxo futuro.
+- A tela de agenda/calendario possui dados mockados e uma visualizacao local
+  de grade de horario, sem persistencia no Firestore.
+- A tela de perfil usa nome/e-mail do Firebase Auth, mas curso e periodo ainda
+  sao mockados.
 - Regras locais do Firestore ficam em `firestore.rules`.
 
 ## Comandos mais usados

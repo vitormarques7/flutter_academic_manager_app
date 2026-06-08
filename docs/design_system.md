@@ -12,7 +12,7 @@ lib/config/theme/app_theme.dart
 
 O tema global define:
 
-- Fonte `Inter`.
+- Fonte `Roboto`.
 - `ColorScheme` baseado em `AppColors.primary`.
 - Tema de inputs.
 - Tema de botoes elevados.
@@ -72,7 +72,12 @@ FloatingAddButton
 AppBottomNavBar
 PrimaryButton
 CancelButton
+SecondaryButton
 SearchField
+SummaryMetricTile
+ListSectionHeader
+MetadataChip
+EmptyStateCard
 ```
 
 ## Dialogs
@@ -91,6 +96,10 @@ Padrao visual:
 - Titulo roxo.
 - Campos com borda clara.
 - Acoes no rodape.
+- Estados de loading/erro dentro do modal quando ha operacao assincrona.
+
+Observacao: `ScheduleDialog` existe como componente, mas a `SchedulePage`
+atual usa uma grade mockada e nao abre esse dialog no fluxo principal.
 
 ## Observacoes de consistencia
 

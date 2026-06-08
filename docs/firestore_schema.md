@@ -12,6 +12,9 @@ users/{uid}/schedules/{scheduleId}
 
 O `{uid}` e o `uid` do Firebase Auth.
 
+Estado atual: somente `users/{uid}/tasks/{taskId}` e usado pelo app. O caminho
+`schedules` ja esta previsto nas regras, mas ainda nao recebe escrita da UI.
+
 ## users
 
 Documento reservado para dados gerais do usuario.
@@ -53,10 +56,16 @@ updatedAt: timestamp
 Observacoes:
 
 - `title` e obrigatorio na UI.
+- `subject` e obrigatorio na UI, mas a lista de disciplinas ainda e fixa no
+  `TaskDialog`.
 - `deadline` usa `dd/mm/yyyy` quando informado, ou string vazia quando sem prazo.
 - `deadline` deve ser hoje ou uma data futura.
 - `visualPriority` aceita atualmente `Trabalho` ou `Prova`.
+- `isChecked` nasce como `false` em `TaskInput.toCreateMap`.
+- `createdAt` e `updatedAt` usam `FieldValue.serverTimestamp()`.
 - O dono da tarefa e definido pelo path `users/{uid}`, nao por um campo `userId`.
+- `AcademicTask` mantem `userId` em memoria para facilitar uso no app, mas esse
+  campo nao e salvo no documento.
 
 Exemplo:
 
@@ -98,6 +107,7 @@ Observacoes:
 - `startTime` e `endTime` usam `HH:mm`.
 - Uma disciplina com varios dias/horarios pode gerar varios documentos em `schedules`.
 - O modal de disciplina ja coleta dias e horarios localmente, mas ainda nao persiste no Firestore.
+- A tela de agenda atual nao le `schedules`; ela usa dados mockados internos.
 
 Exemplo:
 
@@ -117,3 +127,14 @@ Exemplo:
 
 As regras versionadas em `firestore.rules` permitem acesso apenas quando
 `request.auth.uid` e igual ao `{uid}` do path.
+
+As regras atuais cobrem explicitamente:
+
+```txt
+users/{uid}
+users/{uid}/tasks/{taskId}
+users/{uid}/schedules/{scheduleId}
+```
+
+Subcolecoes futuras, como `subjects` ou `activityReminders`, precisam ser
+adicionadas em `firestore.rules` antes de serem usadas em producao.

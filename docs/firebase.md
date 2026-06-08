@@ -44,6 +44,18 @@ TaskRepository -> users/{uid}/tasks/{taskId}
 Nao deve haver chamadas a `FirebaseFirestore.instance` dentro de widgets de
 tela.
 
+Operacoes atuais do `TaskRepository`:
+
+- `watchTasks`: observa tarefas do usuario logado em tempo real e ordena por
+  `createdAt` decrescente quando disponivel.
+- `createTask`: cria tarefa com `isChecked: false`.
+- `updateTask`: altera campos editaveis da tarefa.
+- `updateCompletion`: marca tarefa como concluida ou pendente.
+- `deleteTask`: remove tarefa.
+
+Quando nao ha usuario logado, o repository lanca `TaskRepositoryException` com
+mensagem em portugues.
+
 ## Regras de seguranca
 
 As regras locais ficam em:
