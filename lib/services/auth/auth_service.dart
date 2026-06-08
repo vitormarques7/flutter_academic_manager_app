@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../repositories/user_profile_repository.dart';
+
 class AuthException implements Exception {
   final String message;
 
@@ -12,12 +14,19 @@ class AuthException implements Exception {
 }
 
 class AuthService {
-  AuthService({FirebaseAuth? firebaseAuth, GoogleSignIn? googleSignIn})
-    : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-      _googleSignIn = googleSignIn ?? GoogleSignIn(scopes: const ['email']);
+  AuthService({
+    FirebaseAuth? firebaseAuth,
+    GoogleSignIn? googleSignIn,
+    UserProfileRepository? userProfileRepository,
+  }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+       _googleSignIn = googleSignIn ?? GoogleSignIn(scopes: const ['email']),
+       _userProfileRepository =
+           userProfileRepository ??
+           UserProfileRepository(firebaseAuth: firebaseAuth);
 
   final FirebaseAuth _firebaseAuth;
   final GoogleSignIn _googleSignIn;
+  final UserProfileRepository _userProfileRepository;
 
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
 
@@ -36,12 +45,17 @@ class AuthService {
 
   Future<UserCredential> signInWithEmail(String email, String password) async {
     try {
-      return await _firebaseAuth.signInWithEmailAndPassword(
+      final credential = await _firebaseAuth.signInWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );
+
+      await _ensureUserDocument(credential);
+      return credential;
     } on FirebaseAuthException catch (error) {
       throw AuthException(_mapFirebaseAuthError(error));
+    } on UserProfileRepositoryException catch (error) {
+      throw AuthException(error.message);
     }
   }
 
@@ -61,9 +75,17 @@ class AuthService {
         await credential.user?.updateDisplayName(displayName);
       }
 
+      await _ensureUserDocument(
+        credential,
+        displayName: displayName,
+        email: email,
+      );
+
       return credential;
     } on FirebaseAuthException catch (error) {
       throw AuthException(_mapFirebaseAuthError(error));
+    } on UserProfileRepositoryException catch (error) {
+      throw AuthException(error.message);
     }
   }
 
@@ -77,7 +99,9 @@ class AuthService {
     try {
       if (kIsWeb) {
         final provider = GoogleAuthProvider()..addScope('email');
-        return await _firebaseAuth.signInWithPopup(provider);
+        final credential = await _firebaseAuth.signInWithPopup(provider);
+        await _ensureUserDocument(credential);
+        return credential;
       }
 
       final googleUser = await _googleSignIn.signIn();
@@ -89,9 +113,15 @@ class AuthService {
         idToken: googleAuth.idToken,
       );
 
-      return await _firebaseAuth.signInWithCredential(credential);
+      final userCredential = await _firebaseAuth.signInWithCredential(
+        credential,
+      );
+      await _ensureUserDocument(userCredential);
+      return userCredential;
     } on FirebaseAuthException catch (error) {
       throw AuthException(_mapFirebaseAuthError(error));
+    } on UserProfileRepositoryException catch (error) {
+      throw AuthException(error.message);
     } on AuthException {
       rethrow;
     } catch (_) {
@@ -121,6 +151,28 @@ class AuthService {
         'Não foi possível sair da conta. Tente novamente.',
       );
     }
+  }
+
+  Future<void> ensureCurrentUserDocument() {
+    final user = currentUser;
+
+    return _userProfileRepository.ensureCurrentUserDocument(
+      displayName: user?.displayName,
+      email: user?.email,
+    );
+  }
+
+  Future<void> _ensureUserDocument(
+    UserCredential credential, {
+    String? displayName,
+    String? email,
+  }) {
+    final user = credential.user;
+
+    return _userProfileRepository.ensureCurrentUserDocument(
+      displayName: displayName ?? user?.displayName,
+      email: email ?? user?.email,
+    );
   }
 
   String _mapFirebaseAuthError(FirebaseAuthException error) {
