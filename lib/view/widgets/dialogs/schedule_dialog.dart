@@ -2,15 +2,36 @@ import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
 import '../selectors/weekday_selector.dart';
 
-class ScheduleDialog extends StatefulWidget {
-  final VoidCallback onContinue;
-  final VoidCallback onSkip;
+class ScheduleDialogResult {
+  final List<int> weekdays;
+  final List<ScheduleTimeRangeResult> timeRanges;
 
-  const ScheduleDialog({
-    super.key,
-    required this.onContinue,
-    required this.onSkip,
+  const ScheduleDialogResult({
+    required this.weekdays,
+    required this.timeRanges,
   });
+
+  const ScheduleDialogResult.empty()
+    : weekdays = const [],
+      timeRanges = const [];
+}
+
+class ScheduleTimeRangeResult {
+  final TimeOfDay startTime;
+  final TimeOfDay endTime;
+
+  const ScheduleTimeRangeResult({
+    required this.startTime,
+    required this.endTime,
+  });
+
+  int get startTimeMinutes => startTime.hour * 60 + startTime.minute;
+
+  int get endTimeMinutes => endTime.hour * 60 + endTime.minute;
+}
+
+class ScheduleDialog extends StatefulWidget {
+  const ScheduleDialog({super.key});
 
   @override
   State<ScheduleDialog> createState() => _ScheduleDialogState();
@@ -23,17 +44,15 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
       startTime: const TimeOfDay(hour: 8, minute: 0),
       endTime: const TimeOfDay(hour: 10, minute: 50),
     ),
-    _ScheduleTimeRange(
-      startTime: const TimeOfDay(hour: 8, minute: 0),
-      endTime: const TimeOfDay(hour: 10, minute: 50),
-    ),
   ];
+  String? _errorMessage;
 
   void _toggleWeekday(int index) {
     setState(() {
       if (!_selectedWeekdays.add(index)) {
         _selectedWeekdays.remove(index);
       }
+      _errorMessage = null;
     });
   }
 
@@ -45,6 +64,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
           endTime: const TimeOfDay(hour: 10, minute: 50),
         ),
       );
+      _errorMessage = null;
     });
   }
 
@@ -59,6 +79,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
           ),
         );
       }
+      _errorMessage = null;
     });
   }
 
@@ -86,7 +107,43 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
       } else {
         range.endTime = selectedTime;
       }
+      _errorMessage = null;
     });
+  }
+
+  void _onContinue() {
+    final errorMessage = _validateSchedule();
+    if (errorMessage != null) {
+      setState(() => _errorMessage = errorMessage);
+      return;
+    }
+
+    final weekdays = _selectedWeekdays.toList()..sort();
+    final timeRanges = _timeRanges.map((range) {
+      return ScheduleTimeRangeResult(
+        startTime: range.startTime,
+        endTime: range.endTime,
+      );
+    }).toList();
+
+    Navigator.of(
+      context,
+    ).pop(ScheduleDialogResult(weekdays: weekdays, timeRanges: timeRanges));
+  }
+
+  String? _validateSchedule() {
+    if (_selectedWeekdays.isEmpty) return 'Selecione pelo menos um dia.';
+
+    for (final range in _timeRanges) {
+      final startMinutes = range.startTime.hour * 60 + range.startTime.minute;
+      final endMinutes = range.endTime.hour * 60 + range.endTime.minute;
+
+      if (endMinutes <= startMinutes) {
+        return 'O horário final deve ser depois do inicial.';
+      }
+    }
+
+    return null;
   }
 
   @override
@@ -222,12 +279,24 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                     ),
                   ),
                 ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 12,
+                      fontFamily: 'Roboto',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   height: 44,
                   child: ElevatedButton(
-                    onPressed: widget.onContinue,
+                    onPressed: _onContinue,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
@@ -264,7 +333,11 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                     width: 180,
                     height: 44,
                     child: OutlinedButton(
-                      onPressed: widget.onSkip,
+                      onPressed: () {
+                        Navigator.of(
+                          context,
+                        ).pop(const ScheduleDialogResult.empty());
+                      },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.primary,
                         side: const BorderSide(color: Color(0x7F514EB6)),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../config/routes/app_routes.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../../models/study_cycle.dart';
+import '../../services/setup/academic_setup_service.dart';
 import '../widgets/buttons/cancel_button.dart';
 import '../widgets/buttons/primary_button.dart';
 import '../widgets/common/section_label.dart';
@@ -17,8 +19,10 @@ class HighSchoolConfigPage extends StatefulWidget {
 
 class _HighSchoolConfigPageState extends State<HighSchoolConfigPage> {
   final formKey = GlobalKey<FormState>();
+  final _setupService = AcademicSetupService();
 
   int _selectedSeriesIndex = 0; // Estado para a série selecionada (0 = 1º Ano)
+  List<AcademicSetupDisciplineDraft> _disciplines = const [];
 
   bool isLoading = false;
 
@@ -28,14 +32,28 @@ class _HighSchoolConfigPageState extends State<HighSchoolConfigPage> {
     setState(() => isLoading = true);
 
     try {
-      // Mock da API/Firebase
-      await Future.delayed(const Duration(seconds: 1));
+      await _setupService.saveSetup(
+        studyCycle: StudyCycleInput(
+          type: StudyCycleType.highSchool,
+          schoolYear: _selectedSeriesIndex + 1,
+        ),
+        disciplines: _disciplines,
+      );
 
-      // Aqui, salvar o _selectedSeriesIndex (+1 para o ano real) e as disciplinas
-      if (mounted) AppRoutes.toHome(context);
+      if (mounted) AppRoutes.toHomeClearingStack(context);
+    } on AcademicSetupException catch (error) {
+      if (mounted) _showError(error.message);
+    } catch (_) {
+      if (mounted) _showError('Não foi possível salvar sua configuração.');
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -86,7 +104,9 @@ class _HighSchoolConfigPageState extends State<HighSchoolConfigPage> {
 
                 const SectionLabel(label: 'DISCIPLINAS'),
                 const SizedBox(height: 8),
-                const DisciplineSetupList(),
+                DisciplineSetupList(
+                  onChanged: (disciplines) => _disciplines = disciplines,
+                ),
 
                 const SizedBox(height: 260),
 

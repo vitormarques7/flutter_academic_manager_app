@@ -2,6 +2,8 @@ import 'package:academic_manager_app/config/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../../models/study_cycle.dart';
+import '../../services/setup/academic_setup_service.dart';
 import '../widgets/buttons/cancel_button.dart';
 import '../widgets/buttons/primary_button.dart';
 import '../widgets/common/section_label.dart';
@@ -17,8 +19,10 @@ class UniversityConfigPage extends StatefulWidget {
 
 class _UniversityConfigPageState extends State<UniversityConfigPage> {
   final formKey = GlobalKey<FormState>();
+  final _setupService = AcademicSetupService();
 
   final courseController = TextEditingController();
+  List<AcademicSetupDisciplineDraft> _disciplines = const [];
   int? selectedPeriod;
 
   bool isLoading = false;
@@ -35,11 +39,29 @@ class _UniversityConfigPageState extends State<UniversityConfigPage> {
     setState(() => isLoading = true);
 
     try {
-      await Future.delayed(const Duration(seconds: 1));
-      if (mounted) AppRoutes.toHome(context);
+      await _setupService.saveSetup(
+        studyCycle: StudyCycleInput(
+          type: StudyCycleType.university,
+          courseName: courseController.text,
+          period: selectedPeriod == 0 ? null : selectedPeriod,
+        ),
+        disciplines: _disciplines,
+      );
+
+      if (mounted) AppRoutes.toHomeClearingStack(context);
+    } on AcademicSetupException catch (error) {
+      if (mounted) _showError(error.message);
+    } catch (_) {
+      if (mounted) _showError('Não foi possível salvar sua configuração.');
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -78,7 +100,15 @@ class _UniversityConfigPageState extends State<UniversityConfigPage> {
 
                 const SectionLabel(label: 'NOME DO CURSO'),
                 const SizedBox(height: 8),
-                ConfigTextField(controller: courseController),
+                ConfigTextField(
+                  controller: courseController,
+                  validator: (value) {
+                    if ((value?.trim() ?? '').isEmpty) {
+                      return 'Informe o nome do curso.';
+                    }
+                    return null;
+                  },
+                ),
 
                 const SizedBox(height: 24),
 
@@ -132,7 +162,9 @@ class _UniversityConfigPageState extends State<UniversityConfigPage> {
 
                 const SectionLabel(label: 'DISCIPLINAS'),
                 const SizedBox(height: 8),
-                const DisciplineSetupList(),
+                DisciplineSetupList(
+                  onChanged: (disciplines) => _disciplines = disciplines,
+                ),
 
                 const SizedBox(height: 190),
 

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../../models/study_cycle.dart';
+import '../../services/setup/academic_setup_service.dart';
 import '../widgets/buttons/cancel_button.dart';
 import '../widgets/buttons/primary_button.dart';
 import '../widgets/common/section_label.dart';
@@ -18,6 +20,7 @@ class StudyCycleSetupPage extends StatefulWidget {
 
 class _StudyCycleSetupPageState extends State<StudyCycleSetupPage> {
   final _formKey = GlobalKey<FormState>();
+  final _setupService = AcademicSetupService();
   final _courseController = TextEditingController(
     text: 'Engenharia de Software',
   );
@@ -26,6 +29,7 @@ class _StudyCycleSetupPageState extends State<StudyCycleSetupPage> {
   _StudyCycleType _selectedType = _StudyCycleType.university;
   int? _selectedPeriod = 6;
   int _selectedSeriesIndex = 0;
+  List<AcademicSetupDisciplineDraft> _disciplines = const [];
   bool _isLoading = false;
 
   @override
@@ -41,7 +45,10 @@ class _StudyCycleSetupPageState extends State<StudyCycleSetupPage> {
     setState(() => _isLoading = true);
 
     try {
-      await Future.delayed(const Duration(milliseconds: 450));
+      await _setupService.saveSetup(
+        studyCycle: _buildStudyCycleInput(),
+        disciplines: _disciplines,
+      );
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -51,9 +58,37 @@ class _StudyCycleSetupPageState extends State<StudyCycleSetupPage> {
         ),
       );
       Navigator.of(context).pop();
+    } on AcademicSetupException catch (error) {
+      if (mounted) _showError(error.message);
+    } catch (_) {
+      if (mounted) _showError('Não foi possível salvar sua configuração.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  StudyCycleInput _buildStudyCycleInput() {
+    return switch (_selectedType) {
+      _StudyCycleType.university => StudyCycleInput(
+        type: StudyCycleType.university,
+        courseName: _courseController.text,
+        period: _selectedPeriod,
+      ),
+      _StudyCycleType.highSchool => StudyCycleInput(
+        type: StudyCycleType.highSchool,
+        schoolYear: _selectedSeriesIndex + 1,
+      ),
+      _StudyCycleType.independent => StudyCycleInput(
+        type: StudyCycleType.independent,
+        goal: _goalController.text,
+      ),
+    };
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -98,7 +133,9 @@ class _StudyCycleSetupPageState extends State<StudyCycleSetupPage> {
                 const SizedBox(height: 24),
                 const SectionLabel(label: 'DISCIPLINAS E HORÁRIOS'),
                 const SizedBox(height: 8),
-                const DisciplineSetupList(),
+                DisciplineSetupList(
+                  onChanged: (disciplines) => _disciplines = disciplines,
+                ),
                 const SizedBox(height: 44),
                 PrimaryButton(
                   label: _selectedType.saveLabel,
@@ -261,7 +298,15 @@ class _CycleFields extends StatelessWidget {
         _StudyCycleType.university => [
           const SectionLabel(label: 'NOME DO CURSO'),
           const SizedBox(height: 8),
-          ConfigTextField(controller: courseController),
+          ConfigTextField(
+            controller: courseController,
+            validator: (value) {
+              if ((value?.trim() ?? '').isEmpty) {
+                return 'Informe o nome do curso.';
+              }
+              return null;
+            },
+          ),
           const SizedBox(height: 24),
           const SectionLabel(label: 'PERÍODO'),
           const SizedBox(height: 8),
@@ -310,7 +355,15 @@ class _CycleFields extends StatelessWidget {
         _StudyCycleType.independent => [
           const SectionLabel(label: 'OBJETIVO'),
           const SizedBox(height: 8),
-          ConfigTextField(controller: goalController),
+          ConfigTextField(
+            controller: goalController,
+            validator: (value) {
+              if ((value?.trim() ?? '').isEmpty) {
+                return 'Informe seu objetivo.';
+              }
+              return null;
+            },
+          ),
         ],
       },
     );
