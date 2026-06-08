@@ -77,8 +77,6 @@ Observacoes:
   ciclo ativo.
 - Documentos antigos sem `studyCycleId` continuam validos; o bootstrap tenta
   preencher esse campo quando encontra um ciclo ativo.
-- A listagem de tarefas ignora snapshots vindos apenas do cache local; novas
-  tarefas so sao tratadas como salvas apos confirmacao do servidor.
 
 Exemplo:
 

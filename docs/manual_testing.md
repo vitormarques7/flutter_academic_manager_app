@@ -128,7 +128,6 @@ Resultado esperado:
 - Modal mostra loading.
 - Documento e criado em `users/{uid}/tasks/{taskId}`.
 - Documento recebe `studyCycleId` quando ha ciclo academico ativo.
-- Modal so fecha como sucesso depois que a escrita e confirmada no servidor.
 - Tarefa aparece na lista.
 - Resumo de progresso e contadores sao atualizados.
 
