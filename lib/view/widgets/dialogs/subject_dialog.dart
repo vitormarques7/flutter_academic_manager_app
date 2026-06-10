@@ -33,6 +33,13 @@ class SubjectScheduleEntry {
 
   int get endTimeMinutes => _parseMinutes(endTime);
 
+  bool overlaps(SubjectScheduleEntry other) {
+    if (weekdayIndex != other.weekdayIndex) return false;
+
+    return startTimeMinutes < other.endTimeMinutes &&
+        endTimeMinutes > other.startTimeMinutes;
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'weekdayIndex': weekdayIndex,
@@ -55,7 +62,9 @@ class SubjectScheduleEntry {
 }
 
 class SubjectDialog extends StatefulWidget {
-  const SubjectDialog({super.key});
+  final List<SubjectScheduleEntry> unavailableScheduleEntries;
+
+  const SubjectDialog({super.key, this.unavailableScheduleEntries = const []});
 
   @override
   State<SubjectDialog> createState() => _SubjectDialogState();
@@ -67,12 +76,8 @@ class _SubjectDialogState extends State<SubjectDialog> {
   final _teacherController = TextEditingController();
   final _workloadController = TextEditingController();
   final Set<int> _selectedWeekdays = {};
-  final List<_ScheduleTimeRange> _timeRanges = [
-    _ScheduleTimeRange(
-      startTime: const TimeOfDay(hour: 8, minute: 0),
-      endTime: const TimeOfDay(hour: 10, minute: 0),
-    ),
-  ];
+  final Map<int, List<_ScheduleTimeRange>> _timeRangesByWeekday = {};
+  String? _scheduleErrorMessage;
 
   @override
   void dispose() {
@@ -85,8 +90,9 @@ class _SubjectDialogState extends State<SubjectDialog> {
   void _save() {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_validateSchedule() != null) {
-      setState(() {});
+    final scheduleError = _validateSchedule();
+    if (scheduleError != null) {
+      setState(() => _scheduleErrorMessage = scheduleError);
       return;
     }
 
@@ -105,8 +111,12 @@ class _SubjectDialogState extends State<SubjectDialog> {
   List<SubjectScheduleEntry> _buildSchedule() {
     if (_selectedWeekdays.isEmpty) return const [];
 
-    return _selectedWeekdays.expand((weekdayIndex) {
-      return _timeRanges.map((range) {
+    final sortedWeekdays = _selectedWeekdays.toList()..sort();
+
+    return sortedWeekdays.expand((weekdayIndex) {
+      final ranges = _timeRangesByWeekday[weekdayIndex] ?? const [];
+
+      return ranges.map((range) {
         return SubjectScheduleEntry(
           weekdayIndex: weekdayIndex,
           startTime: _formatTime(range.startTime),
@@ -120,40 +130,44 @@ class _SubjectDialogState extends State<SubjectDialog> {
     setState(() {
       if (!_selectedWeekdays.add(index)) {
         _selectedWeekdays.remove(index);
+        _timeRangesByWeekday.remove(index);
+      } else {
+        _timeRangesByWeekday[index] = [_defaultTimeRange()];
       }
+      _scheduleErrorMessage = null;
     });
   }
 
-  void _addTimeRange() {
+  void _addTimeRange(int weekdayIndex) {
     setState(() {
-      _timeRanges.add(
-        _ScheduleTimeRange(
-          startTime: const TimeOfDay(hour: 8, minute: 0),
-          endTime: const TimeOfDay(hour: 10, minute: 0),
-        ),
+      _timeRangesByWeekday.putIfAbsent(
+        weekdayIndex,
+        () => [_defaultTimeRange()],
       );
+      _timeRangesByWeekday[weekdayIndex]!.add(_defaultTimeRange());
+      _scheduleErrorMessage = null;
     });
   }
 
-  void _removeTimeRange(int index) {
+  void _removeTimeRange({required int weekdayIndex, required int rangeIndex}) {
     setState(() {
-      _timeRanges.removeAt(index);
-      if (_timeRanges.isEmpty) {
-        _timeRanges.add(
-          _ScheduleTimeRange(
-            startTime: const TimeOfDay(hour: 8, minute: 0),
-            endTime: const TimeOfDay(hour: 10, minute: 0),
-          ),
-        );
+      final ranges = _timeRangesByWeekday[weekdayIndex];
+      if (ranges == null) return;
+
+      ranges.removeAt(rangeIndex);
+      if (ranges.isEmpty) {
+        ranges.add(_defaultTimeRange());
       }
+      _scheduleErrorMessage = null;
     });
   }
 
   Future<void> _pickTime({
+    required int weekdayIndex,
     required int index,
     required bool isStartTime,
   }) async {
-    final range = _timeRanges[index];
+    final range = _timeRangesByWeekday[weekdayIndex]![index];
     final selectedTime = await showTimePicker(
       context: context,
       initialTime: isStartTime ? range.startTime : range.endTime,
@@ -177,7 +191,15 @@ class _SubjectDialogState extends State<SubjectDialog> {
       } else {
         range.endTime = selectedTime;
       }
+      _scheduleErrorMessage = null;
     });
+  }
+
+  _ScheduleTimeRange _defaultTimeRange() {
+    return _ScheduleTimeRange(
+      startTime: const TimeOfDay(hour: 8, minute: 0),
+      endTime: const TimeOfDay(hour: 10, minute: 0),
+    );
   }
 
   String? _validateWorkload(String? value) {
@@ -196,16 +218,81 @@ class _SubjectDialogState extends State<SubjectDialog> {
   String? _validateSchedule() {
     if (_selectedWeekdays.isEmpty) return null;
 
-    for (final range in _timeRanges) {
-      final startMinutes = range.startTime.hour * 60 + range.startTime.minute;
-      final endMinutes = range.endTime.hour * 60 + range.endTime.minute;
+    for (final weekdayIndex in _selectedWeekdays) {
+      final ranges = _timeRangesByWeekday[weekdayIndex] ?? const [];
+      if (ranges.isEmpty) return 'Defina pelo menos um horário por dia.';
 
-      if (endMinutes <= startMinutes) {
-        return 'O horário final deve ser depois do inicial.';
+      for (final range in ranges) {
+        final startMinutes = range.startTime.hour * 60 + range.startTime.minute;
+        final endMinutes = range.endTime.hour * 60 + range.endTime.minute;
+
+        if (endMinutes <= startMinutes) {
+          return 'O horário final deve ser depois do inicial.';
+        }
+      }
+    }
+
+    final schedule = _buildSchedule();
+    for (var i = 0; i < schedule.length; i++) {
+      for (var j = i + 1; j < schedule.length; j++) {
+        if (schedule[i].overlaps(schedule[j])) {
+          return 'Há horários sobrepostos para ${_weekdayName(schedule[i].weekdayIndex)}.';
+        }
+      }
+    }
+
+    for (final entry in schedule) {
+      for (final unavailableEntry in widget.unavailableScheduleEntries) {
+        if (entry.overlaps(unavailableEntry)) {
+          return 'Já existe uma disciplina em ${_weekdayName(entry.weekdayIndex)}, das ${unavailableEntry.startTime} às ${unavailableEntry.endTime}.';
+        }
       }
     }
 
     return null;
+  }
+
+  String _weekdayName(int weekdayIndex) {
+    return switch (weekdayIndex) {
+      0 => 'domingo',
+      1 => 'segunda',
+      2 => 'terça',
+      3 => 'quarta',
+      4 => 'quinta',
+      5 => 'sexta',
+      6 => 'sábado',
+      _ => 'dia selecionado',
+    };
+  }
+
+  String _weekdayTitle(int weekdayIndex) {
+    return switch (weekdayIndex) {
+      0 => 'Domingo',
+      1 => 'Segunda',
+      2 => 'Terça',
+      3 => 'Quarta',
+      4 => 'Quinta',
+      5 => 'Sexta',
+      6 => 'Sábado',
+      _ => 'Dia',
+    };
+  }
+
+  String _weekdayShortName(int weekdayIndex) {
+    return switch (weekdayIndex) {
+      0 => 'dom',
+      1 => 'seg',
+      2 => 'ter',
+      3 => 'qua',
+      4 => 'qui',
+      5 => 'sex',
+      6 => 'sab',
+      _ => 'dia',
+    };
+  }
+
+  List<int> get _sortedSelectedWeekdays {
+    return _selectedWeekdays.toList()..sort();
   }
 
   @override
@@ -323,51 +410,80 @@ class _SubjectDialogState extends State<SubjectDialog> {
                           onChanged: _toggleWeekday,
                         ),
                         const SizedBox(height: 24),
-                        const _FieldLabel('HORÁRIO(S)'),
+                        const _FieldLabel('HORÁRIOS POR DIA'),
                         const SizedBox(height: 10),
-                        ..._timeRanges.asMap().entries.map((entry) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: _ScheduleTimeRow(
-                              range: entry.value,
-                              canDelete: _timeRanges.length > 1,
-                              onStartTap: () => _pickTime(
-                                index: entry.key,
-                                isStartTime: true,
-                              ),
-                              onEndTap: () => _pickTime(
-                                index: entry.key,
-                                isStartTime: false,
-                              ),
-                              onDelete: () => _removeTimeRange(entry.key),
-                            ),
-                          );
-                        }),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 38,
-                          child: OutlinedButton.icon(
-                            onPressed: _addTimeRange,
-                            icon: const Icon(Icons.add, size: 18),
-                            label: const Text('Adicionar horário'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.primary,
-                              side: const BorderSide(color: Color(0x7F514EB6)),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                        if (_selectedWeekdays.isEmpty)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF7F7FD),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color(0xFFE2E4F0),
                               ),
                             ),
-                          ),
-                        ),
-                        if (_validateSchedule() != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            _validateSchedule()!,
-                            style: const TextStyle(
-                              color: Colors.red,
-                              fontSize: 12,
-                              fontFamily: 'Roboto',
-                              fontWeight: FontWeight.w500,
+                            child: const Text(
+                              'Selecione um dia para definir o horário.',
+                              style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 13,
+                                fontFamily: 'Roboto',
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          )
+                        else
+                          ..._sortedSelectedWeekdays.map((weekdayIndex) {
+                            final ranges =
+                                _timeRangesByWeekday[weekdayIndex] ?? const [];
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _WeekdayScheduleSection(
+                                title: _weekdayTitle(weekdayIndex),
+                                shortLabel: _weekdayShortName(weekdayIndex),
+                                ranges: ranges,
+                                onAddTimeRange: () =>
+                                    _addTimeRange(weekdayIndex),
+                                onPickStartTime: (rangeIndex) => _pickTime(
+                                  weekdayIndex: weekdayIndex,
+                                  index: rangeIndex,
+                                  isStartTime: true,
+                                ),
+                                onPickEndTime: (rangeIndex) => _pickTime(
+                                  weekdayIndex: weekdayIndex,
+                                  index: rangeIndex,
+                                  isStartTime: false,
+                                ),
+                                onRemoveTimeRange: (rangeIndex) =>
+                                    _removeTimeRange(
+                                      weekdayIndex: weekdayIndex,
+                                      rangeIndex: rangeIndex,
+                                    ),
+                              ),
+                            );
+                          }),
+                        if (_scheduleErrorMessage != null) ...[
+                          const SizedBox(height: 2),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF1F2),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color(0xFFFCA5A5),
+                              ),
+                            ),
+                            child: Text(
+                              _scheduleErrorMessage!,
+                              style: const TextStyle(
+                                color: Color(0xFF991B1B),
+                                fontSize: 12,
+                                fontFamily: 'Roboto',
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
@@ -536,6 +652,108 @@ class _FieldLabel extends StatelessWidget {
           height: 1.50,
           letterSpacing: 0.72,
         ),
+      ),
+    );
+  }
+}
+
+class _WeekdayScheduleSection extends StatelessWidget {
+  final String title;
+  final String shortLabel;
+  final List<_ScheduleTimeRange> ranges;
+  final VoidCallback onAddTimeRange;
+  final ValueChanged<int> onPickStartTime;
+  final ValueChanged<int> onPickEndTime;
+  final ValueChanged<int> onRemoveTimeRange;
+
+  const _WeekdayScheduleSection({
+    required this.title,
+    required this.shortLabel,
+    required this.ranges,
+    required this.onAddTimeRange,
+    required this.onPickStartTime,
+    required this.onPickEndTime,
+    required this.onRemoveTimeRange,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F7FD),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E4F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEDEBFF),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  shortLabel,
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 12,
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Color(0xFF1B1B20),
+                    fontSize: 15,
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...ranges.asMap().entries.map((entry) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _ScheduleTimeRow(
+                range: entry.value,
+                canDelete: ranges.length > 1,
+                onStartTap: () => onPickStartTime(entry.key),
+                onEndTap: () => onPickEndTime(entry.key),
+                onDelete: () => onRemoveTimeRange(entry.key),
+              ),
+            );
+          }),
+          SizedBox(
+            width: double.infinity,
+            height: 36,
+            child: OutlinedButton.icon(
+              onPressed: onAddTimeRange,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Adicionar horário para este dia'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: Color(0x7F514EB6)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
