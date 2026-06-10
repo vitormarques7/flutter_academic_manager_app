@@ -4,6 +4,11 @@ import 'package:flutter/material.dart';
 import '../../config/routes/app_routes.dart';
 import '../../config/scroll/app_scroll_behavior.dart';
 import '../../config/theme/app_colors.dart';
+import '../../models/schedule.dart';
+import '../../models/study_cycle.dart';
+import '../../repositories/schedule_repository.dart';
+import '../../repositories/study_cycle_repository.dart';
+import '../../repositories/user_profile_repository.dart';
 import '../widgets/common/list_section_header.dart';
 import '../widgets/common/metadata_chip.dart';
 import '../widgets/common/page_header.dart';
@@ -50,25 +55,6 @@ class HomePage extends StatelessWidget {
       title: 'Frequência de Cálculo I em atenção',
       description: '60% registrado no mock atual.',
       level: _AlertLevel.info,
-    ),
-  ];
-
-  static const _studyCycles = [
-    _StudyCycle(
-      title: 'Engenharia de Software',
-      label: '5º período',
-      detail: 'Manhã e tarde • 7 aulas',
-      isCurrent: true,
-    ),
-    _StudyCycle(
-      title: 'Engenharia de Software',
-      label: '4º período',
-      detail: 'Encerrado • 6 disciplinas',
-    ),
-    _StudyCycle(
-      title: 'Engenharia de Software',
-      label: '3º período',
-      detail: 'Encerrado • 5 disciplinas',
     ),
   ];
 
@@ -129,7 +115,6 @@ class HomePage extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         return _StudyCycleSheet(
-          cycles: _studyCycles,
           onCreateCycle: () {
             Navigator.of(sheetContext).pop();
             AppRoutes.toStudyCycleSetup(context);
@@ -169,16 +154,22 @@ class _StudyCycleMenuButton extends StatelessWidget {
 }
 
 class _StudyCycleSheet extends StatelessWidget {
-  final List<_StudyCycle> cycles;
   final VoidCallback onCreateCycle;
+  final StudyCycleRepository studyCycleRepository;
+  final UserProfileRepository userProfileRepository;
+  final ScheduleRepository scheduleRepository;
 
-  const _StudyCycleSheet({required this.cycles, required this.onCreateCycle});
+  _StudyCycleSheet({
+    required this.onCreateCycle,
+    StudyCycleRepository? studyCycleRepository,
+    UserProfileRepository? userProfileRepository,
+    ScheduleRepository? scheduleRepository,
+  }) : studyCycleRepository = studyCycleRepository ?? StudyCycleRepository(),
+       userProfileRepository = userProfileRepository ?? UserProfileRepository(),
+       scheduleRepository = scheduleRepository ?? ScheduleRepository();
 
   @override
   Widget build(BuildContext context) {
-    final currentCycle = cycles.firstWhere((cycle) => cycle.isCurrent);
-    final previousCycles = cycles.where((cycle) => !cycle.isCurrent).toList();
-
     return SafeArea(
       top: false,
       child: Container(
@@ -200,30 +191,83 @@ class _StudyCycleSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Períodos',
-                    style: TextStyle(
-                      color: AppColors.textDark,
-                      fontSize: 22,
-                      fontFamily: 'Roboto',
-                      fontWeight: FontWeight.w800,
+            FutureBuilder<List<_StudyCycleSummary>>(
+              future: _loadStudyCycleSummaries(),
+              builder: (context, snapshot) {
+                final cycles = snapshot.data ?? [];
+                final currentCycle = cycles.isEmpty
+                    ? null
+                    : cycles.firstWhere(
+                        (cycle) => cycle.isCurrent,
+                        orElse: () => cycles.first,
+                      );
+                final sheetTitle = _sheetTitleForCycle(currentCycle);
+
+                Widget content;
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  content = const _StudyCycleSheetStatus(
+                    icon: Icons.hourglass_top_rounded,
+                    message: 'Carregando seus períodos...',
+                  );
+                } else if (snapshot.hasError) {
+                  content = const _StudyCycleSheetStatus(
+                    icon: Icons.error_outline_rounded,
+                    message: 'Não foi possível carregar seus períodos.',
+                  );
+                } else if (cycles.isEmpty) {
+                  content = const _StudyCycleSheetStatus(
+                    icon: Icons.school_outlined,
+                    message: 'Nenhum período cadastrado ainda.',
+                  );
+                } else {
+                  final activeCycle = currentCycle!;
+                  final previousCycles = cycles
+                      .where((cycle) => cycle.id != activeCycle.id)
+                      .toList();
+
+                  content = Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _CurrentCycleCard(cycle: activeCycle),
+                      const SizedBox(height: 12),
+                      _PreviousCyclesTile(cycles: previousCycles),
+                    ],
+                  );
+                }
+
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            sheetTitle,
+                            style: const TextStyle(
+                              color: AppColors.textDark,
+                              fontSize: 22,
+                              fontFamily: 'Roboto',
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Fechar',
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(
+                            Icons.close,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Fechar',
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close, color: AppColors.textMuted),
-                ),
-              ],
+                    const SizedBox(height: 10),
+                    content,
+                  ],
+                );
+              },
             ),
-            const SizedBox(height: 10),
-            _CurrentCycleCard(cycle: currentCycle),
-            const SizedBox(height: 12),
-            _PreviousCyclesTile(cycles: previousCycles),
             const SizedBox(height: 14),
             Material(
               color: AppColors.primary,
@@ -259,10 +303,122 @@ class _StudyCycleSheet extends StatelessWidget {
       ),
     );
   }
+
+  Future<List<_StudyCycleSummary>> _loadStudyCycleSummaries() async {
+    final activeStudyCycleId = await userProfileRepository
+        .resolveActiveStudyCycleId();
+    final studyCycles = await studyCycleRepository.fetchStudyCycles();
+    if (studyCycles.isEmpty) return const [];
+
+    final summaries = <_StudyCycleSummary>[];
+    for (final studyCycle in studyCycles) {
+      final schedules = await scheduleRepository.fetchSchedules(
+        studyCycleId: studyCycle.id,
+      );
+
+      summaries.add(
+        _StudyCycleSummary(
+          id: studyCycle.id,
+          type: studyCycle.type,
+          title: _cycleTitle(studyCycle),
+          label: _cycleLabel(studyCycle),
+          detail: _cycleDetail(schedules),
+          isCurrent: studyCycle.id == activeStudyCycleId,
+        ),
+      );
+    }
+
+    summaries.sort((a, b) {
+      if (a.isCurrent && !b.isCurrent) return -1;
+      if (!a.isCurrent && b.isCurrent) return 1;
+      return 0;
+    });
+
+    return summaries;
+  }
+
+  String _sheetTitleForCycle(_StudyCycleSummary? studyCycle) {
+    return switch (studyCycle?.type) {
+      StudyCycleType.university => 'Seus períodos',
+      StudyCycleType.highSchool => 'Seus anos letivos',
+      StudyCycleType.independent => 'Suas metas',
+      null => 'Seus ciclos',
+    };
+  }
+
+  String _cycleTitle(StudyCycle studyCycle) {
+    return switch (studyCycle.type) {
+      StudyCycleType.university =>
+        studyCycle.courseName ?? 'Curso não informado',
+      StudyCycleType.highSchool => 'Ensino médio',
+      StudyCycleType.independent => studyCycle.goal ?? 'Objetivo não informado',
+    };
+  }
+
+  String _cycleLabel(StudyCycle studyCycle) {
+    return switch (studyCycle.type) {
+      StudyCycleType.university =>
+        studyCycle.period == null
+            ? 'Período não informado'
+            : '${studyCycle.period}º período',
+      StudyCycleType.highSchool =>
+        studyCycle.schoolYear == null
+            ? 'Ano letivo não informado'
+            : '${studyCycle.schoolYear}º ano',
+      StudyCycleType.independent => 'Estudo independente',
+    };
+  }
+
+  String _cycleDetail(List<Schedule> schedules) {
+    if (schedules.isEmpty) return 'Sem aulas cadastradas';
+
+    final classCount = schedules.fold<int>(
+      0,
+      (total, schedule) => total + schedule.weekdays.length,
+    );
+    final safeClassCount = classCount == 0 ? schedules.length : classCount;
+    final classLabel = safeClassCount == 1 ? 'aula' : 'aulas';
+
+    return '${_shiftLabelFromSchedules(schedules)} • '
+        '$safeClassCount $classLabel';
+  }
+
+  String _shiftLabelFromSchedules(List<Schedule> schedules) {
+    if (schedules.isEmpty) return 'Sem aulas';
+
+    final shifts = <_ScheduleShift>{};
+
+    for (final schedule in schedules) {
+      shifts.add(_shiftFromTime(schedule.startTimeMinutes));
+    }
+
+    const orderedShifts = [
+      _ScheduleShift.morning,
+      _ScheduleShift.afternoon,
+      _ScheduleShift.night,
+    ];
+
+    final labels = orderedShifts
+        .where(shifts.contains)
+        .map((shift) => shift.label)
+        .toList();
+
+    if (labels.length <= 1) return labels.first;
+    if (labels.length == 2) return '${labels.first} e ${labels.last}';
+
+    return '${labels[0]}, ${labels[1]} e ${labels[2]}';
+  }
+
+  _ScheduleShift _shiftFromTime(int startTimeMinutes) {
+    if (startTimeMinutes < 12 * 60) return _ScheduleShift.morning;
+    if (startTimeMinutes < 18 * 60) return _ScheduleShift.afternoon;
+
+    return _ScheduleShift.night;
+  }
 }
 
 class _CurrentCycleCard extends StatelessWidget {
-  final _StudyCycle cycle;
+  final _StudyCycleSummary cycle;
 
   const _CurrentCycleCard({required this.cycle});
 
@@ -343,12 +499,20 @@ class _CurrentCycleCard extends StatelessWidget {
 }
 
 class _PreviousCyclesTile extends StatelessWidget {
-  final List<_StudyCycle> cycles;
+  final List<_StudyCycleSummary> cycles;
 
   const _PreviousCyclesTile({required this.cycles});
 
   @override
   Widget build(BuildContext context) {
+    if (cycles.isEmpty) {
+      return const _StudyCycleSheetStatus(
+        icon: Icons.history_outlined,
+        message: 'Sem ciclos anteriores.',
+        dense: true,
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFF5F5F5),
@@ -385,7 +549,7 @@ class _PreviousCyclesTile extends StatelessWidget {
 }
 
 class _PreviousCycleRow extends StatelessWidget {
-  final _StudyCycle cycle;
+  final _StudyCycleSummary cycle;
 
   const _PreviousCycleRow({required this.cycle});
 
@@ -431,6 +595,48 @@ class _PreviousCycleRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _StudyCycleSheetStatus extends StatelessWidget {
+  final IconData icon;
+  final String message;
+  final bool dense;
+
+  const _StudyCycleSheetStatus({
+    required this.icon,
+    required this.message,
+    this.dense = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: dense ? 13 : 20),
+      decoration: BoxDecoration(
+        color: dense ? const Color(0xFFF5F5F5) : const Color(0xFFEFF0FB),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0x1F514EB6)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.primary, size: dense ? 22 : 26),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: AppColors.textDark,
+                fontSize: dense ? 14 : 15,
+                fontFamily: 'Roboto',
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -908,13 +1114,17 @@ class _HomeAlert {
   });
 }
 
-class _StudyCycle {
+class _StudyCycleSummary {
+  final String id;
+  final StudyCycleType type;
   final String title;
   final String label;
   final String detail;
   final bool isCurrent;
 
-  const _StudyCycle({
+  const _StudyCycleSummary({
+    required this.id,
+    required this.type,
     required this.title,
     required this.label,
     required this.detail,
@@ -923,3 +1133,13 @@ class _StudyCycle {
 }
 
 enum _AlertLevel { info, warning }
+
+enum _ScheduleShift {
+  morning('Manhã'),
+  afternoon('Tarde'),
+  night('Noite');
+
+  final String label;
+
+  const _ScheduleShift(this.label);
+}
