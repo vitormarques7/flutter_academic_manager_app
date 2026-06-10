@@ -4,11 +4,13 @@ import 'section_label.dart';
 class ListSectionHeader extends StatelessWidget {
   final String label;
   final int count;
+  final Widget? trailing;
 
   const ListSectionHeader({
     super.key,
     required this.label,
     required this.count,
+    this.trailing,
   });
 
   @override
@@ -26,6 +28,7 @@ class ListSectionHeader extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
+        if (trailing != null) ...[const SizedBox(width: 10), trailing!],
       ],
     );
   }

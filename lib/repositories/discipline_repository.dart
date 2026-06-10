@@ -26,6 +26,10 @@ class DisciplineRepository {
     return _firestore.collection('users').doc(uid).collection('disciplines');
   }
 
+  CollectionReference<Map<String, dynamic>> _schedulesCollection(String uid) {
+    return _firestore.collection('users').doc(uid).collection('schedules');
+  }
+
   Query<Map<String, dynamic>> _disciplinesQuery(
     String uid, {
     String? studyCycleId,
@@ -64,12 +68,14 @@ class DisciplineRepository {
     );
   }
 
-  Future<void> createDiscipline(DisciplineInput input) async {
+  Future<String> createDiscipline(DisciplineInput input) async {
     final uid = _currentUserId;
 
-    await _guardFirestoreCall(() {
+    final document = await _guardFirestoreCall(() {
       return _disciplinesCollection(uid).add(input.toCreateMap());
     });
+
+    return document.id;
   }
 
   Future<void> updateDiscipline({
@@ -88,6 +94,56 @@ class DisciplineRepository {
 
     return _guardFirestoreCall(() {
       return _disciplinesCollection(uid).doc(id).delete();
+    });
+  }
+
+  Future<void> deleteDisciplineWithSchedules(Discipline discipline) {
+    final uid = _currentUserId;
+
+    return _guardFirestoreCall(() async {
+      final normalizedStudyCycleId = _normalizeString(discipline.studyCycleId);
+      final normalizedDisciplineName = _normalizeString(
+        discipline.name,
+      )?.toLowerCase();
+      final schedulesQuery = normalizedStudyCycleId == null
+          ? _schedulesCollection(uid)
+          : _schedulesCollection(
+              uid,
+            ).where('studyCycleId', isEqualTo: normalizedStudyCycleId);
+      final schedulesSnapshot = await schedulesQuery.get();
+      final referencesToDelete = <DocumentReference<Map<String, dynamic>>>[
+        _disciplinesCollection(uid).doc(discipline.id),
+      ];
+
+      for (final scheduleDocument in schedulesSnapshot.docs) {
+        final scheduleData = scheduleDocument.data();
+        final scheduleDisciplineId = _normalizeString(
+          scheduleData['disciplineId'],
+        );
+        final scheduleDisciplineName = _normalizeString(
+          scheduleData['disciplineName'],
+        )?.toLowerCase();
+        final belongsToDiscipline =
+            scheduleDisciplineId == discipline.id ||
+            (scheduleDisciplineId == null &&
+                normalizedDisciplineName != null &&
+                scheduleDisciplineName == normalizedDisciplineName);
+
+        if (belongsToDiscipline) {
+          referencesToDelete.add(scheduleDocument.reference);
+        }
+      }
+
+      for (var index = 0; index < referencesToDelete.length; index += 500) {
+        final batch = _firestore.batch();
+        final chunk = referencesToDelete.skip(index).take(500);
+
+        for (final reference in chunk) {
+          batch.delete(reference);
+        }
+
+        await batch.commit();
+      }
     });
   }
 
@@ -130,5 +186,12 @@ class DisciplineRepository {
       'not-found' => 'Não encontramos essa disciplina para atualizar.',
       _ => error.message ?? 'Não foi possível salvar a disciplina.',
     };
+  }
+
+  static String? _normalizeString(Object? value) {
+    if (value is! String) return null;
+
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
   }
 }

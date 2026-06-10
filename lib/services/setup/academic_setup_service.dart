@@ -17,10 +17,14 @@ class AcademicSetupException implements Exception {
 
 class AcademicSetupDisciplineDraft {
   final String name;
+  final String teacher;
+  final int workload;
   final List<AcademicSetupScheduleDraft> schedules;
 
   const AcademicSetupDisciplineDraft({
     required this.name,
+    this.teacher = '',
+    this.workload = 0,
     this.schedules = const [],
   });
 }
@@ -68,12 +72,12 @@ class AcademicSetupService {
         final disciplineName = discipline.name.trim();
         if (disciplineName.isEmpty) continue;
 
-        await _disciplineRepository.createDiscipline(
+        final disciplineId = await _disciplineRepository.createDiscipline(
           DisciplineInput(
             name: disciplineName,
-            teacher: '',
-            workload: 0,
-            colorValue: Discipline.defaultColorValue,
+            teacher: discipline.teacher.trim(),
+            workload: discipline.workload,
+            colorValue: Schedule.colorValueForDisciplineName(disciplineName),
             studyCycleId: studyCycleId,
           ),
         );
@@ -84,11 +88,12 @@ class AcademicSetupService {
           await _scheduleRepository.createSchedule(
             ScheduleInput(
               studyCycleId: studyCycleId,
+              disciplineId: disciplineId,
               disciplineName: disciplineName,
               weekdays: schedule.weekdays,
               startTimeMinutes: schedule.startTimeMinutes,
               endTimeMinutes: schedule.endTimeMinutes,
-              colorValue: Schedule.defaultColorValue,
+              colorValue: Schedule.colorValueForDisciplineName(disciplineName),
             ),
           );
         }

@@ -8,7 +8,6 @@ import '../../repositories/user_profile_repository.dart';
 import 'subject_details_page.dart';
 import '../widgets/common/page_header.dart';
 import '../widgets/inputs/search_field.dart';
-import '../widgets/common/floating_add_button.dart';
 import '../widgets/cards/subject_card.dart';
 import '../widgets/dialogs/subject_dialog.dart';
 import '../widgets/common/empty_state_card.dart';
@@ -49,27 +48,46 @@ class _SubjectsPageState extends State<SubjectsPage> {
   }
 
   Future<void> _openSubjectDialog() async {
-    final result = await showDialog<SubjectDialogResult>(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.28),
-      builder: (_) => const SubjectDialog(),
-    );
-
-    if (result == null || !mounted) return;
-
     final activeStudyCycleId = await _activeStudyCycleIdFuture;
     if (activeStudyCycleId == null) {
       _showError('Configure um ciclo de estudos antes de criar disciplinas.');
       return;
     }
 
+    List<SubjectScheduleEntry> unavailableScheduleEntries;
     try {
-      await _disciplineRepository.createDiscipline(
+      final existingSchedules = await _scheduleRepository.fetchSchedules(
+        studyCycleId: activeStudyCycleId,
+      );
+      unavailableScheduleEntries = _subjectScheduleEntriesFromSchedules(
+        existingSchedules,
+      );
+    } on ScheduleRepositoryException catch (error) {
+      _showError(error.message);
+      return;
+    } catch (_) {
+      _showError('Não foi possível verificar os horários existentes.');
+      return;
+    }
+
+    if (!mounted) return;
+
+    final result = await showDialog<SubjectDialogResult>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.28),
+      builder: (_) =>
+          SubjectDialog(unavailableScheduleEntries: unavailableScheduleEntries),
+    );
+
+    if (result == null || !mounted) return;
+
+    try {
+      final disciplineId = await _disciplineRepository.createDiscipline(
         DisciplineInput(
           name: result.name,
           teacher: result.teacher,
           workload: result.workload,
-          colorValue: Discipline.defaultColorValue,
+          colorValue: Schedule.colorValueForDisciplineName(result.name),
           studyCycleId: activeStudyCycleId,
         ),
       );
@@ -78,11 +96,12 @@ class _SubjectsPageState extends State<SubjectsPage> {
         await _scheduleRepository.createSchedule(
           ScheduleInput(
             studyCycleId: activeStudyCycleId,
+            disciplineId: disciplineId,
             disciplineName: result.name,
             weekdays: schedule.sortedWeekdays,
             startTimeMinutes: schedule.startTimeMinutes,
             endTimeMinutes: schedule.endTimeMinutes,
-            colorValue: Schedule.defaultColorValue,
+            colorValue: Schedule.colorValueForDisciplineName(result.name),
           ),
         );
       }
@@ -95,6 +114,20 @@ class _SubjectsPageState extends State<SubjectsPage> {
     } catch (_) {
       _showError('Não foi possível salvar a disciplina. Tente novamente.');
     }
+  }
+
+  List<SubjectScheduleEntry> _subjectScheduleEntriesFromSchedules(
+    List<Schedule> schedules,
+  ) {
+    return schedules.expand((schedule) {
+      return schedule.weekdays.map((weekdayIndex) {
+        return SubjectScheduleEntry(
+          weekdayIndex: weekdayIndex,
+          startTime: Schedule.formatMinutes(schedule.startTimeMinutes),
+          endTime: Schedule.formatMinutes(schedule.endTimeMinutes),
+        );
+      });
+    }).toList();
   }
 
   List<_GroupedScheduleEntry> _groupScheduleEntries(
@@ -136,6 +169,90 @@ class _SubjectsPageState extends State<SubjectsPage> {
         backgroundColor: Colors.red.shade700,
         behavior: SnackBarBehavior.floating,
       ),
+    );
+  }
+
+  Future<void> _handleEditAction(_SubjectEditAction action) async {
+    switch (action) {
+      case _SubjectEditAction.add:
+        await _openSubjectDialog();
+      case _SubjectEditAction.delete:
+        await _openDeleteDisciplineSheet();
+    }
+  }
+
+  Future<void> _openDeleteDisciplineSheet() async {
+    final activeStudyCycleId = await _activeStudyCycleIdFuture;
+    if (activeStudyCycleId == null) {
+      _showError('Configure um ciclo de estudos antes de excluir disciplinas.');
+      return;
+    }
+
+    List<Discipline> disciplines;
+    try {
+      disciplines = await _disciplineRepository.fetchDisciplines(
+        studyCycleId: activeStudyCycleId,
+      );
+    } on DisciplineRepositoryException catch (error) {
+      _showError(error.message);
+      return;
+    } catch (_) {
+      _showError('Não foi possível carregar suas disciplinas.');
+      return;
+    }
+
+    if (!mounted) return;
+    if (disciplines.isEmpty) {
+      _showError('Nenhuma disciplina cadastrada para excluir.');
+      return;
+    }
+
+    final selectedDiscipline = await showModalBottomSheet<Discipline>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _DeleteDisciplineSheet(disciplines: disciplines),
+    );
+
+    if (selectedDiscipline == null || !mounted) return;
+
+    final shouldDelete = await _confirmDisciplineDeletion(selectedDiscipline);
+    if (shouldDelete != true || !mounted) return;
+
+    try {
+      await _disciplineRepository.deleteDisciplineWithSchedules(
+        selectedDiscipline,
+      );
+      _showSuccess('Disciplina excluída com sucesso.');
+    } on DisciplineRepositoryException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Não foi possível excluir a disciplina. Tente novamente.');
+    }
+  }
+
+  Future<bool?> _confirmDisciplineDeletion(Discipline discipline) {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Excluir disciplina?'),
+          content: Text(
+            'Isso removerá "${discipline.name}" e os horários vinculados a ela.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Excluir'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -222,6 +339,9 @@ class _SubjectsPageState extends State<SubjectsPage> {
                                 ListSectionHeader(
                                   label: 'MINHAS DISCIPLINAS',
                                   count: disciplines.length,
+                                  trailing: _EditSubjectsButton(
+                                    onSelected: _handleEditAction,
+                                  ),
                                 ),
                                 const SizedBox(height: 12),
                                 if (disciplines.isEmpty)
@@ -276,14 +396,215 @@ class _SubjectsPageState extends State<SubjectsPage> {
               ),
             ),
           ),
-
-          // Botão flutuante
-          Positioned(
-            right: 24,
-            bottom: 16,
-            child: FloatingAddButton(onTap: _openSubjectDialog),
-          ),
         ],
+      ),
+    );
+  }
+}
+
+class _EditSubjectsButton extends StatelessWidget {
+  final ValueChanged<_SubjectEditAction> onSelected;
+
+  const _EditSubjectsButton({required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<_SubjectEditAction>(
+      tooltip: 'Editar disciplinas',
+      onSelected: onSelected,
+      color: Colors.white,
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      itemBuilder: (context) => const [
+        PopupMenuItem(
+          value: _SubjectEditAction.delete,
+          child: Row(
+            children: [
+              Icon(Icons.delete_outline, color: Colors.red, size: 20),
+              SizedBox(width: 10),
+              Text('Excluir Disciplina'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: _SubjectEditAction.add,
+          child: Row(
+            children: [
+              Icon(Icons.add, color: Color(0xFF514EB6), size: 20),
+              SizedBox(width: 10),
+              Text('Adicionar Nova Disciplina'),
+            ],
+          ),
+        ),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.72),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: const Color(0x33514EB6)),
+        ),
+        child: const Text(
+          'Editar',
+          style: TextStyle(
+            color: Color(0xFF514EB6),
+            fontSize: 12,
+            fontFamily: 'Roboto',
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DeleteDisciplineSheet extends StatelessWidget {
+  final List<Discipline> disciplines;
+
+  const _DeleteDisciplineSheet({required this.disciplines});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9F9FF),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0x33514EB6)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x33000000),
+              blurRadius: 18,
+              offset: Offset(0, 8),
+            ),
+          ],
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * 0.72,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Excluir disciplina',
+                      style: TextStyle(
+                        color: Color(0xFF191820),
+                        fontSize: 22,
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Fechar',
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close, color: Color(0xFF6B6875)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Escolha qual disciplina deseja remover.',
+                style: TextStyle(
+                  color: Color(0xFF6B6875),
+                  fontSize: 13,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: disciplines.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final discipline = disciplines[index];
+                    final teacher = discipline.teacher.isEmpty
+                        ? 'Professor não informado'
+                        : discipline.teacher;
+
+                    return Material(
+                      color: const Color(0xFFEFF0FB),
+                      borderRadius: BorderRadius.circular(14),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () => Navigator.of(context).pop(discipline),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFF514EB6,
+                                  ).withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: const Color(0x4C514EB6),
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.menu_book_outlined,
+                                  color: Color(0xFF514EB6),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      discipline.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Color(0xFF191820),
+                                        fontSize: 15,
+                                        fontFamily: 'Roboto',
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      teacher,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Color(0xFF6B6875),
+                                        fontSize: 12,
+                                        fontFamily: 'Roboto',
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -357,3 +678,5 @@ class _GroupedScheduleEntry {
 
   List<int> get sortedWeekdays => weekdays.toList()..sort();
 }
+
+enum _SubjectEditAction { delete, add }

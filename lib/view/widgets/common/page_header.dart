@@ -42,7 +42,7 @@ class PageHeader extends StatelessWidget {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppTextStyles.headline2,
+            style: AppTextStyles.headline2.copyWith(fontSize: 28, height: 1.1),
           ),
         ),
         if (trailing != null) ...[const SizedBox(width: 12), trailing!],

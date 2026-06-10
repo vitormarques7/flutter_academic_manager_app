@@ -8,12 +8,14 @@ class TaskDialogResult {
   final String subject;
   final String deadline;
   final String visualPriority;
+  final String description;
 
   const TaskDialogResult({
     required this.title,
     required this.subject,
     required this.deadline,
     required this.visualPriority,
+    this.description = '',
   });
 }
 
@@ -36,9 +38,19 @@ class TaskDialog extends StatefulWidget {
 }
 
 class _TaskDialogState extends State<TaskDialog> {
+  static const _taskTypes = [
+    _TaskType(label: 'Trabalho', icon: Icons.assignment_outlined),
+    _TaskType(label: 'Prova', icon: Icons.edit_square),
+    _TaskType(label: 'Estudo', icon: Icons.school_outlined),
+    _TaskType(label: 'Seminário', icon: Icons.co_present_outlined),
+    _TaskType(label: 'Leitura', icon: Icons.menu_book_outlined),
+    _TaskType(label: 'Pesquisa', icon: Icons.search_outlined),
+  ];
+
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleController;
   late final TextEditingController _deadlineController;
+  late final TextEditingController _descriptionController;
   late String? _selectedSubject;
   late String _selectedVisualPriority;
   bool _isSaving = false;
@@ -55,6 +67,9 @@ class _TaskDialogState extends State<TaskDialog> {
     _deadlineController = TextEditingController(
       text: initialTask?.deadline ?? '',
     );
+    _descriptionController = TextEditingController(
+      text: initialTask?.description ?? '',
+    );
     _selectedSubject = initialTask?.subject;
     _selectedVisualPriority = initialTask?.visualPriority ?? 'Trabalho';
   }
@@ -63,6 +78,7 @@ class _TaskDialogState extends State<TaskDialog> {
   void dispose() {
     _titleController.dispose();
     _deadlineController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -79,6 +95,7 @@ class _TaskDialogState extends State<TaskDialog> {
       subject: _selectedSubject!,
       deadline: _deadlineController.text.trim(),
       visualPriority: _selectedVisualPriority,
+      description: _descriptionController.text.trim(),
     );
 
     try {
@@ -264,6 +281,7 @@ class _TaskDialogState extends State<TaskDialog> {
                           label: 'DISCIPLINA',
                           child: DropdownButtonFormField<String>(
                             initialValue: _selectedSubject,
+                            isExpanded: true,
                             icon: const Icon(
                               Icons.keyboard_arrow_down,
                               color: Color(0xFF6B7280),
@@ -275,7 +293,11 @@ class _TaskDialogState extends State<TaskDialog> {
                                 .map(
                                   (subject) => DropdownMenuItem(
                                     value: subject,
-                                    child: Text(subject),
+                                    child: Text(
+                                      subject,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 )
                                 .toList(),
@@ -310,43 +332,58 @@ class _TaskDialogState extends State<TaskDialog> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        const _FieldLabel('PRIORIDADE VISUAL'),
+                        const _FieldLabel('Tipo'),
                         const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _PriorityOption(
-                                label: 'Trabalho',
-                                icon: Icons.assignment_outlined,
-                                isSelected:
-                                    _selectedVisualPriority == 'Trabalho',
-                                onTap: _isSaving || _isDeleting
-                                    ? null
-                                    : () {
-                                        setState(
-                                          () => _selectedVisualPriority =
-                                              'Trabalho',
-                                        );
-                                      },
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _PriorityOption(
-                                label: 'Prova',
-                                icon: Icons.edit_square,
-                                isSelected: _selectedVisualPriority == 'Prova',
-                                onTap: _isSaving || _isDeleting
-                                    ? null
-                                    : () {
-                                        setState(
-                                          () =>
-                                              _selectedVisualPriority = 'Prova',
-                                        );
-                                      },
-                              ),
-                            ),
-                          ],
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final optionWidth = (constraints.maxWidth - 16) / 3;
+
+                            return Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: _taskTypes.map((taskType) {
+                                return SizedBox(
+                                  width: optionWidth,
+                                  child: _TypeOption(
+                                    label: taskType.label,
+                                    icon: taskType.icon,
+                                    isSelected:
+                                        _selectedVisualPriority ==
+                                        taskType.label,
+                                    onTap: _isSaving || _isDeleting
+                                        ? null
+                                        : () {
+                                            setState(
+                                              () => _selectedVisualPriority =
+                                                  taskType.label,
+                                            );
+                                          },
+                                  ),
+                                );
+                              }).toList(),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        _LabeledField(
+                          label: 'Descrição',
+                          child: TextFormField(
+                            controller: _descriptionController,
+                            minLines: 4,
+                            maxLines: 5,
+                            textInputAction: TextInputAction.newline,
+                            decoration:
+                                _inputDecoration(
+                                  hintText: 'Digite algo...',
+                                ).copyWith(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 14,
+                                  ),
+                                  alignLabelWithHint: true,
+                                ),
+                            enabled: !_isSaving && !_isDeleting,
+                          ),
                         ),
                       ],
                     ),
@@ -568,13 +605,13 @@ class _FieldLabel extends StatelessWidget {
   }
 }
 
-class _PriorityOption extends StatelessWidget {
+class _TypeOption extends StatelessWidget {
   final String label;
   final IconData icon;
   final bool isSelected;
   final VoidCallback? onTap;
 
-  const _PriorityOption({
+  const _TypeOption({
     required this.label,
     required this.icon,
     required this.isSelected,
@@ -589,8 +626,8 @@ class _PriorityOption extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          height: 56,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
             color: isSelected ? const Color(0xFFEDEAF7) : Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -601,8 +638,8 @@ class _PriorityOption extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: const Color(0xFF464552), size: 26),
-              const SizedBox(width: 10),
+              Icon(icon, color: const Color(0xFF464552), size: 22),
+              const SizedBox(width: 7),
               Flexible(
                 child: Text(
                   label,
@@ -610,9 +647,9 @@ class _PriorityOption extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Color(0xFF464552),
-                    fontSize: 16,
+                    fontSize: 13,
                     fontFamily: 'Roboto',
-                    fontWeight: FontWeight.w400,
+                    fontWeight: FontWeight.w600,
                     height: 1.50,
                   ),
                 ),
@@ -623,6 +660,13 @@ class _PriorityOption extends StatelessWidget {
       ),
     );
   }
+}
+
+class _TaskType {
+  final String label;
+  final IconData icon;
+
+  const _TaskType({required this.label, required this.icon});
 }
 
 class _DateInputFormatter extends TextInputFormatter {
