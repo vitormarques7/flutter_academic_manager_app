@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../config/scroll/app_scroll_behavior.dart';
 import '../../models/academic_task.dart';
+import '../../models/discipline.dart';
+import '../../repositories/discipline_repository.dart';
 import '../../repositories/task_repository.dart';
+import '../../repositories/user_profile_repository.dart';
 import '../../config/theme/app_colors.dart';
 import '../widgets/common/page_header.dart';
 import '../widgets/cards/task_card.dart';
@@ -38,24 +41,73 @@ class TasksPage extends StatefulWidget {
 class _TasksPageState extends State<TasksPage> {
   _TaskFilter _selectedFilter = _TaskFilter.all;
   final TaskRepository _taskRepository = TaskRepository();
+  final DisciplineRepository _disciplineRepository = DisciplineRepository();
+  final UserProfileRepository _userProfileRepository = UserProfileRepository();
+  late Future<String?> _activeStudyCycleIdFuture;
 
-  final List<String> _subjects = const [
-    'Programação',
-    'Cálculo I',
-    'Banco de Dados',
-    'Inteligência Artificial',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _activeStudyCycleIdFuture = _userProfileRepository
+        .resolveActiveStudyCycleId();
+  }
 
   List<AcademicTask> _filterTasks(List<AcademicTask> tasks) {
     return tasks.where(_selectedFilter.matches).toList();
   }
 
-  Future<void> _openTaskDialog({AcademicTask? task}) async {
+  List<String> _subjectNamesFromDisciplines(List<Discipline> disciplines) {
+    return disciplines
+        .map((discipline) => discipline.name.trim())
+        .where((name) => name.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+  }
+
+  List<String> _subjectsForDialog({
+    required List<String> subjects,
+    AcademicTask? task,
+  }) {
+    final mergedSubjects = [...subjects];
+    final currentSubject = task?.subject.trim();
+
+    if (currentSubject != null &&
+        currentSubject.isNotEmpty &&
+        !mergedSubjects.contains(currentSubject)) {
+      mergedSubjects.add(currentSubject);
+    }
+
+    return mergedSubjects;
+  }
+
+  Future<void> _openTaskDialog({
+    AcademicTask? task,
+    required List<String> subjects,
+    required bool isLoadingSubjects,
+    required bool hasSubjectsError,
+  }) async {
+    if (isLoadingSubjects && task == null) {
+      _showError('Aguarde carregar suas disciplinas.');
+      return;
+    }
+
+    if (hasSubjectsError && task == null) {
+      _showError('Não foi possível carregar suas disciplinas.');
+      return;
+    }
+
+    final dialogSubjects = _subjectsForDialog(subjects: subjects, task: task);
+    if (dialogSubjects.isEmpty) {
+      _showError('Cadastre uma disciplina antes de criar tarefas.');
+      return;
+    }
+
     await showDialog<void>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.28),
       builder: (_) => TaskDialog(
-        subjects: _subjects,
+        subjects: dialogSubjects,
         initialTask: task == null
             ? null
             : TaskDialogResult(
@@ -63,6 +115,7 @@ class _TasksPageState extends State<TasksPage> {
                 subject: task.subject,
                 deadline: task.deadline,
                 visualPriority: task.visualPriority,
+                description: task.description,
               ),
         onSubmit: (result) {
           final input = TaskInput(
@@ -70,6 +123,7 @@ class _TasksPageState extends State<TasksPage> {
             subject: result.subject,
             deadline: result.deadline,
             visualPriority: result.visualPriority,
+            description: result.description,
           );
 
           if (task == null) {
@@ -122,88 +176,135 @@ class _TasksPageState extends State<TasksPage> {
 
                     const SizedBox(height: 24),
 
-                    StreamBuilder<List<AcademicTask>>(
-                      stream: _taskRepository.watchTasks(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                                ConnectionState.waiting &&
-                            !snapshot.hasData) {
+                    FutureBuilder<String?>(
+                      future: _activeStudyCycleIdFuture,
+                      builder: (context, activeCycleSnapshot) {
+                        if (activeCycleSnapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return const _TasksLoadingState();
                         }
 
-                        if (snapshot.hasError) {
+                        if (activeCycleSnapshot.hasError) {
                           return const EmptyStateCard(
                             message:
-                                'Não foi possível carregar suas tarefas agora.',
+                                'Não foi possível carregar seu ciclo de estudos.',
                           );
                         }
 
-                        final allTasks = snapshot.data ?? [];
-                        final tasks = _filterTasks(allTasks);
-                        final pendingCount = allTasks
-                            .where((task) => !task.isChecked)
-                            .length;
-                        final completedCount = allTasks
-                            .where((task) => task.isChecked)
-                            .length;
-                        final timelineStats = _TaskTimelineStats.fromTasks(
-                          allTasks,
-                        );
+                        return StreamBuilder<List<Discipline>>(
+                          stream: _disciplineRepository.watchDisciplines(
+                            studyCycleId: activeCycleSnapshot.data,
+                          ),
+                          builder: (context, disciplineSnapshot) {
+                            final isLoadingSubjects =
+                                disciplineSnapshot.connectionState ==
+                                    ConnectionState.waiting &&
+                                !disciplineSnapshot.hasData;
+                            final hasSubjectsError =
+                                disciplineSnapshot.hasError;
+                            final subjects = hasSubjectsError
+                                ? const <String>[]
+                                : _subjectNamesFromDisciplines(
+                                    disciplineSnapshot.data ?? const [],
+                                  );
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _TasksOverview(
-                              total: allTasks.length,
-                              pending: pendingCount,
-                              completed: completedCount,
-                              timelineStats: timelineStats,
-                            ),
-                            const SizedBox(height: 22),
-                            ListSectionHeader(
-                              label: 'LISTA DE TAREFAS',
-                              count: tasks.length,
-                            ),
-                            const SizedBox(height: 12),
-                            _TaskFilterTabs(
-                              selectedFilter: _selectedFilter,
-                              onSelected: (filter) {
-                                setState(() => _selectedFilter = filter);
-                              },
-                            ),
-                            const SizedBox(height: 18),
-                            if (tasks.isEmpty)
-                              EmptyStateCard(
-                                message: allTasks.isEmpty
-                                    ? 'Nenhuma tarefa criada ainda.'
-                                    : 'Nenhuma tarefa nesse filtro.',
-                                icon: allTasks.isEmpty
-                                    ? Icons.assignment_outlined
-                                    : Icons.filter_alt_off_outlined,
-                              )
-                            else
-                              Column(
-                                children: tasks.map((task) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 12),
-                                    child: TaskCard(
-                                      title: task.title,
-                                      subject: task.subject,
-                                      deadline: task.deadlineLabel,
-                                      visualPriority: task.visualPriority,
-                                      isChecked: task.isChecked,
-                                      onChanged: (value) {
-                                        _updateTaskCompletion(
-                                          task,
-                                          value ?? false,
+                            return StreamBuilder<List<AcademicTask>>(
+                              stream: _taskRepository.watchTasks(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                        ConnectionState.waiting &&
+                                    !snapshot.hasData) {
+                                  return const _TasksLoadingState();
+                                }
+
+                                if (snapshot.hasError) {
+                                  return const EmptyStateCard(
+                                    message:
+                                        'Não foi possível carregar suas tarefas agora.',
+                                  );
+                                }
+
+                                final allTasks = snapshot.data ?? [];
+                                final tasks = _filterTasks(allTasks);
+                                final pendingCount = allTasks
+                                    .where((task) => !task.isChecked)
+                                    .length;
+                                final completedCount = allTasks
+                                    .where((task) => task.isChecked)
+                                    .length;
+                                final timelineStats =
+                                    _TaskTimelineStats.fromTasks(allTasks);
+
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _TasksOverview(
+                                      total: allTasks.length,
+                                      pending: pendingCount,
+                                      completed: completedCount,
+                                      timelineStats: timelineStats,
+                                    ),
+                                    const SizedBox(height: 22),
+                                    ListSectionHeader(
+                                      label: 'LISTA DE TAREFAS',
+                                      count: tasks.length,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _TaskFilterTabs(
+                                      selectedFilter: _selectedFilter,
+                                      onSelected: (filter) {
+                                        setState(
+                                          () => _selectedFilter = filter,
                                         );
                                       },
-                                      onTap: () => _openTaskDialog(task: task),
                                     ),
-                                  );
-                                }).toList(),
-                              ),
-                          ],
+                                    const SizedBox(height: 18),
+                                    if (tasks.isEmpty)
+                                      EmptyStateCard(
+                                        message: allTasks.isEmpty
+                                            ? 'Nenhuma tarefa criada ainda.'
+                                            : 'Nenhuma tarefa nesse filtro.',
+                                        icon: allTasks.isEmpty
+                                            ? Icons.assignment_outlined
+                                            : Icons.filter_alt_off_outlined,
+                                      )
+                                    else
+                                      Column(
+                                        children: tasks.map((task) {
+                                          return Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 12,
+                                            ),
+                                            child: TaskCard(
+                                              title: task.title,
+                                              subject: task.subject,
+                                              deadline: task.deadlineLabel,
+                                              visualPriority:
+                                                  task.visualPriority,
+                                              isChecked: task.isChecked,
+                                              onChanged: (value) {
+                                                _updateTaskCompletion(
+                                                  task,
+                                                  value ?? false,
+                                                );
+                                              },
+                                              onTap: () => _openTaskDialog(
+                                                task: task,
+                                                subjects: subjects,
+                                                isLoadingSubjects:
+                                                    isLoadingSubjects,
+                                                hasSubjectsError:
+                                                    hasSubjectsError,
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
                         );
                       },
                     ),
@@ -216,7 +317,45 @@ class _TasksPageState extends State<TasksPage> {
             Positioned(
               right: 24,
               bottom: 16,
-              child: FloatingAddButton(onTap: () => _openTaskDialog()),
+              child: FutureBuilder<String?>(
+                future: _activeStudyCycleIdFuture,
+                builder: (context, activeCycleSnapshot) {
+                  return StreamBuilder<List<Discipline>>(
+                    stream:
+                        activeCycleSnapshot.connectionState ==
+                                ConnectionState.done &&
+                            !activeCycleSnapshot.hasError
+                        ? _disciplineRepository.watchDisciplines(
+                            studyCycleId: activeCycleSnapshot.data,
+                          )
+                        : null,
+                    builder: (context, disciplineSnapshot) {
+                      final isLoadingSubjects =
+                          activeCycleSnapshot.connectionState ==
+                              ConnectionState.waiting ||
+                          (disciplineSnapshot.connectionState ==
+                                  ConnectionState.waiting &&
+                              !disciplineSnapshot.hasData);
+                      final hasSubjectsError =
+                          activeCycleSnapshot.hasError ||
+                          disciplineSnapshot.hasError;
+                      final subjects = hasSubjectsError
+                          ? const <String>[]
+                          : _subjectNamesFromDisciplines(
+                              disciplineSnapshot.data ?? const [],
+                            );
+
+                      return FloatingAddButton(
+                        onTap: () => _openTaskDialog(
+                          subjects: subjects,
+                          isLoadingSubjects: isLoadingSubjects,
+                          hasSubjectsError: hasSubjectsError,
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),

@@ -24,9 +24,14 @@ class TaskCard extends StatelessWidget {
   });
 
   IconData get _priorityIcon {
-    return visualPriority == 'Prova'
-        ? Icons.edit_square
-        : Icons.assignment_outlined;
+    return switch (visualPriority) {
+      'Prova' => Icons.edit_square,
+      'Estudo' => Icons.school_outlined,
+      'Seminário' => Icons.co_present_outlined,
+      'Leitura' => Icons.menu_book_outlined,
+      'Pesquisa' => Icons.search_outlined,
+      _ => Icons.assignment_outlined,
+    };
   }
 
   @override

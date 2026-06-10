@@ -6,6 +6,7 @@ class AcademicTask {
   final String subject;
   final String deadline;
   final String visualPriority;
+  final String description;
   final bool isChecked;
   final String userId;
   final String? studyCycleId;
@@ -18,6 +19,7 @@ class AcademicTask {
     required this.subject,
     required this.deadline,
     required this.visualPriority,
+    required this.description,
     required this.isChecked,
     required this.userId,
     this.studyCycleId,
@@ -47,6 +49,7 @@ class AcademicTask {
       subject: data['subject'] as String? ?? '',
       deadline: data['deadline'] as String? ?? '',
       visualPriority: data['visualPriority'] as String? ?? 'Trabalho',
+      description: data['description'] as String? ?? '',
       isChecked: data['isChecked'] as bool? ?? false,
       userId: userId,
       studyCycleId: _readString(data['studyCycleId']),
@@ -75,6 +78,7 @@ class TaskInput {
   final String subject;
   final String deadline;
   final String visualPriority;
+  final String description;
   final String? studyCycleId;
 
   const TaskInput({
@@ -82,6 +86,7 @@ class TaskInput {
     required this.subject,
     required this.deadline,
     required this.visualPriority,
+    this.description = '',
     this.studyCycleId,
   });
 
@@ -90,6 +95,7 @@ class TaskInput {
     String? subject,
     String? deadline,
     String? visualPriority,
+    String? description,
     String? studyCycleId,
   }) {
     return TaskInput(
@@ -97,6 +103,7 @@ class TaskInput {
       subject: subject ?? this.subject,
       deadline: deadline ?? this.deadline,
       visualPriority: visualPriority ?? this.visualPriority,
+      description: description ?? this.description,
       studyCycleId: studyCycleId ?? this.studyCycleId,
     );
   }
@@ -118,6 +125,7 @@ class TaskInput {
       'subject': subject,
       'deadline': deadline,
       'visualPriority': visualPriority,
+      'description': description.trim(),
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }

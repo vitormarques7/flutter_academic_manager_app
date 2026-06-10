@@ -16,6 +16,7 @@ void main() {
           'subject': 'Programacao',
           'deadline': '26/06/2026',
           'visualPriority': 'Trabalho',
+          'description': 'Preparar slides e roteiro.',
           'isChecked': true,
           'studyCycleId': ' cycle-1 ',
           'createdAt': createdAt,
@@ -29,6 +30,7 @@ void main() {
       expect(task.subject, 'Programacao');
       expect(task.deadline, '26/06/2026');
       expect(task.visualPriority, 'Trabalho');
+      expect(task.description, 'Preparar slides e roteiro.');
       expect(task.isChecked, isTrue);
       expect(task.studyCycleId, 'cycle-1');
       expect(task.createdAt, createdAt.toDate());
@@ -47,6 +49,7 @@ void main() {
       expect(task.deadline, isEmpty);
       expect(task.deadlineLabel, 'Sem prazo');
       expect(task.visualPriority, 'Trabalho');
+      expect(task.description, isEmpty);
       expect(task.isChecked, isFalse);
       expect(task.studyCycleId, isNull);
       expect(task.createdAt, isNull);
@@ -60,6 +63,7 @@ void main() {
       subject: 'Calculo I',
       deadline: '10/06/2026',
       visualPriority: 'Prova',
+      description: 'Resolver a lista antes da aula.',
       studyCycleId: 'cycle-1',
     );
 
@@ -70,6 +74,7 @@ void main() {
       expect(map['subject'], input.subject);
       expect(map['deadline'], input.deadline);
       expect(map['visualPriority'], input.visualPriority);
+      expect(map['description'], input.description);
       expect(map['studyCycleId'], input.studyCycleId);
       expect(map['isChecked'], isFalse);
       expect(map['createdAt'], isA<FieldValue>());
@@ -83,6 +88,7 @@ void main() {
       expect(map['subject'], input.subject);
       expect(map['deadline'], input.deadline);
       expect(map['visualPriority'], input.visualPriority);
+      expect(map['description'], input.description);
       expect(map['studyCycleId'], input.studyCycleId);
       expect(map['updatedAt'], isA<FieldValue>());
       expect(map.containsKey('isChecked'), isFalse);
