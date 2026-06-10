@@ -2,6 +2,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Schedule {
   static const int defaultColorValue = 0xFF514EB6;
+  static const List<int> disciplineColorPalette = [
+    0xFF514EB6,
+    0xFF2F80ED,
+    0xFF0E9F6E,
+    0xFFD97706,
+    0xFFDB2777,
+    0xFF7C3AED,
+    0xFF0891B2,
+    0xFFDC2626,
+    0xFF4F46E5,
+    0xFF16A34A,
+  ];
   static const int minTimeMinutes = 0;
   static const int maxTimeMinutes = 1439;
   static const int firstWeekdayIndex = 0;
@@ -9,6 +21,7 @@ class Schedule {
 
   final String id;
   final String? studyCycleId;
+  final String? disciplineId;
   final String disciplineName;
   final List<int> weekdays;
   final int startTimeMinutes;
@@ -20,6 +33,7 @@ class Schedule {
   const Schedule({
     required this.id,
     this.studyCycleId,
+    this.disciplineId,
     required this.disciplineName,
     required this.weekdays,
     required this.startTimeMinutes,
@@ -42,6 +56,7 @@ class Schedule {
     return Schedule(
       id: id,
       studyCycleId: _readString(data['studyCycleId']),
+      disciplineId: _readString(data['disciplineId']),
       disciplineName: data['disciplineName'] as String? ?? '',
       weekdays: _normalizeWeekdays(data['weekdays']),
       startTimeMinutes: _normalizeTimeMinutes(data['startTimeMinutes']),
@@ -55,6 +70,7 @@ class Schedule {
   Map<String, dynamic> toFirestore() {
     return {
       if (studyCycleId != null) 'studyCycleId': studyCycleId,
+      if (disciplineId != null) 'disciplineId': disciplineId,
       'disciplineName': disciplineName,
       'weekdays': weekdays,
       'startTimeMinutes': startTimeMinutes,
@@ -97,6 +113,24 @@ class Schedule {
     return a.id.compareTo(b.id);
   }
 
+  static int colorValueForDisciplineName(String disciplineName) {
+    final normalizedName = disciplineName.trim().toLowerCase();
+    if (normalizedName.isEmpty) return defaultColorValue;
+
+    return disciplineColorPalette[_stableHash(normalizedName) %
+        disciplineColorPalette.length];
+  }
+
+  static int _stableHash(String value) {
+    var hash = 0;
+
+    for (final codeUnit in value.codeUnits) {
+      hash = (hash * 31 + codeUnit) & 0x7fffffff;
+    }
+
+    return hash;
+  }
+
   static List<int> _normalizeWeekdays(Object? value) {
     if (value is! Iterable) return const [];
 
@@ -137,6 +171,7 @@ class Schedule {
 
 class ScheduleInput {
   final String? studyCycleId;
+  final String? disciplineId;
   final String disciplineName;
   final List<int> weekdays;
   final int startTimeMinutes;
@@ -145,6 +180,7 @@ class ScheduleInput {
 
   const ScheduleInput({
     this.studyCycleId,
+    this.disciplineId,
     required this.disciplineName,
     required this.weekdays,
     required this.startTimeMinutes,
@@ -154,6 +190,7 @@ class ScheduleInput {
 
   ScheduleInput copyWith({
     String? studyCycleId,
+    String? disciplineId,
     String? disciplineName,
     List<int>? weekdays,
     int? startTimeMinutes,
@@ -162,6 +199,7 @@ class ScheduleInput {
   }) {
     return ScheduleInput(
       studyCycleId: studyCycleId ?? this.studyCycleId,
+      disciplineId: disciplineId ?? this.disciplineId,
       disciplineName: disciplineName ?? this.disciplineName,
       weekdays: weekdays ?? this.weekdays,
       startTimeMinutes: startTimeMinutes ?? this.startTimeMinutes,
@@ -176,9 +214,11 @@ class ScheduleInput {
 
   Map<String, dynamic> toUpdateMap() {
     final normalizedStudyCycleId = Schedule._readString(studyCycleId);
+    final normalizedDisciplineId = Schedule._readString(disciplineId);
 
     return {
       'studyCycleId': ?normalizedStudyCycleId,
+      'disciplineId': ?normalizedDisciplineId,
       'disciplineName': disciplineName,
       'weekdays': Schedule._normalizeWeekdays(weekdays),
       'startTimeMinutes': Schedule._normalizeTimeMinutes(startTimeMinutes),

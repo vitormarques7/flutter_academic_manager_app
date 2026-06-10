@@ -35,29 +35,17 @@ class CurrentPeriodSchedule extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: const [
                     Text(
-                      'Aulas do seu período',
+                      'Suas Aulas',
                       style: TextStyle(
                         color: AppColors.textDark,
                         fontSize: 18,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Inspirado no quadro da faculdade, sem horários vazios.',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 11,
-                        fontFamily: 'Roboto',
-                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],

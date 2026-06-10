@@ -6,7 +6,7 @@ import '../../../config/theme/app_colors.dart';
 class MonthCalendar extends StatelessWidget {
   final DateTime focusedDay;
   final DateTime selectedDay;
-  final Set<DateTime> daysWithClasses;
+  final Map<DateTime, List<Color>> classColorsByDay;
   final ValueChanged<DateTime> onDaySelected;
   final ValueChanged<DateTime> onFocusedDayChanged;
 
@@ -14,21 +14,20 @@ class MonthCalendar extends StatelessWidget {
     super.key,
     required this.focusedDay,
     required this.selectedDay,
-    required this.daysWithClasses,
+    required this.classColorsByDay,
     required this.onDaySelected,
     required this.onFocusedDayChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TableCalendar<int>(
+    return TableCalendar<Color>(
       locale: 'pt_BR',
       firstDay: DateTime.utc(2020, 1, 1),
       lastDay: DateTime.utc(2035, 12, 31),
       focusedDay: focusedDay,
       selectedDayPredicate: (day) => isSameDay(day, selectedDay),
-      eventLoader: (day) =>
-          daysWithClasses.contains(_dateOnly(day)) ? const [1] : const [],
+      eventLoader: (day) => classColorsByDay[_dateOnly(day)] ?? const [],
       startingDayOfWeek: StartingDayOfWeek.sunday,
       calendarFormat: CalendarFormat.month,
       availableCalendarFormats: const {CalendarFormat.month: 'Mês'},
@@ -63,18 +62,15 @@ class MonthCalendar extends StatelessWidget {
           shape: BoxShape.circle,
         ),
         todayDecoration: BoxDecoration(color: Colors.transparent),
-        markerDecoration: BoxDecoration(
-          color: AppColors.primary,
-          shape: BoxShape.circle,
-        ),
         markerSize: 4,
-        markersMaxCount: 1,
+        markersMaxCount: 3,
         markersAnchor: 0.78,
         markersAlignment: Alignment.bottomCenter,
       ),
-      calendarBuilders: const CalendarBuilders<int>(
+      calendarBuilders: const CalendarBuilders<Color>(
         selectedBuilder: _selectedDayBuilder,
         todayBuilder: _todayBuilder,
+        markerBuilder: _markerBuilder,
       ),
     );
   }
@@ -135,6 +131,33 @@ class MonthCalendar extends StatelessWidget {
     DateTime focusedDay,
   ) {
     return Center(child: Text('${day.day}', style: _dayStyle));
+  }
+
+  static Widget _markerBuilder(
+    BuildContext context,
+    DateTime day,
+    List<Color> events,
+  ) {
+    if (events.isEmpty) return const SizedBox.shrink();
+
+    final markerColors = events.take(3).toList();
+
+    return Positioned(
+      bottom: 7,
+      left: 0,
+      right: 0,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: markerColors.map((color) {
+          return Container(
+            width: 5,
+            height: 5,
+            margin: const EdgeInsets.symmetric(horizontal: 1.5),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          );
+        }).toList(),
+      ),
+    );
   }
 
   static String _weekdayLabel(DateTime date) {

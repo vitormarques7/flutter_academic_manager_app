@@ -8,12 +8,16 @@ import 'schedule_models.dart';
 
 class CourseScheduleView extends StatelessWidget {
   final List<ScheduleDay> days;
+  final String subtitle;
+  final String shiftLabel;
   final VoidCallback onBack;
   final VoidCallback onEdit;
 
   const CourseScheduleView({
     super.key,
     required this.days,
+    required this.subtitle,
+    required this.shiftLabel,
     required this.onBack,
     required this.onEdit,
   });
@@ -34,9 +38,9 @@ class CourseScheduleView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _CourseScheduleHeader(onBack: onBack),
+                    _CourseScheduleHeader(subtitle: subtitle, onBack: onBack),
                     const SizedBox(height: 16),
-                    _ScheduleStats(days: days),
+                    _ScheduleStats(days: days, shiftLabel: shiftLabel),
                     const SizedBox(height: 14),
                     if (days.isEmpty)
                       const EmptyStateCard(
@@ -57,9 +61,10 @@ class CourseScheduleView extends StatelessWidget {
 }
 
 class _CourseScheduleHeader extends StatelessWidget {
+  final String subtitle;
   final VoidCallback onBack;
 
-  const _CourseScheduleHeader({required this.onBack});
+  const _CourseScheduleHeader({required this.subtitle, required this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -121,9 +126,11 @@ class _CourseScheduleHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Horários salvos no Firestore',
-            style: TextStyle(
+          Text(
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
               color: Color(0xFF656565),
               fontSize: 16,
               fontFamily: 'Roboto',
@@ -138,8 +145,9 @@ class _CourseScheduleHeader extends StatelessWidget {
 
 class _ScheduleStats extends StatelessWidget {
   final List<ScheduleDay> days;
+  final String shiftLabel;
 
-  const _ScheduleStats({required this.days});
+  const _ScheduleStats({required this.days, required this.shiftLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -147,8 +155,6 @@ class _ScheduleStats extends StatelessWidget {
       0,
       (count, day) => count + day.classes.length,
     );
-    final dayCount = days.length;
-
     return Row(
       children: [
         Expanded(
@@ -162,8 +168,8 @@ class _ScheduleStats extends StatelessWidget {
         Expanded(
           child: _ScheduleStatChip(
             icon: Icons.wb_sunny_outlined,
-            label: 'Dias',
-            value: '$dayCount ${dayCount == 1 ? 'dia' : 'dias'}',
+            label: 'Turno',
+            value: shiftLabel,
           ),
         ),
       ],
@@ -219,7 +225,7 @@ class _ScheduleStatChip extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.black,

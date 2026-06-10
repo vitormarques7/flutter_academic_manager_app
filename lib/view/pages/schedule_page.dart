@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../config/scroll/app_scroll_behavior.dart';
 import '../../config/theme/app_colors.dart';
 import '../../models/schedule.dart';
+import '../../models/study_cycle.dart';
 import '../../repositories/schedule_repository.dart';
+import '../../repositories/study_cycle_repository.dart';
 import '../../repositories/user_profile_repository.dart';
 import '../widgets/common/floating_add_button.dart';
 import '../widgets/dialogs/schedule_dialog.dart';
@@ -22,8 +24,9 @@ class SchedulePage extends StatefulWidget {
 
 class _SchedulePageState extends State<SchedulePage> {
   final ScheduleRepository _scheduleRepository = ScheduleRepository();
+  final StudyCycleRepository _studyCycleRepository = StudyCycleRepository();
   final UserProfileRepository _userProfileRepository = UserProfileRepository();
-  late Future<String?> _activeStudyCycleIdFuture;
+  late Future<_ActiveStudyCycleInfo> _activeStudyCycleInfoFuture;
   late DateTime _focusedDay;
   late DateTime _selectedDay;
   bool _isShowingCourseSchedule = false;
@@ -34,14 +37,13 @@ class _SchedulePageState extends State<SchedulePage> {
     final today = _dateOnly(DateTime.now());
     _focusedDay = today;
     _selectedDay = today;
-    _activeStudyCycleIdFuture = _userProfileRepository
-        .resolveActiveStudyCycleId();
+    _activeStudyCycleInfoFuture = _loadActiveStudyCycleInfo();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<String?>(
-      future: _activeStudyCycleIdFuture,
+    return FutureBuilder<_ActiveStudyCycleInfo>(
+      future: _activeStudyCycleInfoFuture,
       builder: (context, activeCycleSnapshot) {
         if (activeCycleSnapshot.connectionState == ConnectionState.waiting) {
           return const _ScheduleLoadingScaffold();
@@ -51,11 +53,12 @@ class _SchedulePageState extends State<SchedulePage> {
           return _ScheduleErrorScaffold(onRetry: _reloadActiveStudyCycle);
         }
 
-        final activeStudyCycleId = activeCycleSnapshot.data;
+        final activeStudyCycleInfo =
+            activeCycleSnapshot.data ?? const _ActiveStudyCycleInfo();
 
         return StreamBuilder<List<Schedule>>(
           stream: _scheduleRepository.watchSchedules(
-            studyCycleId: activeStudyCycleId,
+            studyCycleId: activeStudyCycleInfo.id,
           ),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting &&
@@ -68,12 +71,22 @@ class _SchedulePageState extends State<SchedulePage> {
             }
 
             final schedules = snapshot.data ?? [];
-            final selectedClasses = _classesForDay(schedules, _selectedDay);
-            final courseScheduleDays = _scheduleDaysFromSchedules(schedules);
+            final disciplineColors = _disciplineColorsForSchedules(schedules);
+            final selectedClasses = _classesForDay(
+              schedules,
+              _selectedDay,
+              disciplineColors,
+            );
+            final courseScheduleDays = _scheduleDaysFromSchedules(
+              schedules,
+              disciplineColors,
+            );
 
             if (_isShowingCourseSchedule) {
               return CourseScheduleView(
                 days: courseScheduleDays,
+                subtitle: activeStudyCycleInfo.label,
+                shiftLabel: _shiftLabelFromSchedules(schedules),
                 onBack: () => setState(() => _isShowingCourseSchedule = false),
                 onEdit: () =>
                     _showComingSoon('Edição da grade em desenvolvimento.'),
@@ -111,9 +124,10 @@ class _SchedulePageState extends State<SchedulePage> {
                                 MonthCalendar(
                                   focusedDay: _focusedDay,
                                   selectedDay: _selectedDay,
-                                  daysWithClasses:
-                                      _daysWithSchedulesInFocusedMonth(
+                                  classColorsByDay:
+                                      _classColorsByDayInFocusedMonth(
                                         schedules,
+                                        disciplineColors,
                                       ),
                                   onDaySelected: (day) {
                                     setState(() {
@@ -166,18 +180,18 @@ class _SchedulePageState extends State<SchedulePage> {
       return;
     }
 
-    final activeStudyCycleId = await _activeStudyCycleIdFuture;
+    final activeStudyCycleInfo = await _activeStudyCycleInfoFuture;
 
     try {
       for (final timeRange in result.timeRanges) {
         await _scheduleRepository.createSchedule(
           ScheduleInput(
-            studyCycleId: activeStudyCycleId,
+            studyCycleId: activeStudyCycleInfo.id,
             disciplineName: disciplineName,
             weekdays: result.weekdays,
             startTimeMinutes: timeRange.startTimeMinutes,
             endTimeMinutes: timeRange.endTimeMinutes,
-            colorValue: Schedule.defaultColorValue,
+            colorValue: Schedule.colorValueForDisciplineName(disciplineName),
           ),
         );
       }
@@ -229,14 +243,49 @@ class _SchedulePageState extends State<SchedulePage> {
 
   void _reloadActiveStudyCycle() {
     setState(() {
-      _activeStudyCycleIdFuture = _userProfileRepository
-          .resolveActiveStudyCycleId();
+      _activeStudyCycleInfoFuture = _loadActiveStudyCycleInfo();
     });
+  }
+
+  Future<_ActiveStudyCycleInfo> _loadActiveStudyCycleInfo() async {
+    final activeStudyCycleId = await _userProfileRepository
+        .resolveActiveStudyCycleId();
+    if (activeStudyCycleId == null) {
+      return const _ActiveStudyCycleInfo();
+    }
+
+    final studyCycles = await _studyCycleRepository.fetchStudyCycles();
+
+    for (final studyCycle in studyCycles) {
+      if (studyCycle.id == activeStudyCycleId) {
+        return _ActiveStudyCycleInfo(
+          id: activeStudyCycleId,
+          label: _activeStudyCycleLabel(studyCycle),
+        );
+      }
+    }
+
+    return const _ActiveStudyCycleInfo(label: 'Ciclo acadêmico ativo');
+  }
+
+  String _activeStudyCycleLabel(StudyCycle studyCycle) {
+    return switch (studyCycle.type) {
+      StudyCycleType.university =>
+        studyCycle.period == null
+            ? 'Período não informado'
+            : '${studyCycle.period}º período',
+      StudyCycleType.highSchool =>
+        studyCycle.schoolYear == null
+            ? 'Ano letivo não informado'
+            : '${studyCycle.schoolYear}º ano',
+      StudyCycleType.independent => studyCycle.goal ?? 'Meta não informada',
+    };
   }
 
   List<ScheduleClassInfo> _classesForDay(
     List<Schedule> schedules,
     DateTime day,
+    Map<String, Color> disciplineColors,
   ) {
     final weekdayIndex = _weekdayIndexFromDate(day);
     final classes =
@@ -245,11 +294,16 @@ class _SchedulePageState extends State<SchedulePage> {
             .toList()
           ..sort(Schedule.compareByStartTime);
 
-    return classes.map(_toClassInfo).toList();
+    return classes
+        .map((schedule) => _toClassInfo(schedule, disciplineColors))
+        .toList();
   }
 
-  Set<DateTime> _daysWithSchedulesInFocusedMonth(List<Schedule> schedules) {
-    final days = <DateTime>{};
+  Map<DateTime, List<Color>> _classColorsByDayInFocusedMonth(
+    List<Schedule> schedules,
+    Map<String, Color> disciplineColors,
+  ) {
+    final classColorsByDay = <DateTime, List<Color>>{};
     final firstDay = DateTime(_focusedDay.year, _focusedDay.month);
     final daysInMonth = DateUtils.getDaysInMonth(
       _focusedDay.year,
@@ -259,17 +313,26 @@ class _SchedulePageState extends State<SchedulePage> {
     for (var dayOffset = 0; dayOffset < daysInMonth; dayOffset++) {
       final day = firstDay.add(Duration(days: dayOffset));
       final weekdayIndex = _weekdayIndexFromDate(day);
-      final hasSchedule = schedules.any(
+      final schedulesForDay = schedules.where(
         (schedule) => schedule.occursOnWeekday(weekdayIndex),
       );
 
-      if (hasSchedule) days.add(_dateOnly(day));
+      final colors = schedulesForDay
+          .map((schedule) => _scheduleColor(schedule, disciplineColors))
+          .toSet()
+          .toList(growable: false);
+      if (colors.isNotEmpty) {
+        classColorsByDay[_dateOnly(day)] = colors;
+      }
     }
 
-    return days;
+    return classColorsByDay;
   }
 
-  List<ScheduleDay> _scheduleDaysFromSchedules(List<Schedule> schedules) {
+  List<ScheduleDay> _scheduleDaysFromSchedules(
+    List<Schedule> schedules,
+    Map<String, Color> disciplineColors,
+  ) {
     final days = <ScheduleDay>[];
 
     for (var weekdayIndex = 0; weekdayIndex <= 6; weekdayIndex++) {
@@ -284,7 +347,12 @@ class _SchedulePageState extends State<SchedulePage> {
       days.add(
         ScheduleDay(
           weekday: _weekdayName(weekdayIndex),
-          classes: schedulesForDay.map(_toPeriodScheduleClass).toList(),
+          classes: schedulesForDay
+              .map(
+                (schedule) =>
+                    _toPeriodScheduleClass(schedule, disciplineColors),
+              )
+              .toList(),
         ),
       );
     }
@@ -292,8 +360,11 @@ class _SchedulePageState extends State<SchedulePage> {
     return days;
   }
 
-  ScheduleClassInfo _toClassInfo(Schedule schedule) {
-    final color = _scheduleColor(schedule);
+  ScheduleClassInfo _toClassInfo(
+    Schedule schedule,
+    Map<String, Color> disciplineColors,
+  ) {
+    final color = _scheduleColor(schedule, disciplineColors);
 
     return ScheduleClassInfo(
       title: schedule.disciplineName,
@@ -305,8 +376,11 @@ class _SchedulePageState extends State<SchedulePage> {
     );
   }
 
-  PeriodScheduleClass _toPeriodScheduleClass(Schedule schedule) {
-    final color = _scheduleColor(schedule);
+  PeriodScheduleClass _toPeriodScheduleClass(
+    Schedule schedule,
+    Map<String, Color> disciplineColors,
+  ) {
+    final color = _scheduleColor(schedule, disciplineColors);
 
     return PeriodScheduleClass(
       timeRange: schedule.formattedTimeRange,
@@ -319,8 +393,107 @@ class _SchedulePageState extends State<SchedulePage> {
     );
   }
 
-  Color _scheduleColor(Schedule schedule) {
-    return Color(schedule.colorValue);
+  Color _scheduleColor(Schedule schedule, Map<String, Color> disciplineColors) {
+    final disciplineName = _normalizedDisciplineName(schedule.disciplineName);
+    if (disciplineName == null) return Color(schedule.colorValue);
+
+    return disciplineColors[disciplineName] ?? Color(schedule.colorValue);
+  }
+
+  Map<String, Color> _disciplineColorsForSchedules(List<Schedule> schedules) {
+    final disciplineNames = schedules
+        .map((schedule) => _normalizedDisciplineName(schedule.disciplineName))
+        .nonNulls
+        .toSet()
+        .toList();
+
+    disciplineNames.sort((a, b) {
+      final preferredColorComparison = _preferredPaletteIndex(
+        a,
+      ).compareTo(_preferredPaletteIndex(b));
+      if (preferredColorComparison != 0) return preferredColorComparison;
+
+      return a.compareTo(b);
+    });
+
+    final disciplineColors = <String, Color>{};
+    final usedPaletteIndexes = <int>{};
+    final palette = Schedule.disciplineColorPalette;
+
+    for (var i = 0; i < disciplineNames.length; i++) {
+      final disciplineName = disciplineNames[i];
+      final preferredIndex = _preferredPaletteIndex(disciplineName);
+      final colorIndex = _availablePaletteIndex(
+        preferredIndex: preferredIndex,
+        fallbackIndex: i,
+        usedPaletteIndexes: usedPaletteIndexes,
+      );
+
+      disciplineColors[disciplineName] = Color(palette[colorIndex]);
+    }
+
+    return disciplineColors;
+  }
+
+  int _availablePaletteIndex({
+    required int preferredIndex,
+    required int fallbackIndex,
+    required Set<int> usedPaletteIndexes,
+  }) {
+    final paletteLength = Schedule.disciplineColorPalette.length;
+
+    for (var offset = 0; offset < paletteLength; offset++) {
+      final candidateIndex = (preferredIndex + offset) % paletteLength;
+      if (usedPaletteIndexes.add(candidateIndex)) return candidateIndex;
+    }
+
+    return fallbackIndex % paletteLength;
+  }
+
+  int _preferredPaletteIndex(String disciplineName) {
+    final colorValue = Schedule.colorValueForDisciplineName(disciplineName);
+    final paletteIndex = Schedule.disciplineColorPalette.indexOf(colorValue);
+
+    return paletteIndex == -1 ? 0 : paletteIndex;
+  }
+
+  String? _normalizedDisciplineName(String disciplineName) {
+    final normalizedName = disciplineName.trim().toLowerCase();
+
+    return normalizedName.isEmpty ? null : normalizedName;
+  }
+
+  String _shiftLabelFromSchedules(List<Schedule> schedules) {
+    if (schedules.isEmpty) return 'Sem aulas';
+
+    final shifts = <_ScheduleShift>{};
+
+    for (final schedule in schedules) {
+      shifts.add(_shiftFromTime(schedule.startTimeMinutes));
+    }
+
+    const orderedShifts = [
+      _ScheduleShift.morning,
+      _ScheduleShift.afternoon,
+      _ScheduleShift.night,
+    ];
+
+    final labels = orderedShifts
+        .where(shifts.contains)
+        .map((shift) => shift.label)
+        .toList();
+
+    if (labels.length <= 1) return labels.first;
+    if (labels.length == 2) return '${labels.first} e ${labels.last}';
+
+    return '${labels[0]}, ${labels[1]} e ${labels[2]}';
+  }
+
+  _ScheduleShift _shiftFromTime(int startTimeMinutes) {
+    if (startTimeMinutes < 12 * 60) return _ScheduleShift.morning;
+    if (startTimeMinutes < 18 * 60) return _ScheduleShift.afternoon;
+
+    return _ScheduleShift.night;
   }
 
   String _shortTitle(String name) {
@@ -356,6 +529,26 @@ class _SchedulePageState extends State<SchedulePage> {
   static DateTime _dateOnly(DateTime date) {
     return DateTime(date.year, date.month, date.day);
   }
+}
+
+enum _ScheduleShift {
+  morning('Manhã'),
+  afternoon('Tarde'),
+  night('Noite');
+
+  final String label;
+
+  const _ScheduleShift(this.label);
+}
+
+class _ActiveStudyCycleInfo {
+  final String? id;
+  final String label;
+
+  const _ActiveStudyCycleInfo({
+    this.id,
+    this.label = 'Ciclo acadêmico não configurado',
+  });
 }
 
 class _ScheduleLoadingScaffold extends StatelessWidget {

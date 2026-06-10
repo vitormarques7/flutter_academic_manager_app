@@ -12,6 +12,7 @@ void main() {
         id: 'schedule-1',
         data: {
           'studyCycleId': ' cycle-1 ',
+          'disciplineId': ' discipline-1 ',
           'disciplineName': 'Programacao Mobile',
           'weekdays': [1, 3, 5],
           'startTimeMinutes': 450,
@@ -24,6 +25,7 @@ void main() {
 
       expect(schedule.id, 'schedule-1');
       expect(schedule.studyCycleId, 'cycle-1');
+      expect(schedule.disciplineId, 'discipline-1');
       expect(schedule.disciplineName, 'Programacao Mobile');
       expect(schedule.weekdays, [1, 3, 5]);
       expect(schedule.startTimeMinutes, 450);
@@ -38,6 +40,7 @@ void main() {
 
       expect(schedule.disciplineName, isEmpty);
       expect(schedule.studyCycleId, isNull);
+      expect(schedule.disciplineId, isNull);
       expect(schedule.weekdays, isEmpty);
       expect(schedule.startTimeMinutes, 0);
       expect(schedule.endTimeMinutes, 0);
@@ -65,6 +68,7 @@ void main() {
       final original = Schedule(
         id: 'schedule-1',
         studyCycleId: 'cycle-1',
+        disciplineId: 'discipline-1',
         disciplineName: 'Banco de Dados',
         weekdays: const [2, 4],
         startTimeMinutes: 780,
@@ -81,6 +85,7 @@ void main() {
 
       expect(reconstructed.id, original.id);
       expect(reconstructed.studyCycleId, original.studyCycleId);
+      expect(reconstructed.disciplineId, original.disciplineId);
       expect(reconstructed.disciplineName, original.disciplineName);
       expect(reconstructed.weekdays, original.weekdays);
       expect(reconstructed.startTimeMinutes, original.startTimeMinutes);
@@ -169,6 +174,7 @@ void main() {
   group('ScheduleInput', () {
     const input = ScheduleInput(
       studyCycleId: 'cycle-1',
+      disciplineId: 'discipline-1',
       disciplineName: 'Programacao Mobile',
       weekdays: [3, 1, 3],
       startTimeMinutes: 450,
@@ -181,6 +187,7 @@ void main() {
 
       expect(map['disciplineName'], input.disciplineName);
       expect(map['studyCycleId'], input.studyCycleId);
+      expect(map['disciplineId'], input.disciplineId);
       expect(map['weekdays'], [1, 3]);
       expect(map['startTimeMinutes'], input.startTimeMinutes);
       expect(map['endTimeMinutes'], input.endTimeMinutes);
@@ -194,6 +201,7 @@ void main() {
 
       expect(map['disciplineName'], input.disciplineName);
       expect(map['studyCycleId'], input.studyCycleId);
+      expect(map['disciplineId'], input.disciplineId);
       expect(map['weekdays'], [1, 3]);
       expect(map['startTimeMinutes'], input.startTimeMinutes);
       expect(map['endTimeMinutes'], input.endTimeMinutes);
@@ -214,6 +222,7 @@ void main() {
       final map = input.toUpdateMap();
 
       expect(map.containsKey('studyCycleId'), isFalse);
+      expect(map.containsKey('disciplineId'), isFalse);
     });
   });
 }
