@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class AcademicTask {
   final String id;
   final String title;
+  final String? disciplineId;
   final String subject;
   final String deadline;
   final String visualPriority;
@@ -16,6 +17,7 @@ class AcademicTask {
   const AcademicTask({
     required this.id,
     required this.title,
+    this.disciplineId,
     required this.subject,
     required this.deadline,
     required this.visualPriority,
@@ -46,6 +48,7 @@ class AcademicTask {
     return AcademicTask(
       id: id,
       title: data['title'] as String? ?? '',
+      disciplineId: _readString(data['disciplineId']),
       subject: data['subject'] as String? ?? '',
       deadline: data['deadline'] as String? ?? '',
       visualPriority: data['visualPriority'] as String? ?? 'Trabalho',
@@ -75,6 +78,7 @@ class AcademicTask {
 
 class TaskInput {
   final String title;
+  final String? disciplineId;
   final String subject;
   final String deadline;
   final String visualPriority;
@@ -83,6 +87,7 @@ class TaskInput {
 
   const TaskInput({
     required this.title,
+    this.disciplineId,
     required this.subject,
     required this.deadline,
     required this.visualPriority,
@@ -92,6 +97,7 @@ class TaskInput {
 
   TaskInput copyWith({
     String? title,
+    String? disciplineId,
     String? subject,
     String? deadline,
     String? visualPriority,
@@ -100,6 +106,7 @@ class TaskInput {
   }) {
     return TaskInput(
       title: title ?? this.title,
+      disciplineId: disciplineId ?? this.disciplineId,
       subject: subject ?? this.subject,
       deadline: deadline ?? this.deadline,
       visualPriority: visualPriority ?? this.visualPriority,
@@ -118,9 +125,11 @@ class TaskInput {
 
   Map<String, dynamic> toUpdateMap() {
     final normalizedStudyCycleId = AcademicTask._readString(studyCycleId);
+    final normalizedDisciplineId = AcademicTask._readString(disciplineId);
 
     return {
       'studyCycleId': ?normalizedStudyCycleId,
+      'disciplineId': ?normalizedDisciplineId,
       'title': title,
       'subject': subject,
       'deadline': deadline,

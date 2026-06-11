@@ -58,26 +58,46 @@ class _TasksPageState extends State<TasksPage> {
     return tasks.where(_selectedFilter.matches).toList();
   }
 
-  List<String> _subjectNamesFromDisciplines(List<Discipline> disciplines) {
+  List<TaskDialogSubject> _subjectOptionsFromDisciplines(
+    List<Discipline> disciplines,
+  ) {
     return disciplines
-        .map((discipline) => discipline.name.trim())
-        .where((name) => name.isNotEmpty)
-        .toSet()
+        .where((discipline) => discipline.name.trim().isNotEmpty)
+        .map(
+          (discipline) => TaskDialogSubject(
+            id: discipline.id,
+            name: discipline.name.trim(),
+          ),
+        )
         .toList()
-      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
 
-  List<String> _subjectsForDialog({
-    required List<String> subjects,
+  List<TaskDialogSubject> _subjectsForDialog({
+    required List<TaskDialogSubject> subjects,
     AcademicTask? task,
   }) {
     final mergedSubjects = [...subjects];
+    final currentDisciplineId = task?.disciplineId?.trim();
     final currentSubject = task?.subject.trim();
 
-    if (currentSubject != null &&
+    final hasCurrentDiscipline =
+        currentDisciplineId != null &&
+        currentDisciplineId.isNotEmpty &&
+        mergedSubjects.any((subject) => subject.id == currentDisciplineId);
+    final hasCurrentSubject =
+        currentSubject != null &&
         currentSubject.isNotEmpty &&
-        !mergedSubjects.contains(currentSubject)) {
-      mergedSubjects.add(currentSubject);
+        mergedSubjects.any(
+          (subject) =>
+              subject.name.trim().toLowerCase() == currentSubject.toLowerCase(),
+        );
+
+    if (!hasCurrentDiscipline &&
+        !hasCurrentSubject &&
+        currentSubject != null &&
+        currentSubject.isNotEmpty) {
+      mergedSubjects.add(TaskDialogSubject(name: currentSubject));
     }
 
     return mergedSubjects;
@@ -85,7 +105,8 @@ class _TasksPageState extends State<TasksPage> {
 
   Future<void> _openTaskDialog({
     AcademicTask? task,
-    required List<String> subjects,
+    required List<TaskDialogSubject> subjects,
+    String? activeStudyCycleId,
     required bool isLoadingSubjects,
     required bool hasSubjectsError,
   }) async {
@@ -114,6 +135,7 @@ class _TasksPageState extends State<TasksPage> {
             ? null
             : TaskDialogResult(
                 title: task.title,
+                disciplineId: task.disciplineId,
                 subject: task.subject,
                 deadline: task.deadline,
                 visualPriority: task.visualPriority,
@@ -122,10 +144,12 @@ class _TasksPageState extends State<TasksPage> {
         onSubmit: (result) {
           final input = TaskInput(
             title: result.title,
+            disciplineId: result.disciplineId,
             subject: result.subject,
             deadline: result.deadline,
             visualPriority: result.visualPriority,
             description: result.description,
+            studyCycleId: task?.studyCycleId ?? activeStudyCycleId,
           );
 
           if (task == null) {
@@ -205,13 +229,15 @@ class _TasksPageState extends State<TasksPage> {
                             final hasSubjectsError =
                                 disciplineSnapshot.hasError;
                             final subjects = hasSubjectsError
-                                ? const <String>[]
-                                : _subjectNamesFromDisciplines(
+                                ? const <TaskDialogSubject>[]
+                                : _subjectOptionsFromDisciplines(
                                     disciplineSnapshot.data ?? const [],
                                   );
 
                             return StreamBuilder<List<AcademicTask>>(
-                              stream: _taskRepository.watchTasks(),
+                              stream: _taskRepository.watchTasks(
+                                studyCycleId: activeCycleSnapshot.data,
+                              ),
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState ==
                                         ConnectionState.waiting &&
@@ -288,6 +314,8 @@ class _TasksPageState extends State<TasksPage> {
                                           onTap: () => _openTaskDialog(
                                             task: task,
                                             subjects: subjects,
+                                            activeStudyCycleId:
+                                                activeCycleSnapshot.data,
                                             isLoadingSubjects:
                                                 isLoadingSubjects,
                                             hasSubjectsError: hasSubjectsError,
@@ -334,14 +362,15 @@ class _TasksPageState extends State<TasksPage> {
                           activeCycleSnapshot.hasError ||
                           disciplineSnapshot.hasError;
                       final subjects = hasSubjectsError
-                          ? const <String>[]
-                          : _subjectNamesFromDisciplines(
+                          ? const <TaskDialogSubject>[]
+                          : _subjectOptionsFromDisciplines(
                               disciplineSnapshot.data ?? const [],
                             );
 
                       return FloatingAddButton(
                         onTap: () => _openTaskDialog(
                           subjects: subjects,
+                          activeStudyCycleId: activeCycleSnapshot.data,
                           isLoadingSubjects: isLoadingSubjects,
                           hasSubjectsError: hasSubjectsError,
                         ),

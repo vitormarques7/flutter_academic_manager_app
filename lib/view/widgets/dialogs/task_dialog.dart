@@ -5,6 +5,7 @@ import '../inputs/date_picker_field.dart';
 
 class TaskDialogResult {
   final String title;
+  final String? disciplineId;
   final String subject;
   final String deadline;
   final String visualPriority;
@@ -12,6 +13,7 @@ class TaskDialogResult {
 
   const TaskDialogResult({
     required this.title,
+    this.disciplineId,
     required this.subject,
     required this.deadline,
     required this.visualPriority,
@@ -19,8 +21,17 @@ class TaskDialogResult {
   });
 }
 
+class TaskDialogSubject {
+  final String? id;
+  final String name;
+
+  const TaskDialogSubject({required this.name, this.id});
+
+  String get value => id ?? 'legacy:${name.trim().toLowerCase()}';
+}
+
 class TaskDialog extends StatefulWidget {
-  final List<String> subjects;
+  final List<TaskDialogSubject> subjects;
   final TaskDialogResult? initialTask;
   final Future<void> Function(TaskDialogResult task) onSubmit;
   final Future<void> Function()? onDelete;
@@ -51,7 +62,7 @@ class _TaskDialogState extends State<TaskDialog> {
   late final TextEditingController _titleController;
   late final TextEditingController _deadlineController;
   late final TextEditingController _descriptionController;
-  late String? _selectedSubject;
+  late String? _selectedSubjectValue;
   late String _selectedVisualPriority;
   bool _isSaving = false;
   bool _isDeleting = false;
@@ -70,7 +81,7 @@ class _TaskDialogState extends State<TaskDialog> {
     _descriptionController = TextEditingController(
       text: initialTask?.description ?? '',
     );
-    _selectedSubject = initialTask?.subject;
+    _selectedSubjectValue = _initialSubjectValue(initialTask);
     _selectedVisualPriority = initialTask?.visualPriority ?? 'Trabalho';
   }
 
@@ -84,6 +95,8 @@ class _TaskDialogState extends State<TaskDialog> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    final selectedSubject = _selectedSubject();
+    if (selectedSubject == null) return;
 
     setState(() {
       _isSaving = true;
@@ -92,7 +105,8 @@ class _TaskDialogState extends State<TaskDialog> {
 
     final task = TaskDialogResult(
       title: _titleController.text.trim(),
-      subject: _selectedSubject!,
+      disciplineId: selectedSubject.id,
+      subject: selectedSubject.name,
       deadline: _deadlineController.text.trim(),
       visualPriority: _selectedVisualPriority,
       description: _descriptionController.text.trim(),
@@ -109,6 +123,39 @@ class _TaskDialogState extends State<TaskDialog> {
         _isSaving = false;
       });
     }
+  }
+
+  String? _initialSubjectValue(TaskDialogResult? initialTask) {
+    if (initialTask == null) return null;
+
+    final disciplineId = initialTask.disciplineId?.trim();
+    if (disciplineId != null && disciplineId.isNotEmpty) {
+      for (final subject in widget.subjects) {
+        if (subject.id == disciplineId) return subject.value;
+      }
+    }
+
+    final subjectName = initialTask.subject.trim().toLowerCase();
+    if (subjectName.isEmpty) return null;
+
+    for (final subject in widget.subjects) {
+      if (subject.name.trim().toLowerCase() == subjectName) {
+        return subject.value;
+      }
+    }
+
+    return null;
+  }
+
+  TaskDialogSubject? _selectedSubject() {
+    final selectedValue = _selectedSubjectValue;
+    if (selectedValue == null) return null;
+
+    for (final subject in widget.subjects) {
+      if (subject.value == selectedValue) return subject;
+    }
+
+    return null;
   }
 
   Future<void> _confirmDelete() async {
@@ -266,7 +313,7 @@ class _TaskDialogState extends State<TaskDialog> {
                         _LabeledField(
                           label: 'DISCIPLINA',
                           child: DropdownButtonFormField<String>(
-                            initialValue: _selectedSubject,
+                            initialValue: _selectedSubjectValue,
                             isExpanded: true,
                             icon: const Icon(
                               Icons.keyboard_arrow_down,
@@ -278,9 +325,9 @@ class _TaskDialogState extends State<TaskDialog> {
                             items: widget.subjects
                                 .map(
                                   (subject) => DropdownMenuItem(
-                                    value: subject,
+                                    value: subject.value,
                                     child: Text(
-                                      subject,
+                                      subject.name,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -290,7 +337,9 @@ class _TaskDialogState extends State<TaskDialog> {
                             onChanged: _isSaving || _isDeleting
                                 ? null
                                 : (value) {
-                                    setState(() => _selectedSubject = value);
+                                    setState(
+                                      () => _selectedSubjectValue = value,
+                                    );
                                   },
                             validator: (value) {
                               if (value == null) {

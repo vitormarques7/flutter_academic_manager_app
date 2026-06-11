@@ -35,12 +35,19 @@ class TaskRepository {
     return _firestore.collection('users').doc(uid).collection('tasks');
   }
 
-  Stream<List<AcademicTask>> watchTasks() {
+  Stream<List<AcademicTask>> watchTasks({String? studyCycleId}) {
     final uid = _currentUserId;
+    final normalizedStudyCycleId = _normalizeString(studyCycleId);
 
     return _tasksCollection(uid).snapshots().map((snapshot) {
       final tasks = snapshot.docs
           .map((document) => AcademicTask.fromFirestore(document, uid))
+          .where((task) {
+            if (normalizedStudyCycleId == null) return true;
+
+            return task.studyCycleId == null ||
+                task.studyCycleId == normalizedStudyCycleId;
+          })
           .toList();
 
       tasks.sort((a, b) {

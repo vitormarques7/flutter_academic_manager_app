@@ -13,6 +13,7 @@ void main() {
         userId: 'user-1',
         data: {
           'title': 'Seminario de Java',
+          'disciplineId': ' discipline-1 ',
           'subject': 'Programacao',
           'deadline': '26/06/2026',
           'visualPriority': 'Trabalho',
@@ -27,6 +28,7 @@ void main() {
       expect(task.id, 'task-1');
       expect(task.userId, 'user-1');
       expect(task.title, 'Seminario de Java');
+      expect(task.disciplineId, 'discipline-1');
       expect(task.subject, 'Programacao');
       expect(task.deadline, '26/06/2026');
       expect(task.visualPriority, 'Trabalho');
@@ -45,6 +47,7 @@ void main() {
       );
 
       expect(task.title, isEmpty);
+      expect(task.disciplineId, isNull);
       expect(task.subject, isEmpty);
       expect(task.deadline, isEmpty);
       expect(task.deadlineLabel, 'Sem prazo');
@@ -60,6 +63,7 @@ void main() {
   group('TaskInput', () {
     const input = TaskInput(
       title: 'Lista de exercicios',
+      disciplineId: 'discipline-1',
       subject: 'Calculo I',
       deadline: '10/06/2026',
       visualPriority: 'Prova',
@@ -71,6 +75,7 @@ void main() {
       final map = input.toCreateMap();
 
       expect(map['title'], input.title);
+      expect(map['disciplineId'], input.disciplineId);
       expect(map['subject'], input.subject);
       expect(map['deadline'], input.deadline);
       expect(map['visualPriority'], input.visualPriority);
@@ -85,6 +90,7 @@ void main() {
       final map = input.toUpdateMap();
 
       expect(map['title'], input.title);
+      expect(map['disciplineId'], input.disciplineId);
       expect(map['subject'], input.subject);
       expect(map['deadline'], input.deadline);
       expect(map['visualPriority'], input.visualPriority);
@@ -106,6 +112,19 @@ void main() {
       final map = input.toUpdateMap();
 
       expect(map.containsKey('studyCycleId'), isFalse);
+    });
+
+    test('toUpdateMap keeps disciplineId absent when it is not provided', () {
+      const input = TaskInput(
+        title: 'Lista de exercicios',
+        subject: 'Calculo I',
+        deadline: '10/06/2026',
+        visualPriority: 'Prova',
+      );
+
+      final map = input.toUpdateMap();
+
+      expect(map.containsKey('disciplineId'), isFalse);
     });
   });
 }
