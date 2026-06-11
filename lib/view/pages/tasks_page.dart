@@ -6,6 +6,8 @@ import '../../repositories/discipline_repository.dart';
 import '../../repositories/task_repository.dart';
 import '../../repositories/user_profile_repository.dart';
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_design_tokens.dart';
+import '../widgets/common/app_surface.dart';
 import '../widgets/common/page_header.dart';
 import '../widgets/cards/task_card.dart';
 import '../widgets/common/floating_add_button.dart';
@@ -269,36 +271,28 @@ class _TasksPageState extends State<TasksPage> {
                                             : Icons.filter_alt_off_outlined,
                                       )
                                     else
-                                      Column(
-                                        children: tasks.map((task) {
-                                          return Padding(
-                                            padding: const EdgeInsets.only(
-                                              bottom: 12,
-                                            ),
-                                            child: TaskCard(
-                                              title: task.title,
-                                              subject: task.subject,
-                                              deadline: task.deadlineLabel,
-                                              visualPriority:
-                                                  task.visualPriority,
-                                              isChecked: task.isChecked,
-                                              onChanged: (value) {
-                                                _updateTaskCompletion(
-                                                  task,
-                                                  value ?? false,
-                                                );
-                                              },
-                                              onTap: () => _openTaskDialog(
-                                                task: task,
-                                                subjects: subjects,
-                                                isLoadingSubjects:
-                                                    isLoadingSubjects,
-                                                hasSubjectsError:
-                                                    hasSubjectsError,
-                                              ),
-                                            ),
-                                          );
-                                        }).toList(),
+                                      _GroupedTaskList(
+                                        tasks: tasks,
+                                        itemBuilder: (task) => TaskCard(
+                                          title: task.title,
+                                          subject: task.subject,
+                                          deadline: task.deadlineLabel,
+                                          visualPriority: task.visualPriority,
+                                          isChecked: task.isChecked,
+                                          onChanged: (value) {
+                                            _updateTaskCompletion(
+                                              task,
+                                              value ?? false,
+                                            );
+                                          },
+                                          onTap: () => _openTaskDialog(
+                                            task: task,
+                                            subjects: subjects,
+                                            isLoadingSubjects:
+                                                isLoadingSubjects,
+                                            hasSubjectsError: hasSubjectsError,
+                                          ),
+                                        ),
                                       ),
                                   ],
                                 );
@@ -383,21 +377,12 @@ class _TasksOverview extends StatelessWidget {
     final progressPercent = (progress * 100).round();
     final focusText = _focusText();
 
-    return Container(
+    return AppSurface(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF0FB),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E4F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22587DBD),
-            blurRadius: 14,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
+      gradient: AppGradients.softSurface,
+      border: Border.all(color: AppColors.outline),
+      shadows: AppShadows.card,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -510,6 +495,110 @@ class _TasksOverview extends StatelessWidget {
   }
 }
 
+class _GroupedTaskList extends StatelessWidget {
+  final List<AcademicTask> tasks;
+  final Widget Function(AcademicTask task) itemBuilder;
+
+  const _GroupedTaskList({required this.tasks, required this.itemBuilder});
+
+  @override
+  Widget build(BuildContext context) {
+    final groups = _TaskTimelineGroup.fromTasks(tasks);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final group in groups) ...[
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              group.label,
+              style: const TextStyle(
+                color: AppColors.textMedium,
+                fontSize: 12,
+                fontFamily: 'Roboto',
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.6,
+              ),
+            ),
+          ),
+          ...group.tasks.map(
+            (task) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: itemBuilder(task),
+            ),
+          ),
+          const SizedBox(height: 4),
+        ],
+      ],
+    );
+  }
+}
+
+class _TaskTimelineGroup {
+  final String label;
+  final List<AcademicTask> tasks;
+
+  const _TaskTimelineGroup({required this.label, required this.tasks});
+
+  static List<_TaskTimelineGroup> fromTasks(List<AcademicTask> tasks) {
+    final today = _dateOnly(DateTime.now());
+    final overdue = <AcademicTask>[];
+    final todayTasks = <AcademicTask>[];
+    final nextTasks = <AcademicTask>[];
+    final noDate = <AcademicTask>[];
+    final completed = <AcademicTask>[];
+
+    for (final task in tasks) {
+      if (task.isChecked) {
+        completed.add(task);
+        continue;
+      }
+
+      final deadline = _parseBrazilianDate(task.deadline);
+      if (deadline == null) {
+        noDate.add(task);
+      } else if (deadline.isBefore(today)) {
+        overdue.add(task);
+      } else if (deadline == today) {
+        todayTasks.add(task);
+      } else {
+        nextTasks.add(task);
+      }
+    }
+
+    int byDeadline(AcademicTask a, AcademicTask b) {
+      final aDate = _parseBrazilianDate(a.deadline);
+      final bDate = _parseBrazilianDate(b.deadline);
+      if (aDate == null && bDate == null) return a.title.compareTo(b.title);
+      if (aDate == null) return 1;
+      if (bDate == null) return -1;
+      final dateComparison = aDate.compareTo(bDate);
+      if (dateComparison != 0) return dateComparison;
+      return a.title.compareTo(b.title);
+    }
+
+    overdue.sort(byDeadline);
+    todayTasks.sort(byDeadline);
+    nextTasks.sort(byDeadline);
+    noDate.sort((a, b) => a.title.compareTo(b.title));
+    completed.sort((a, b) => a.title.compareTo(b.title));
+
+    return [
+      if (overdue.isNotEmpty)
+        _TaskTimelineGroup(label: 'ATRASADAS', tasks: overdue),
+      if (todayTasks.isNotEmpty)
+        _TaskTimelineGroup(label: 'HOJE', tasks: todayTasks),
+      if (nextTasks.isNotEmpty)
+        _TaskTimelineGroup(label: 'PRÓXIMOS PRAZOS', tasks: nextTasks),
+      if (noDate.isNotEmpty)
+        _TaskTimelineGroup(label: 'SEM PRAZO', tasks: noDate),
+      if (completed.isNotEmpty)
+        _TaskTimelineGroup(label: 'CONCLUÍDAS', tasks: completed),
+    ];
+  }
+}
+
 class _TaskInsightPill extends StatelessWidget {
   final String label;
   final String value;
@@ -579,14 +668,13 @@ class _TaskFilterTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppSurface(
       height: 46,
       padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF0FB),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E4F0)),
-      ),
+      color: AppColors.surface,
+      border: Border.all(color: AppColors.outline),
+      shadows: AppShadows.subtle,
+      borderRadius: AppRadius.md,
       child: Row(
         children: _filters.map((filter) {
           final isSelected = selectedFilter == filter;

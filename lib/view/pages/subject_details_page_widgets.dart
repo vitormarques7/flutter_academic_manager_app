@@ -62,21 +62,12 @@ class _SubjectSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppSurface(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF0FB),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E4F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22587DBD),
-            blurRadius: 14,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
+      gradient: AppGradients.softSurface,
+      border: Border.all(color: AppColors.outline),
+      shadows: AppShadows.card,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -205,7 +196,7 @@ class _AverageRing extends StatelessWidget {
                   child: CircularProgressIndicator(
                     value: (average / 10).clamp(0.0, 1.0),
                     strokeWidth: 5,
-                    backgroundColor: Colors.white.withValues(alpha: 0.85),
+                    backgroundColor: AppColors.surface,
                     color: _statusColor,
                   ),
                 ),
@@ -281,7 +272,7 @@ class _InlineActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white.withValues(alpha: 0.82),
+      color: AppColors.surface,
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
@@ -290,7 +281,9 @@ class _InlineActionButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: const Color(0x33514EB6)),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.18),
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -867,20 +860,9 @@ class _PanelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppSurface.card(
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF0FB),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E4F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22587DBD),
-            blurRadius: 14,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
+      padding: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       child: child,
     );

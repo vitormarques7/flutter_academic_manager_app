@@ -1,6 +1,8 @@
 // Card de tarefa com checkbox, título, disciplina e prazo.
 import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_design_tokens.dart';
+import '../common/app_surface.dart';
 import '../common/metadata_chip.dart';
 
 class TaskCard extends StatelessWidget {
@@ -40,21 +42,9 @@ class TaskCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: const Color(0xFFEFF0FB),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E4F0)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x33587DBD),
-                blurRadius: 10,
-                offset: Offset(0, 5),
-              ),
-            ],
-          ),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: AppSurface.card(
+          padding: EdgeInsets.zero,
           clipBehavior: Clip.antiAlias,
           child: Stack(
             children: [
@@ -62,11 +52,9 @@ class TaskCard extends StatelessWidget {
                 left: 0,
                 top: 0,
                 bottom: 0,
-                width: 5,
+                width: 4,
                 child: ColoredBox(
-                  color: isChecked
-                      ? const Color(0xFF8BC2A3)
-                      : AppColors.primary,
+                  color: isChecked ? AppColors.success : AppColors.primary,
                 ),
               ),
               Padding(
@@ -81,14 +69,27 @@ class TaskCard extends StatelessWidget {
                           width: 44,
                           height: 44,
                           decoration: ShapeDecoration(
-                            color: const Color(0xFFF8F9FF),
+                            color: isChecked
+                                ? AppColors.successSurface
+                                : AppColors.surface,
                             shape: RoundedRectangleBorder(
-                              side: const BorderSide(
+                              side: BorderSide(
                                 width: 1,
-                                color: Color(0x4C514EB6),
+                                color: isChecked
+                                    ? AppColors.success.withValues(alpha: 0.22)
+                                    : AppColors.outlineStrong.withValues(
+                                        alpha: 0.72,
+                                      ),
                               ),
                               borderRadius: BorderRadius.circular(12),
                             ),
+                            shadows: const [
+                              BoxShadow(
+                                color: Color(0x06111827),
+                                blurRadius: 4,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
                           ),
                           child: Checkbox(
                             value: isChecked,
@@ -157,6 +158,12 @@ class TaskCard extends StatelessWidget {
                         MetadataChip(
                           icon: _priorityIcon,
                           label: visualPriority,
+                          foregroundColor: isChecked
+                              ? AppColors.success
+                              : AppColors.primary,
+                          backgroundColor: isChecked
+                              ? AppColors.successSurface
+                              : AppColors.primary.withValues(alpha: 0.08),
                           maxWidth: 220,
                         ),
                       ],

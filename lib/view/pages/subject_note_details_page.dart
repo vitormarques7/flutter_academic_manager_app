@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_design_tokens.dart';
 import '../../models/subject_note.dart';
+import '../widgets/common/app_surface.dart';
 import '../widgets/common/metadata_chip.dart';
 
 class SubjectNoteDetailsPage extends StatefulWidget {
@@ -224,20 +226,11 @@ class _NoteHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppSurface(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF0FB),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E4F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22587DBD),
-            blurRadius: 14,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
+      gradient: AppGradients.softSurface,
+      border: Border.all(color: AppColors.outline),
+      shadows: AppShadows.card,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -293,13 +286,8 @@ class _NoteInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppSurface.card(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF0FB),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E4F0)),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

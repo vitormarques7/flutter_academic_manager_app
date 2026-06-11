@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_design_tokens.dart';
+import '../common/app_surface.dart';
 import 'schedule_models.dart';
 
 class SelectedDayScheduleCard extends StatelessWidget {
@@ -346,26 +348,11 @@ class _RaisedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
+    return AppSurface.card(
       constraints: BoxConstraints(minHeight: minHeight),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22000000),
-            blurRadius: 5,
-            offset: Offset(0, 4),
-          ),
-          BoxShadow(
-            color: Color(0x33587DBD),
-            blurRadius: 4,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(padding: padding, child: child),
+      padding: padding,
+      borderRadius: AppRadius.lg,
+      child: child,
     );
   }
 }

@@ -1,6 +1,8 @@
 // Card de disciplina com nome, professor, barra de frequência e média atual.
 import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_design_tokens.dart';
+import '../common/app_surface.dart';
 import '../common/metadata_chip.dart';
 
 class SubjectCard extends StatelessWidget {
@@ -10,6 +12,8 @@ class SubjectCard extends StatelessWidget {
   final double average;
   final int? workload;
   final VoidCallback? onTap;
+  final Color accentColor;
+  final bool showFrequency;
 
   const SubjectCard({
     super.key,
@@ -19,6 +23,8 @@ class SubjectCard extends StatelessWidget {
     required this.average,
     this.workload,
     this.onTap,
+    this.accentColor = AppColors.primary,
+    this.showFrequency = true,
   });
 
   Color get _averageColor {
@@ -35,21 +41,8 @@ class SubjectCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: const Color(0xFFEFF0FB),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E4F0)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x33587DBD),
-                blurRadius: 10,
-                offset: Offset(0, 5),
-              ),
-            ],
-          ),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: AppSurface.card(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,13 +51,22 @@ class SubjectCard extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
+                  color: accentColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0x4C514EB6)),
+                  border: Border.all(
+                    color: accentColor.withValues(alpha: 0.28),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: 0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.menu_book_outlined,
-                  color: AppColors.primary,
+                  color: accentColor,
                   size: 24,
                 ),
               ),
@@ -78,10 +80,10 @@ class SubjectCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Color(0xFF191820),
+                        color: AppColors.textDark,
                         fontSize: 17,
                         fontFamily: 'Roboto',
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                         height: 1.26,
                       ),
                     ),
@@ -91,56 +93,62 @@ class SubjectCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Color(0xFF464552),
+                        color: AppColors.textMedium,
                         fontSize: 13,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w600,
                         height: 1.35,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        const Text(
-                          'Frequência',
-                          style: TextStyle(
-                            color: Color(0xFF464552),
-                            fontSize: 12,
-                            fontFamily: 'Roboto',
-                            fontWeight: FontWeight.w700,
-                            height: 1.2,
+                    if (showFrequency) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Text(
+                            'Frequência',
+                            style: TextStyle(
+                              color: AppColors.textMedium,
+                              fontSize: 12,
+                              fontFamily: 'Roboto',
+                              fontWeight: FontWeight.w700,
+                              height: 1.2,
+                            ),
                           ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          percentLabel,
-                          style: const TextStyle(
-                            color: Color(0xFF464552),
-                            fontSize: 12,
-                            fontFamily: 'Roboto',
-                            fontWeight: FontWeight.w700,
-                            height: 1.2,
+                          const Spacer(),
+                          Text(
+                            percentLabel,
+                            style: const TextStyle(
+                              color: AppColors.textMedium,
+                              fontSize: 12,
+                              fontFamily: 'Roboto',
+                              fontWeight: FontWeight.w700,
+                              height: 1.2,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(30),
-                      child: LinearProgressIndicator(
-                        value: frequency.clamp(0.0, 1.0).toDouble(),
-                        minHeight: 8,
-                        backgroundColor: const Color(0x33514EB6),
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          AppColors.primary,
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(30),
+                        child: LinearProgressIndicator(
+                          value: frequency.clamp(0.0, 1.0).toDouble(),
+                          minHeight: 8,
+                          backgroundColor: AppColors.primary.withValues(
+                            alpha: 0.12,
+                          ),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            accentColor,
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                     if (workload != null) ...[
                       const SizedBox(height: 10),
                       MetadataChip(
                         icon: Icons.access_time,
                         label: '${workload}h',
+                        foregroundColor: accentColor,
+                        backgroundColor: accentColor.withValues(alpha: 0.08),
                         iconSize: 15,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 9,
@@ -156,9 +164,16 @@ class SubjectCard extends StatelessWidget {
                 width: 76,
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.72),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E4F0)),
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(color: AppColors.outline),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x06111827),
+                      blurRadius: 6,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
