@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_design_tokens.dart';
 import '../../../config/theme/app_text_styles.dart';
 
 class PrimaryButton extends StatelessWidget {
@@ -21,8 +22,8 @@ class PrimaryButton extends StatelessWidget {
     this.onPressed,
     this.backgroundColor = AppColors.primary,
     this.textColor = AppColors.textOnPrimary,
-    this.borderRadius = 35,
-    this.height = 65,
+    this.borderRadius = AppRadius.pill,
+    this.height = 56,
     this.padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
     this.textStyle,
     this.leading,
@@ -38,28 +39,38 @@ class PrimaryButton extends StatelessWidget {
         : onPressed;
 
     return Material(
-      color: Colors.transparent,
+      color: effectiveDisabled
+          ? backgroundColor.withValues(alpha: 0.5)
+          : backgroundColor,
+      borderRadius: BorderRadius.circular(borderRadius),
+      clipBehavior: Clip.antiAlias,
+      shadowColor: backgroundColor.withValues(alpha: 0.24),
+      elevation: effectiveDisabled ? 0 : 2,
       child: InkWell(
         onTap: effectiveOnPressed,
         borderRadius: BorderRadius.circular(borderRadius),
-        child: Container(
+        child: Ink(
           width: double.infinity,
           height: height,
           padding: padding,
           decoration: ShapeDecoration(
-            color: effectiveDisabled
-                ? backgroundColor.withValues(alpha: 0.5)
-                : backgroundColor,
+            color: Colors.transparent,
             shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: Colors.white.withValues(alpha: 0.14),
+                width: 1,
+              ),
               borderRadius: BorderRadius.circular(borderRadius),
             ),
-            shadows: [
-              BoxShadow(
-                color: backgroundColor.withValues(alpha: 0.3),
-                blurRadius: 4,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            shadows: effectiveDisabled
+                ? null
+                : [
+                    BoxShadow(
+                      color: backgroundColor.withValues(alpha: 0.24),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -78,7 +89,11 @@ class PrimaryButton extends StatelessWidget {
                       label,
                       style:
                           textStyle ??
-                          AppTextStyles.button.copyWith(color: textColor),
+                          AppTextStyles.button.copyWith(
+                            color: textColor,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                          ),
                     ),
             ],
           ),

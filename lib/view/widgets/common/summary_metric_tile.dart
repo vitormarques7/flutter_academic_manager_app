@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_design_tokens.dart';
+import 'app_surface.dart';
 
 class SummaryMetricTile extends StatelessWidget {
   final String label;
@@ -15,24 +17,32 @@ class SummaryMetricTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 82,
+    return AppSurface.card(
+      height: 92,
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF0FB),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E4F0)),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppColors.primary, size: 18),
+          Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(AppRadius.xs),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.12),
+              ),
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 17),
+          ),
           const Spacer(),
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              color: Color(0xFF191820),
-              fontSize: 22,
+              color: AppColors.textDark,
+              fontSize: 20,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w800,
               height: 1,
@@ -44,8 +54,8 @@ class SummaryMetricTile extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              color: Color(0xFF464552),
-              fontSize: 11,
+              color: AppColors.textMedium,
+              fontSize: 10.5,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w700,
               height: 1.2,

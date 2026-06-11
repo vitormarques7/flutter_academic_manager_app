@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_design_tokens.dart';
+
 class MetadataChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final double iconSize;
   final EdgeInsetsGeometry padding;
   final double? maxWidth;
+  final Color? foregroundColor;
+  final Color? backgroundColor;
 
   const MetadataChip({
     super.key,
@@ -14,32 +19,44 @@ class MetadataChip extends StatelessWidget {
     this.iconSize = 16,
     this.padding = const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
     this.maxWidth,
+    this.foregroundColor,
+    this.backgroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final color = foregroundColor ?? AppColors.textMedium;
+    final fill = backgroundColor ?? AppColors.surface;
+
     return Container(
       constraints: maxWidth == null
           ? null
           : BoxConstraints(maxWidth: maxWidth!),
       padding: padding,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE2E4F0)),
+        color: fill,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: color.withValues(alpha: 0.16)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x06111827),
+            blurRadius: 4,
+            offset: Offset(0, 1),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: const Color(0xFF464552), size: iconSize),
+          Icon(icon, color: color, size: iconSize),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Color(0xFF464552),
+              style: TextStyle(
+                color: color,
                 fontSize: 12,
                 fontFamily: 'Roboto',
                 fontWeight: FontWeight.w700,

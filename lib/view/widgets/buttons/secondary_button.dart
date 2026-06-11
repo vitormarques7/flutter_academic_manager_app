@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_design_tokens.dart';
 import '../../../config/theme/app_text_styles.dart';
 
 class SecondaryButton extends StatelessWidget {
@@ -24,8 +25,8 @@ class SecondaryButton extends StatelessWidget {
     this.backgroundColor = AppColors.background,
     this.borderColor = AppColors.primary,
     this.textColor = AppColors.textDark,
-    this.borderRadius = 35,
-    this.height = 65,
+    this.borderRadius = AppRadius.pill,
+    this.height = 56,
     this.padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
     this.textStyle,
     this.isLoading = false,
@@ -40,29 +41,35 @@ class SecondaryButton extends StatelessWidget {
         : onPressed;
 
     return Material(
-      color: Colors.transparent,
+      color: effectiveDisabled
+          ? backgroundColor.withValues(alpha: 0.5)
+          : backgroundColor,
+      borderRadius: BorderRadius.circular(borderRadius),
+      clipBehavior: Clip.antiAlias,
+      elevation: effectiveDisabled ? 0 : 1,
+      shadowColor: borderColor.withValues(alpha: 0.10),
       child: InkWell(
         onTap: effectiveOnPressed,
         borderRadius: BorderRadius.circular(borderRadius),
-        child: Container(
+        child: Ink(
           width: double.infinity,
           height: height,
           padding: padding,
           decoration: ShapeDecoration(
-            color: effectiveDisabled
-                ? backgroundColor.withValues(alpha: 0.5)
-                : backgroundColor,
+            color: Colors.transparent,
             shape: RoundedRectangleBorder(
-              side: BorderSide(width: 2.5, color: borderColor),
+              side: BorderSide(width: 1.4, color: borderColor),
               borderRadius: BorderRadius.circular(borderRadius),
             ),
-            shadows: [
-              BoxShadow(
-                color: borderColor.withValues(alpha: 0.3),
-                blurRadius: 4,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            shadows: effectiveDisabled
+                ? null
+                : [
+                    BoxShadow(
+                      color: borderColor.withValues(alpha: 0.12),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -81,7 +88,11 @@ class SecondaryButton extends StatelessWidget {
                       label,
                       style:
                           textStyle ??
-                          AppTextStyles.button.copyWith(color: textColor),
+                          AppTextStyles.button.copyWith(
+                            color: textColor,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                          ),
                     ),
             ],
           ),

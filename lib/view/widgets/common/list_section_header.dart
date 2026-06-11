@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../config/theme/app_colors.dart';
 import 'section_label.dart';
 
 class ListSectionHeader extends StatelessWidget {
@@ -22,7 +23,7 @@ class ListSectionHeader extends StatelessWidget {
         Text(
           '$count ${count == 1 ? 'item' : 'itens'}',
           style: const TextStyle(
-            color: Color(0xFF464552),
+            color: AppColors.textMuted,
             fontSize: 13,
             fontFamily: 'Roboto',
             fontWeight: FontWeight.w700,

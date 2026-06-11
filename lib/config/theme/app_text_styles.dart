@@ -10,24 +10,24 @@ class AppTextStyles {
   // Headlines
   static const TextStyle headline1 = TextStyle(
     fontFamily: _font,
-    fontSize: 40,
-    fontWeight: FontWeight.w700,
+    fontSize: 36,
+    fontWeight: FontWeight.w800,
     color: AppColors.textDark,
     letterSpacing: _letterSpacing,
   );
 
   static const TextStyle headline2 = TextStyle(
     fontFamily: _font,
-    fontSize: 32,
-    fontWeight: FontWeight.w700,
+    fontSize: 28,
+    fontWeight: FontWeight.w800,
     color: AppColors.textDark,
     letterSpacing: _letterSpacing,
   );
 
   static const TextStyle headline3 = TextStyle(
     fontFamily: _font,
-    fontSize: 24,
-    fontWeight: FontWeight.w700,
+    fontSize: 22,
+    fontWeight: FontWeight.w800,
     color: AppColors.textDark,
     letterSpacing: _letterSpacing,
   );
@@ -36,7 +36,7 @@ class AppTextStyles {
   static const TextStyle bodyBold = TextStyle(
     fontFamily: _font,
     fontSize: 16,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w800,
     color: AppColors.textMedium,
     letterSpacing: _letterSpacing,
     height: 1.38,
@@ -64,8 +64,8 @@ class AppTextStyles {
     fontFamily: _font,
     fontSize: 12,
     fontWeight: FontWeight.w700,
-    color: AppColors.textDark,
-    letterSpacing: 0.5,
+    color: AppColors.textMedium,
+    letterSpacing: 0.7,
   );
 
   // Navegação (bottom nav bar)

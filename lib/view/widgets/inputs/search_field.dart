@@ -1,6 +1,9 @@
 // Campo de busca com ícone de lupa e placeholder roxo translúcido.
 import 'package:flutter/material.dart';
 
+import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_design_tokens.dart';
+
 class SearchField extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
@@ -15,47 +18,49 @@ class SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 49,
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF0FB),
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x66587DBD),
-            blurRadius: 4,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        style: const TextStyle(
-          color: Color(0xFF191820),
-          fontSize: 15,
-          fontFamily: 'Roboto',
-          fontWeight: FontWeight.w600,
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      elevation: 1,
+      shadowColor: const Color(0x10111827),
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.outline),
         ),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(
-            color: Color(0x7F514EB6),
+        child: TextField(
+          controller: controller,
+          onChanged: onChanged,
+          style: const TextStyle(
+            color: AppColors.textDark,
             fontSize: 15,
             fontFamily: 'Roboto',
             fontWeight: FontWeight.w600,
-            height: 1.47,
           ),
-          prefixIcon: const Icon(
-            Icons.search,
-            color: Color(0x7F514EB6),
-            size: 22,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(
+              color: AppColors.textSubtle,
+              fontSize: 15,
+              fontFamily: 'Roboto',
+              fontWeight: FontWeight.w600,
+              height: 1.47,
+            ),
+            prefixIcon: const Padding(
+              padding: EdgeInsets.only(left: 14, right: 8),
+              child: Icon(Icons.search, color: AppColors.primary, size: 22),
+            ),
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 50,
+              minHeight: 52,
+            ),
+            filled: false,
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(vertical: 14),
           ),
-          filled: false,
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 14),
         ),
       ),
     );
