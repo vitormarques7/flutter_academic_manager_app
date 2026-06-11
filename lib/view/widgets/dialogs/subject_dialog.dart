@@ -537,21 +537,14 @@ class _SubjectDialogState extends State<SubjectDialog> {
                               ),
                               padding: EdgeInsets.zero,
                             ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.save_outlined, size: 28),
-                                SizedBox(width: 10),
-                                Text(
-                                  'Salvar',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontFamily: 'Roboto',
-                                    fontWeight: FontWeight.w400,
-                                    height: 1.50,
-                                  ),
-                                ),
-                              ],
+                            child: const Text(
+                              'Salvar',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontFamily: 'Roboto',
+                                fontWeight: FontWeight.w400,
+                                height: 1.50,
+                              ),
                             ),
                           ),
                         ),

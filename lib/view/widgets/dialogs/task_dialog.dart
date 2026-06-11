@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../config/theme/app_colors.dart';
+import '../inputs/date_picker_field.dart';
 
 class TaskDialogResult {
   final String title;
@@ -160,24 +160,10 @@ class _TaskDialogState extends State<TaskDialog> {
 
   String? _validateDeadline(String? value) {
     final text = value?.trim() ?? '';
-    final parts = text.split('/');
 
     if (text.isEmpty) return null;
-    if (parts.length != 3) return 'Use o formato dd/mm/yyyy.';
-
-    final day = int.tryParse(parts[0]);
-    final month = int.tryParse(parts[1]);
-    final year = int.tryParse(parts[2]);
-
-    if (day == null || month == null || year == null) {
-      return 'Use apenas números na data.';
-    }
-
-    final parsed = DateTime(year, month, day);
-    final isValidDate =
-        parsed.day == day && parsed.month == month && parsed.year == year;
-
-    if (!isValidDate) return 'Informe uma data válida.';
+    final parsed = parseBrazilianDate(text);
+    if (parsed == null) return 'Informe uma data válida.';
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -317,16 +303,13 @@ class _TaskDialogState extends State<TaskDialog> {
                         const SizedBox(height: 24),
                         _LabeledField(
                           label: 'DATA / PRAZO',
-                          child: TextFormField(
+                          child: AppDatePickerField(
                             controller: _deadlineController,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              _DateInputFormatter(),
-                            ],
                             decoration: _inputDecoration(
                               hintText: 'dd/mm/yyyy',
                             ),
+                            firstDate: DateTime.now(),
+                            helpText: 'Escolher prazo',
                             enabled: !_isSaving && !_isDeleting,
                             validator: _validateDeadline,
                           ),
@@ -472,21 +455,14 @@ class _TaskDialogState extends State<TaskDialog> {
                                       ),
                                     ),
                                   )
-                                : const Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.save_outlined, size: 28),
-                                      SizedBox(width: 10),
-                                      Text(
-                                        'Salvar',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontFamily: 'Roboto',
-                                          fontWeight: FontWeight.w400,
-                                          height: 1.50,
-                                        ),
-                                      ),
-                                    ],
+                                : const Text(
+                                    'Salvar',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontFamily: 'Roboto',
+                                      fontWeight: FontWeight.w400,
+                                      height: 1.50,
+                                    ),
                                   ),
                           ),
                         ),
@@ -667,27 +643,4 @@ class _TaskType {
   final IconData icon;
 
   const _TaskType({required this.label, required this.icon});
-}
-
-class _DateInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final digits = newValue.text.replaceAll(RegExp('[^0-9]'), '');
-    final limited = digits.length > 8 ? digits.substring(0, 8) : digits;
-    final buffer = StringBuffer();
-
-    for (var i = 0; i < limited.length; i++) {
-      if (i == 2 || i == 4) buffer.write('/');
-      buffer.write(limited[i]);
-    }
-
-    final formatted = buffer.toString();
-    return TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
-  }
 }
