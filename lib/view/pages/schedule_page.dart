@@ -2,13 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../../config/scroll/app_scroll_behavior.dart';
 import '../../config/theme/app_colors.dart';
+import '../../models/discipline.dart';
 import '../../models/schedule.dart';
 import '../../models/study_cycle.dart';
+import '../../models/subject_event.dart';
+import '../../repositories/discipline_repository.dart';
 import '../../repositories/schedule_repository.dart';
 import '../../repositories/study_cycle_repository.dart';
+import '../../repositories/subject_event_repository.dart';
 import '../../repositories/user_profile_repository.dart';
+import 'subject_details_page.dart';
+import 'subject_event_details_page.dart';
 import '../widgets/common/floating_add_button.dart';
-import '../widgets/dialogs/schedule_dialog.dart';
+import '../widgets/dialogs/schedule_event_dialog.dart';
 import '../widgets/schedules/course_schedule_view.dart';
 import '../widgets/schedules/month_calendar.dart';
 import '../widgets/schedules/schedule_header.dart';
@@ -23,7 +29,9 @@ class SchedulePage extends StatefulWidget {
 }
 
 class _SchedulePageState extends State<SchedulePage> {
+  final DisciplineRepository _disciplineRepository = DisciplineRepository();
   final ScheduleRepository _scheduleRepository = ScheduleRepository();
+  final SubjectEventRepository _eventRepository = SubjectEventRepository();
   final StudyCycleRepository _studyCycleRepository = StudyCycleRepository();
   final UserProfileRepository _userProfileRepository = UserProfileRepository();
   late Future<_ActiveStudyCycleInfo> _activeStudyCycleInfoFuture;
@@ -72,11 +80,6 @@ class _SchedulePageState extends State<SchedulePage> {
 
             final schedules = snapshot.data ?? [];
             final disciplineColors = _disciplineColorsForSchedules(schedules);
-            final selectedClasses = _classesForDay(
-              schedules,
-              _selectedDay,
-              disciplineColors,
-            );
             final courseScheduleDays = _scheduleDaysFromSchedules(
               schedules,
               disciplineColors,
@@ -93,71 +96,122 @@ class _SchedulePageState extends State<SchedulePage> {
               );
             }
 
-            return Scaffold(
-              backgroundColor: AppColors.background,
-              body: SafeArea(
-                child: Stack(
-                  children: [
-                    ScrollConfiguration(
-                      behavior: const AppScrollBehavior(),
-                      child: SingleChildScrollView(
-                        physics: const ClampingScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(20, 39, 20, 100),
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 400),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                ScheduleHeader(
-                                  selectedDay: _selectedDay,
-                                  focusedDay: _focusedDay,
-                                  onPreviousDay: () => _changeSelectedDay(-1),
-                                  onNextDay: () => _changeSelectedDay(1),
-                                  onCourseScheduleTap: () {
-                                    setState(
-                                      () => _isShowingCourseSchedule = true,
-                                    );
-                                  },
+            return StreamBuilder<List<Discipline>>(
+              stream: _disciplineRepository.watchDisciplines(
+                studyCycleId: activeStudyCycleInfo.id,
+              ),
+              builder: (context, disciplineSnapshot) {
+                final disciplines =
+                    disciplineSnapshot.data ?? const <Discipline>[];
+
+                return StreamBuilder<List<SubjectEvent>>(
+                  stream: _eventRepository.watchEvents(
+                    studyCycleId: activeStudyCycleInfo.id,
+                    upcomingOnly: true,
+                  ),
+                  builder: (context, eventSnapshot) {
+                    final events = eventSnapshot.data ?? const <SubjectEvent>[];
+                    final selectedClasses = _classesForDay(
+                      schedules,
+                      _selectedDay,
+                      disciplineColors,
+                      disciplines,
+                    );
+                    final selectedEvents = _eventsForDay(
+                      events,
+                      _selectedDay,
+                      disciplineColors,
+                    );
+
+                    return Scaffold(
+                      backgroundColor: AppColors.background,
+                      body: SafeArea(
+                        child: Stack(
+                          children: [
+                            ScrollConfiguration(
+                              behavior: const AppScrollBehavior(),
+                              child: SingleChildScrollView(
+                                physics: const ClampingScrollPhysics(),
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  39,
+                                  20,
+                                  100,
                                 ),
-                                const SizedBox(height: 31),
-                                MonthCalendar(
-                                  focusedDay: _focusedDay,
-                                  selectedDay: _selectedDay,
-                                  classColorsByDay:
-                                      _classColorsByDayInFocusedMonth(
-                                        schedules,
-                                        disciplineColors,
-                                      ),
-                                  onDaySelected: (day) {
-                                    setState(() {
-                                      _selectedDay = day;
-                                      _focusedDay = day;
-                                    });
-                                  },
-                                  onFocusedDayChanged: (day) {
-                                    setState(() => _focusedDay = day);
-                                  },
+                                child: Center(
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxWidth: 400,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        ScheduleHeader(
+                                          selectedDay: _selectedDay,
+                                          focusedDay: _focusedDay,
+                                          onPreviousDay: () =>
+                                              _changeSelectedDay(-1),
+                                          onNextDay: () =>
+                                              _changeSelectedDay(1),
+                                          onCourseScheduleTap: () {
+                                            setState(
+                                              () => _isShowingCourseSchedule =
+                                                  true,
+                                            );
+                                          },
+                                        ),
+                                        const SizedBox(height: 31),
+                                        MonthCalendar(
+                                          focusedDay: _focusedDay,
+                                          selectedDay: _selectedDay,
+                                          markerColorsByDay:
+                                              _calendarMarkersByDayInFocusedMonth(
+                                                schedules,
+                                                events,
+                                                disciplineColors,
+                                              ),
+                                          onDaySelected: (day) {
+                                            setState(() {
+                                              _selectedDay = day;
+                                              _focusedDay = day;
+                                            });
+                                          },
+                                          onFocusedDayChanged: (day) {
+                                            setState(() => _focusedDay = day);
+                                          },
+                                        ),
+                                        const SizedBox(height: 16),
+                                        SelectedDayScheduleCard(
+                                          selectedDay: _selectedDay,
+                                          classes: selectedClasses,
+                                          events: selectedEvents,
+                                        ),
+                                        if (eventSnapshot.hasError ||
+                                            disciplineSnapshot.hasError) ...[
+                                          const SizedBox(height: 12),
+                                          const _ScheduleDataWarning(),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                                const SizedBox(height: 16),
-                                SelectedDayScheduleCard(
-                                  selectedDay: _selectedDay,
-                                  classes: selectedClasses,
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
+                            Positioned(
+                              right: 24,
+                              bottom: 16,
+                              child: FloatingAddButton(
+                                onTap: () => _openEventDialog(disciplines),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    Positioned(
-                      right: 24,
-                      bottom: 16,
-                      child: FloatingAddButton(onTap: _openScheduleDialog),
-                    ),
-                  ],
-                ),
-              ),
+                    );
+                  },
+                );
+              },
             );
           },
         );
@@ -165,42 +219,43 @@ class _SchedulePageState extends State<SchedulePage> {
     );
   }
 
-  Future<void> _openScheduleDialog() async {
-    final result = await showDialog<ScheduleDialogResult>(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.28),
-      builder: (_) => const ScheduleDialog(showDisciplineNameField: true),
-    );
+  Future<void> _openEventDialog(List<Discipline> disciplines) async {
+    final activeStudyCycleInfo = await _activeStudyCycleInfoFuture;
+    if (!mounted) return;
 
-    if (result == null || result.weekdays.isEmpty || !mounted) return;
-
-    final disciplineName = result.disciplineName?.trim();
-    if (disciplineName == null || disciplineName.isEmpty) {
-      _showError('Informe o nome da disciplina para salvar o horário.');
+    if (activeStudyCycleInfo.id == null) {
+      _showError('Configure um ciclo de estudos antes de criar eventos.');
       return;
     }
 
-    final activeStudyCycleInfo = await _activeStudyCycleInfoFuture;
+    final result = await showDialog<ScheduleEventDialogResult>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.28),
+      builder: (_) => ScheduleEventDialog(
+        disciplines: disciplines,
+        initialDate: _selectedDay,
+      ),
+    );
+
+    if (result == null || !mounted) return;
 
     try {
-      for (final timeRange in result.timeRanges) {
-        await _scheduleRepository.createSchedule(
-          ScheduleInput(
-            studyCycleId: activeStudyCycleInfo.id,
-            disciplineName: disciplineName,
-            weekdays: result.weekdays,
-            startTimeMinutes: timeRange.startTimeMinutes,
-            endTimeMinutes: timeRange.endTimeMinutes,
-            colorValue: Schedule.colorValueForDisciplineName(disciplineName),
-          ),
-        );
-      }
-
-      _showSuccess('Horário salvo com sucesso.');
-    } on ScheduleRepositoryException catch (error) {
+      await _eventRepository.createEvent(
+        SubjectEventInput(
+          studyCycleId: activeStudyCycleInfo.id,
+          disciplineId: result.disciplineId,
+          disciplineName: result.disciplineName,
+          title: result.title,
+          type: result.type,
+          eventDate: result.eventDate,
+          description: result.description,
+        ),
+      );
+      _showSuccess('Evento salvo com sucesso.');
+    } on SubjectEventRepositoryException catch (error) {
       _showError(error.message);
     } catch (_) {
-      _showError('Não foi possível salvar o horário. Tente novamente.');
+      _showError('Não foi possível salvar o evento. Tente novamente.');
     }
   }
 
@@ -286,6 +341,7 @@ class _SchedulePageState extends State<SchedulePage> {
     List<Schedule> schedules,
     DateTime day,
     Map<String, Color> disciplineColors,
+    List<Discipline> disciplines,
   ) {
     final weekdayIndex = _weekdayIndexFromDate(day);
     final classes =
@@ -295,15 +351,19 @@ class _SchedulePageState extends State<SchedulePage> {
           ..sort(Schedule.compareByStartTime);
 
     return classes
-        .map((schedule) => _toClassInfo(schedule, disciplineColors))
+        .map(
+          (schedule) => _toClassInfo(schedule, disciplineColors, disciplines),
+        )
         .toList();
   }
 
-  Map<DateTime, List<Color>> _classColorsByDayInFocusedMonth(
+  Map<DateTime, List<ScheduleCalendarMarker>>
+  _calendarMarkersByDayInFocusedMonth(
     List<Schedule> schedules,
+    List<SubjectEvent> events,
     Map<String, Color> disciplineColors,
   ) {
-    final classColorsByDay = <DateTime, List<Color>>{};
+    final markersByDay = <DateTime, List<ScheduleCalendarMarker>>{};
     final firstDay = DateTime(_focusedDay.year, _focusedDay.month);
     final daysInMonth = DateUtils.getDaysInMonth(
       _focusedDay.year,
@@ -317,16 +377,52 @@ class _SchedulePageState extends State<SchedulePage> {
         (schedule) => schedule.occursOnWeekday(weekdayIndex),
       );
 
-      final colors = schedulesForDay
-          .map((schedule) => _scheduleColor(schedule, disciplineColors))
-          .toSet()
-          .toList(growable: false);
-      if (colors.isNotEmpty) {
-        classColorsByDay[_dateOnly(day)] = colors;
+      for (final schedule in schedulesForDay) {
+        _addCalendarMarker(
+          markersByDay,
+          day,
+          ScheduleCalendarMarker(
+            color: _scheduleColor(schedule, disciplineColors),
+            kind: ScheduleCalendarMarkerKind.classSchedule,
+          ),
+        );
       }
     }
 
-    return classColorsByDay;
+    for (final event in events) {
+      final eventDay = _dateOnly(event.eventDate);
+      if (eventDay.year != _focusedDay.year ||
+          eventDay.month != _focusedDay.month) {
+        continue;
+      }
+
+      _addCalendarMarker(
+        markersByDay,
+        eventDay,
+        ScheduleCalendarMarker(
+          color: _subjectEventColor(event, disciplineColors),
+          kind: ScheduleCalendarMarkerKind.subjectEvent,
+        ),
+      );
+    }
+
+    return markersByDay;
+  }
+
+  void _addCalendarMarker(
+    Map<DateTime, List<ScheduleCalendarMarker>> markersByDay,
+    DateTime day,
+    ScheduleCalendarMarker marker,
+  ) {
+    final normalizedDay = _dateOnly(day);
+    final markers = markersByDay.putIfAbsent(normalizedDay, () => []);
+    final alreadyExists = markers.any(
+      (existingMarker) =>
+          existingMarker.kind == marker.kind &&
+          existingMarker.color == marker.color,
+    );
+
+    if (!alreadyExists) markers.add(marker);
   }
 
   List<ScheduleDay> _scheduleDaysFromSchedules(
@@ -363,6 +459,7 @@ class _SchedulePageState extends State<SchedulePage> {
   ScheduleClassInfo _toClassInfo(
     Schedule schedule,
     Map<String, Color> disciplineColors,
+    List<Discipline> disciplines,
   ) {
     final color = _scheduleColor(schedule, disciplineColors);
 
@@ -373,7 +470,118 @@ class _SchedulePageState extends State<SchedulePage> {
       accentColor: color,
       iconColor: color,
       iconBackground: color.withValues(alpha: 0.12),
+      onTap: () => _openDisciplineDetails(schedule, disciplines),
     );
+  }
+
+  List<ScheduleEventInfo> _eventsForDay(
+    List<SubjectEvent> events,
+    DateTime day,
+    Map<String, Color> disciplineColors,
+  ) {
+    final selectedDay = _dateOnly(day);
+    final eventsForDay =
+        events
+            .where((event) => _dateOnly(event.eventDate) == selectedDay)
+            .toList()
+          ..sort(SubjectEvent.compareByDate);
+
+    return eventsForDay
+        .map((event) => _toEventInfo(event, disciplineColors))
+        .toList();
+  }
+
+  ScheduleEventInfo _toEventInfo(
+    SubjectEvent event,
+    Map<String, Color> disciplineColors,
+  ) {
+    final color = _subjectEventColor(event, disciplineColors);
+
+    return ScheduleEventInfo(
+      title: event.title,
+      subject: event.disciplineName,
+      typeLabel: event.type.label,
+      description: event.description,
+      icon: _eventIcon(event.type),
+      accentColor: color,
+      iconColor: color,
+      iconBackground: color.withValues(alpha: 0.12),
+      onTap: () => _openEventDetails(event, color),
+    );
+  }
+
+  IconData _eventIcon(SubjectEventType type) {
+    return switch (type) {
+      SubjectEventType.exam => Icons.edit_square,
+      SubjectEventType.lecture => Icons.record_voice_over_outlined,
+      SubjectEventType.seminar => Icons.co_present_outlined,
+      SubjectEventType.deadline => Icons.assignment_turned_in_outlined,
+      SubjectEventType.extraClass => Icons.school_outlined,
+      SubjectEventType.other => Icons.event_note_outlined,
+    };
+  }
+
+  void _openDisciplineDetails(Schedule schedule, List<Discipline> disciplines) {
+    final discipline = _findDisciplineForSchedule(schedule, disciplines);
+    if (discipline == null) {
+      _showError('Não foi possível localizar os detalhes dessa disciplina.');
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SubjectDetailsPage(
+          disciplineId: discipline.id,
+          studyCycleId: discipline.studyCycleId,
+          name: discipline.name,
+          teacher: discipline.teacher.isEmpty
+              ? 'Professor não informado'
+              : discipline.teacher,
+          average: 0,
+          workload: discipline.workload,
+          colorValue: discipline.colorValue,
+        ),
+      ),
+    );
+  }
+
+  void _openEventDetails(SubjectEvent event, Color accentColor) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SubjectEventDetailsPage(
+          event: event,
+          accentColor: accentColor,
+          onDelete: _deleteEvent,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteEvent(SubjectEvent event) {
+    return _eventRepository.deleteEvent(event.id);
+  }
+
+  Discipline? _findDisciplineForSchedule(
+    Schedule schedule,
+    List<Discipline> disciplines,
+  ) {
+    final disciplineId = schedule.disciplineId;
+    if (disciplineId != null) {
+      for (final discipline in disciplines) {
+        if (discipline.id == disciplineId) return discipline;
+      }
+    }
+
+    final scheduleName = _normalizedDisciplineName(schedule.disciplineName);
+    if (scheduleName == null) return null;
+
+    for (final discipline in disciplines) {
+      if (_normalizedDisciplineName(discipline.name) == scheduleName) {
+        return discipline;
+      }
+    }
+
+    return null;
   }
 
   PeriodScheduleClass _toPeriodScheduleClass(
@@ -398,6 +606,17 @@ class _SchedulePageState extends State<SchedulePage> {
     if (disciplineName == null) return Color(schedule.colorValue);
 
     return disciplineColors[disciplineName] ?? Color(schedule.colorValue);
+  }
+
+  Color _subjectEventColor(
+    SubjectEvent event,
+    Map<String, Color> disciplineColors,
+  ) {
+    final disciplineName = _normalizedDisciplineName(event.disciplineName);
+    if (disciplineName == null) return AppColors.primary;
+
+    return disciplineColors[disciplineName] ??
+        Color(Schedule.colorValueForDisciplineName(disciplineName));
   }
 
   Map<String, Color> _disciplineColorsForSchedules(List<Schedule> schedules) {
@@ -619,6 +838,40 @@ class _ScheduleErrorScaffold extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ScheduleDataWarning extends StatelessWidget {
+  const _ScheduleDataWarning();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFED7AA)),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.event_busy_outlined, color: Color(0xFFC2410C), size: 20),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Não foi possível carregar todos os detalhes do calendário.',
+              style: TextStyle(
+                color: Color(0xFF9A3412),
+                fontSize: 13,
+                fontFamily: 'Roboto',
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -7,6 +7,7 @@ class ScheduleClassInfo {
   final Color accentColor;
   final Color iconColor;
   final Color iconBackground;
+  final VoidCallback? onTap;
 
   const ScheduleClassInfo({
     required this.title,
@@ -15,6 +16,40 @@ class ScheduleClassInfo {
     required this.accentColor,
     required this.iconColor,
     required this.iconBackground,
+    this.onTap,
+  });
+}
+
+enum ScheduleCalendarMarkerKind { classSchedule, subjectEvent }
+
+class ScheduleCalendarMarker {
+  final Color color;
+  final ScheduleCalendarMarkerKind kind;
+
+  const ScheduleCalendarMarker({required this.color, required this.kind});
+}
+
+class ScheduleEventInfo {
+  final String title;
+  final String subject;
+  final String typeLabel;
+  final String description;
+  final IconData icon;
+  final Color accentColor;
+  final Color iconColor;
+  final Color iconBackground;
+  final VoidCallback? onTap;
+
+  const ScheduleEventInfo({
+    required this.title,
+    required this.subject,
+    required this.typeLabel,
+    required this.description,
+    required this.icon,
+    required this.accentColor,
+    required this.iconColor,
+    required this.iconBackground,
+    this.onTap,
   });
 }
 

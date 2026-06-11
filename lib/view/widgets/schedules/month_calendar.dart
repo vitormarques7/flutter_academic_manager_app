@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../../config/theme/app_colors.dart';
+import 'schedule_models.dart';
 
 class MonthCalendar extends StatelessWidget {
   final DateTime focusedDay;
   final DateTime selectedDay;
-  final Map<DateTime, List<Color>> classColorsByDay;
+  final Map<DateTime, List<ScheduleCalendarMarker>> markerColorsByDay;
   final ValueChanged<DateTime> onDaySelected;
   final ValueChanged<DateTime> onFocusedDayChanged;
 
@@ -14,20 +15,20 @@ class MonthCalendar extends StatelessWidget {
     super.key,
     required this.focusedDay,
     required this.selectedDay,
-    required this.classColorsByDay,
+    required this.markerColorsByDay,
     required this.onDaySelected,
     required this.onFocusedDayChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TableCalendar<Color>(
+    return TableCalendar<ScheduleCalendarMarker>(
       locale: 'pt_BR',
       firstDay: DateTime.utc(2020, 1, 1),
       lastDay: DateTime.utc(2035, 12, 31),
       focusedDay: focusedDay,
       selectedDayPredicate: (day) => isSameDay(day, selectedDay),
-      eventLoader: (day) => classColorsByDay[_dateOnly(day)] ?? const [],
+      eventLoader: (day) => markerColorsByDay[_dateOnly(day)] ?? const [],
       startingDayOfWeek: StartingDayOfWeek.sunday,
       calendarFormat: CalendarFormat.month,
       availableCalendarFormats: const {CalendarFormat.month: 'Mês'},
@@ -63,11 +64,11 @@ class MonthCalendar extends StatelessWidget {
         ),
         todayDecoration: BoxDecoration(color: Colors.transparent),
         markerSize: 4,
-        markersMaxCount: 3,
+        markersMaxCount: 1,
         markersAnchor: 0.78,
         markersAlignment: Alignment.bottomCenter,
       ),
-      calendarBuilders: const CalendarBuilders<Color>(
+      calendarBuilders: const CalendarBuilders<ScheduleCalendarMarker>(
         selectedBuilder: _selectedDayBuilder,
         todayBuilder: _todayBuilder,
         markerBuilder: _markerBuilder,
@@ -136,26 +137,39 @@ class MonthCalendar extends StatelessWidget {
   static Widget _markerBuilder(
     BuildContext context,
     DateTime day,
-    List<Color> events,
+    List<ScheduleCalendarMarker> events,
   ) {
     if (events.isEmpty) return const SizedBox.shrink();
 
-    final markerColors = events.take(3).toList();
+    final hasClass = events.any(
+      (event) => event.kind == ScheduleCalendarMarkerKind.classSchedule,
+    );
+    final hasEvent = events.any(
+      (event) => event.kind == ScheduleCalendarMarkerKind.subjectEvent,
+    );
 
     return Positioned(
-      bottom: 7,
+      bottom: 8,
       left: 0,
       right: 0,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: markerColors.map((color) {
-          return Container(
-            width: 5,
-            height: 5,
-            margin: const EdgeInsets.symmetric(horizontal: 1.5),
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          );
-        }).toList(),
+        children: [
+          if (hasClass)
+            _ActivitySegment(
+              width: hasEvent ? 10 : 20,
+              color: AppColors.primary,
+              leftRadius: true,
+              rightRadius: !hasEvent,
+            ),
+          if (hasEvent)
+            _ActivitySegment(
+              width: hasClass ? 10 : 20,
+              color: const Color(0xFFDB2777),
+              leftRadius: !hasClass,
+              rightRadius: true,
+            ),
+        ],
       ),
     );
   }
@@ -167,5 +181,34 @@ class MonthCalendar extends StatelessWidget {
 
   static DateTime _dateOnly(DateTime date) {
     return DateTime(date.year, date.month, date.day);
+  }
+}
+
+class _ActivitySegment extends StatelessWidget {
+  final double width;
+  final Color color;
+  final bool leftRadius;
+  final bool rightRadius;
+
+  const _ActivitySegment({
+    required this.width,
+    required this.color,
+    required this.leftRadius,
+    required this.rightRadius,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: 4,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.horizontal(
+          left: Radius.circular(leftRadius ? 999 : 0),
+          right: Radius.circular(rightRadius ? 999 : 0),
+        ),
+      ),
+    );
   }
 }
