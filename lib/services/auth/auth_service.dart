@@ -162,6 +162,34 @@ class AuthService {
     );
   }
 
+  Future<void> updateDisplayName(String displayName) async {
+    final user = currentUser;
+    if (user == null) {
+      throw const AuthException('Entre na sua conta para editar seus dados.');
+    }
+
+    final normalizedDisplayName = displayName.trim();
+    if (normalizedDisplayName.isEmpty) {
+      throw const AuthException('Informe seu nome.');
+    }
+
+    try {
+      await user.updateDisplayName(normalizedDisplayName);
+      await _userProfileRepository.updateCurrentUserProfile(
+        displayName: normalizedDisplayName,
+        email: user.email,
+      );
+    } on FirebaseAuthException catch (error) {
+      throw AuthException(_mapFirebaseAuthError(error));
+    } on UserProfileRepositoryException catch (error) {
+      throw AuthException(error.message);
+    } catch (_) {
+      throw const AuthException(
+        'Não foi possível atualizar seu nome. Tente novamente.',
+      );
+    }
+  }
+
   Future<void> _ensureUserDocument(
     UserCredential credential, {
     String? displayName,

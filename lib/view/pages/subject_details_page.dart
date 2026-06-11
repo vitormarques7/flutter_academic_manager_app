@@ -229,8 +229,11 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
     final cycleId = widget.studyCycleId.trim();
 
     return tasks.where((task) {
-      final sameSubject = _normalizedText(task.subject) == subjectKey;
-      if (!sameSubject) return false;
+      final sameDiscipline = task.disciplineId == widget.disciplineId;
+      final legacySameSubject =
+          task.disciplineId == null &&
+          _normalizedText(task.subject) == subjectKey;
+      if (!sameDiscipline && !legacySameSubject) return false;
 
       if (cycleId.isEmpty) return true;
 
@@ -307,7 +310,9 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
                       final average = _averageFromAssessments(assessments);
 
                       return StreamBuilder<List<AcademicTask>>(
-                        stream: _taskRepository.watchTasks(),
+                        stream: _taskRepository.watchTasks(
+                          studyCycleId: widget.studyCycleId,
+                        ),
                         builder: (context, taskSnapshot) {
                           final tasks = _relatedTasks(
                             taskSnapshot.data ?? const [],

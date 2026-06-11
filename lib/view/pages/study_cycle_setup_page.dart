@@ -21,13 +21,11 @@ class StudyCycleSetupPage extends StatefulWidget {
 class _StudyCycleSetupPageState extends State<StudyCycleSetupPage> {
   final _formKey = GlobalKey<FormState>();
   final _setupService = AcademicSetupService();
-  final _courseController = TextEditingController(
-    text: 'Engenharia de Software',
-  );
+  final _courseController = TextEditingController();
   final _goalController = TextEditingController();
 
   _StudyCycleType _selectedType = _StudyCycleType.university;
-  int? _selectedPeriod = 6;
+  int? _selectedPeriod;
   int _selectedSeriesIndex = 0;
   List<AcademicSetupDisciplineDraft> _disciplines = const [];
   bool _isLoading = false;
