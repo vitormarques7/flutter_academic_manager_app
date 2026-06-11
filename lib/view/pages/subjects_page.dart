@@ -371,6 +371,9 @@ class _SubjectsPageState extends State<SubjectsPage> {
                                           Navigator.of(context).push(
                                             MaterialPageRoute(
                                               builder: (_) => SubjectDetailsPage(
+                                                disciplineId: discipline.id,
+                                                studyCycleId:
+                                                    discipline.studyCycleId,
                                                 name: discipline.name,
                                                 teacher:
                                                     discipline.teacher.isEmpty
@@ -378,6 +381,8 @@ class _SubjectsPageState extends State<SubjectsPage> {
                                                     : discipline.teacher,
                                                 average: 0,
                                                 workload: discipline.workload,
+                                                colorValue:
+                                                    discipline.colorValue,
                                               ),
                                             ),
                                           );
