@@ -1,22 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import '../../config/routes/app_routes.dart';
+import '../../config/scroll/app_scroll_behavior.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../../models/academic_task.dart';
+import '../../models/assessment.dart';
+import '../../models/subject_event.dart';
+import '../../models/subject_note.dart';
+import '../../repositories/assessment_repository.dart';
+import '../../repositories/subject_event_repository.dart';
+import '../../repositories/subject_note_repository.dart';
+import '../../repositories/task_repository.dart';
 import '../widgets/common/app_bottom_nav_bar.dart';
+import '../widgets/common/metadata_chip.dart';
+import '../widgets/inputs/date_picker_field.dart';
+import 'subject_event_details_page.dart';
+import 'subject_note_details_page.dart';
 
-class SubjectDetailsPage extends StatelessWidget {
+part 'subject_details_page_widgets.dart';
+part 'subject_details_page_dialogs.dart';
+
+class SubjectDetailsPage extends StatefulWidget {
+  final String disciplineId;
+  final String studyCycleId;
   final String name;
   final String teacher;
   final double average;
   final int workload;
+  final int colorValue;
 
   const SubjectDetailsPage({
     super.key,
+    required this.disciplineId,
+    required this.studyCycleId,
     required this.name,
     required this.teacher,
     required this.average,
     required this.workload,
+    required this.colorValue,
   });
+
+  @override
+  State<SubjectDetailsPage> createState() => _SubjectDetailsPageState();
+}
+
+class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
+  final AssessmentRepository _assessmentRepository = AssessmentRepository();
+  final SubjectEventRepository _eventRepository = SubjectEventRepository();
+  final SubjectNoteRepository _noteRepository = SubjectNoteRepository();
+  final TaskRepository _taskRepository = TaskRepository();
+
+  Color get _accentColor => Color(widget.colorValue);
 
   void _onBottomNavTap(BuildContext context, int index) {
     if (index == 1) {
@@ -34,6 +70,207 @@ class SubjectDetailsPage extends StatelessWidget {
     Navigator.of(context).pushNamedAndRemoveUntil(route, (_) => false);
   }
 
+  Future<void> _openAssessmentDialog() async {
+    final result = await showDialog<_AssessmentDialogResult>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.28),
+      builder: (_) => const _AssessmentDialog(),
+    );
+
+    if (result == null) return;
+
+    try {
+      await _assessmentRepository.createAssessment(
+        AssessmentInput(
+          studyCycleId: widget.studyCycleId,
+          disciplineId: widget.disciplineId,
+          disciplineName: widget.name,
+          title: result.title,
+          dateLabel: result.dateLabel,
+          grade: result.grade,
+        ),
+      );
+      _showSuccess('Nota salva com sucesso.');
+    } on AssessmentRepositoryException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Não foi possível salvar a nota. Tente novamente.');
+    }
+  }
+
+  Future<void> _deleteAssessment(Assessment assessment) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Excluir nota?'),
+          content: Text(
+            'Isso removerá "${assessment.title}" desta disciplina.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Excluir'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) return;
+
+    try {
+      await _assessmentRepository.deleteAssessment(assessment.id);
+      _showSuccess('Nota excluída.');
+    } on AssessmentRepositoryException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Não foi possível excluir a nota.');
+    }
+  }
+
+  Future<void> _openEventDialog() async {
+    final result = await showDialog<_SubjectEventDialogResult>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.28),
+      builder: (_) => const _SubjectEventDialog(),
+    );
+
+    if (result == null) return;
+
+    try {
+      await _eventRepository.createEvent(
+        SubjectEventInput(
+          studyCycleId: widget.studyCycleId,
+          disciplineId: widget.disciplineId,
+          disciplineName: widget.name,
+          title: result.title,
+          type: result.type,
+          eventDate: result.eventDate,
+          description: result.description,
+        ),
+      );
+      _showSuccess('Evento salvo com sucesso.');
+    } on SubjectEventRepositoryException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Não foi possível salvar o evento. Tente novamente.');
+    }
+  }
+
+  Future<void> _deleteEvent(SubjectEvent event) {
+    return _eventRepository.deleteEvent(event.id);
+  }
+
+  void _openEventDetails(SubjectEvent event) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SubjectEventDetailsPage(
+          event: event,
+          accentColor: _accentColor,
+          onDelete: _deleteEvent,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openNoteDialog() async {
+    final result = await showDialog<_SubjectNoteDialogResult>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.28),
+      builder: (_) => const _SubjectNoteDialog(),
+    );
+
+    if (result == null) return;
+
+    try {
+      await _noteRepository.createNote(
+        SubjectNoteInput(
+          studyCycleId: widget.studyCycleId,
+          disciplineId: widget.disciplineId,
+          disciplineName: widget.name,
+          title: result.title,
+          content: result.content,
+        ),
+      );
+      _showSuccess('Anotação salva com sucesso.');
+    } on SubjectNoteRepositoryException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Não foi possível salvar a anotação. Tente novamente.');
+    }
+  }
+
+  Future<void> _deleteNote(SubjectNote note) {
+    return _noteRepository.deleteNote(note.id);
+  }
+
+  void _openNoteDetails(SubjectNote note) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SubjectNoteDetailsPage(
+          note: note,
+          accentColor: _accentColor,
+          onDelete: _deleteNote,
+        ),
+      ),
+    );
+  }
+
+  List<AcademicTask> _relatedTasks(List<AcademicTask> tasks) {
+    final subjectKey = _normalizedText(widget.name);
+    final cycleId = widget.studyCycleId.trim();
+
+    return tasks.where((task) {
+      final sameSubject = _normalizedText(task.subject) == subjectKey;
+      if (!sameSubject) return false;
+
+      if (cycleId.isEmpty) return true;
+
+      return task.studyCycleId == null || task.studyCycleId == cycleId;
+    }).toList();
+  }
+
+  double _averageFromAssessments(List<Assessment> assessments) {
+    if (assessments.isEmpty) return widget.average;
+
+    final total = assessments.fold<double>(
+      0,
+      (sum, assessment) => sum + assessment.grade,
+    );
+
+    return total / assessments.length;
+  }
+
+  String _normalizedText(String value) {
+    return value.trim().toLowerCase();
+  }
+
+  void _showSuccess(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.shade700,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,337 +282,153 @@ class SubjectDetailsPage extends StatelessWidget {
       body: SafeArea(
         bottom: false,
         child: ScrollConfiguration(
-          behavior: const _NoStretchScrollBehavior(),
+          behavior: const AppScrollBehavior(),
           child: CustomScrollView(
             physics: const ClampingScrollPhysics(),
-            clipBehavior: Clip.hardEdge,
             slivers: [
               const SliverToBoxAdapter(child: _DetailsHeader()),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(24, 37, 24, 34),
-                sliver: SliverList.list(
-                  children: [
-                    _SubjectSummaryCard(
-                      name: name,
-                      teacher: teacher,
-                      average: average,
-                      workload: workload,
+                padding: const EdgeInsets.fromLTRB(20, 22, 20, 34),
+                sliver: SliverToBoxAdapter(
+                  child: StreamBuilder<List<Assessment>>(
+                    stream: _assessmentRepository.watchAssessments(
+                      studyCycleId: widget.studyCycleId,
+                      disciplineId: widget.disciplineId,
                     ),
-                    const SizedBox(height: 36),
-                    const _SectionTitle(label: 'Avaliações'),
-                    const SizedBox(height: 28),
-                    const _EmptyActionCard(
-                      actionLabel: 'Avaliações',
-                      buttonWidth: 210,
-                    ),
-                    const SizedBox(height: 36),
-                    const _SectionTitle(label: 'Tarefas relacionadas'),
-                    const SizedBox(height: 28),
-                    const _EmptyActionCard(
-                      actionLabel: 'Tarefas',
-                      buttonWidth: 210,
-                    ),
-                  ],
+                    builder: (context, assessmentSnapshot) {
+                      final assessments = assessmentSnapshot.data ?? const [];
+                      final assessmentsAreLoading =
+                          assessmentSnapshot.connectionState ==
+                              ConnectionState.waiting &&
+                          !assessmentSnapshot.hasData;
+                      final assessmentsHaveError = assessmentSnapshot.hasError;
+                      final average = _averageFromAssessments(assessments);
+
+                      return StreamBuilder<List<AcademicTask>>(
+                        stream: _taskRepository.watchTasks(),
+                        builder: (context, taskSnapshot) {
+                          final tasks = _relatedTasks(
+                            taskSnapshot.data ?? const [],
+                          );
+                          final tasksAreLoading =
+                              taskSnapshot.connectionState ==
+                                  ConnectionState.waiting &&
+                              !taskSnapshot.hasData;
+                          final tasksHaveError = taskSnapshot.hasError;
+                          final pendingTasks = tasks
+                              .where((task) => !task.isChecked)
+                              .length;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _SubjectSummaryCard(
+                                name: widget.name,
+                                teacher: widget.teacher,
+                                average: average,
+                                workload: widget.workload,
+                                gradeCount: assessments.length,
+                                pendingTaskCount: pendingTasks,
+                                accentColor: _accentColor,
+                              ),
+                              const SizedBox(height: 26),
+                              _SectionHeader(
+                                title: 'Eventos',
+                                trailing: _InlineActionButton(
+                                  label: 'Adicionar',
+                                  icon: Icons.event_available_outlined,
+                                  onTap: _openEventDialog,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              StreamBuilder<List<SubjectEvent>>(
+                                stream: _eventRepository.watchEvents(
+                                  studyCycleId: widget.studyCycleId,
+                                  disciplineId: widget.disciplineId,
+                                  upcomingOnly: true,
+                                ),
+                                builder: (context, eventSnapshot) {
+                                  return _SubjectEventsPanel(
+                                    events: eventSnapshot.data ?? const [],
+                                    isLoading:
+                                        eventSnapshot.connectionState ==
+                                            ConnectionState.waiting &&
+                                        !eventSnapshot.hasData,
+                                    hasError: eventSnapshot.hasError,
+                                    accentColor: _accentColor,
+                                    onOpen: _openEventDetails,
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 28),
+                              _SectionHeader(
+                                title: 'Notas',
+                                trailing: _InlineActionButton(
+                                  label: 'Adicionar',
+                                  icon: Icons.add,
+                                  onTap: _openAssessmentDialog,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              _AssessmentsPanel(
+                                assessments: assessments,
+                                isLoading: assessmentsAreLoading,
+                                hasError: assessmentsHaveError,
+                                accentColor: _accentColor,
+                                onAdd: _openAssessmentDialog,
+                                onDelete: _deleteAssessment,
+                              ),
+                              const SizedBox(height: 28),
+                              const _SectionHeader(
+                                title: 'Tarefas relacionadas',
+                              ),
+                              const SizedBox(height: 12),
+                              _RelatedTasksPanel(
+                                tasks: tasks,
+                                isLoading: tasksAreLoading,
+                                hasError: tasksHaveError,
+                                accentColor: _accentColor,
+                                onOpenTasks: () => _onBottomNavTap(context, 2),
+                              ),
+                              const SizedBox(height: 28),
+                              _SectionHeader(
+                                title: 'Anotações',
+                                trailing: _InlineActionButton(
+                                  label: 'Adicionar',
+                                  icon: Icons.note_add_outlined,
+                                  onTap: _openNoteDialog,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              StreamBuilder<List<SubjectNote>>(
+                                stream: _noteRepository.watchNotes(
+                                  studyCycleId: widget.studyCycleId,
+                                  disciplineId: widget.disciplineId,
+                                ),
+                                builder: (context, noteSnapshot) {
+                                  return _SubjectNotesPanel(
+                                    notes: noteSnapshot.data ?? const [],
+                                    isLoading:
+                                        noteSnapshot.connectionState ==
+                                            ConnectionState.waiting &&
+                                        !noteSnapshot.hasData,
+                                    hasError: noteSnapshot.hasError,
+                                    accentColor: _accentColor,
+                                    onOpen: _openNoteDetails,
+                                  );
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _NoStretchScrollBehavior extends ScrollBehavior {
-  const _NoStretchScrollBehavior();
-
-  @override
-  ScrollPhysics getScrollPhysics(BuildContext context) {
-    return const ClampingScrollPhysics();
-  }
-
-  @override
-  Widget buildOverscrollIndicator(
-    BuildContext context,
-    Widget child,
-    ScrollableDetails details,
-  ) {
-    return child;
-  }
-}
-
-class _DetailsHeader extends StatelessWidget {
-  const _DetailsHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 62,
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFFE4E4FF), width: 1)),
-      ),
-      child: Row(
-        children: [
-          const SizedBox(width: 13),
-          IconButton(
-            onPressed: () => Navigator.of(context).maybePop(),
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: AppColors.textDark,
-              size: 32,
-            ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 34, height: 48),
-            tooltip: 'Voltar',
-          ),
-          Text(
-            'Detalhes da disciplina',
-            textAlign: TextAlign.center,
-            style: AppTextStyles.headline3.copyWith(
-              fontWeight: FontWeight.w600,
-              height: 0.92,
-              letterSpacing: 0,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SubjectSummaryCard extends StatelessWidget {
-  final String name;
-  final String teacher;
-  final double average;
-  final int workload;
-
-  const _SubjectSummaryCard({
-    required this.name,
-    required this.teacher,
-    required this.average,
-    required this.workload,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 133,
-      decoration: ShapeDecoration(
-        color: const Color(0xFFEFF0FB),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        shadows: const [
-          BoxShadow(
-            color: Color(0x66587DBD),
-            blurRadius: 4,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.fromLTRB(17, 23, 17, 21),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.headline3.copyWith(
-                    fontWeight: FontWeight.w600,
-                    height: 0.92,
-                    letterSpacing: 0,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  teacher,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.bodyRegular.copyWith(
-                    color: AppColors.textDark,
-                    letterSpacing: 0,
-                  ),
-                ),
-                const Spacer(),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.access_time,
-                      color: AppColors.textDark,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Carga horária: ${workload}h',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.bodyRegular.copyWith(
-                          color: AppColors.textDark,
-                          letterSpacing: 0,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 14),
-          SizedBox(
-            width: 112,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'Média geral',
-                  maxLines: 1,
-                  style: AppTextStyles.bodyRegular.copyWith(
-                    color: AppColors.textDark,
-                    letterSpacing: 0,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  average.toStringAsFixed(1),
-                  style: const TextStyle(
-                    color: AppColors.textDark,
-                    fontSize: 40,
-                    fontFamily: 'Roboto',
-                    fontWeight: FontWeight.w500,
-                    height: 0.55,
-                    letterSpacing: 0,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  final String label;
-
-  const _SectionTitle({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: const TextStyle(
-        color: AppColors.textDark,
-        fontSize: 20,
-        fontFamily: 'Roboto',
-        fontWeight: FontWeight.w700,
-        height: 1.1,
-      ),
-    );
-  }
-}
-
-class _EmptyActionCard extends StatelessWidget {
-  final String actionLabel;
-  final double buttonWidth;
-
-  const _EmptyActionCard({
-    required this.actionLabel,
-    required this.buttonWidth,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 262,
-      decoration: ShapeDecoration(
-        color: const Color(0xFFEFF0FB),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        shadows: const [
-          BoxShadow(
-            color: Color(0x66587DBD),
-            blurRadius: 4,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          const Positioned(left: 17, right: 17, top: 71, child: _CardDivider()),
-          const Positioned(
-            left: 17,
-            right: 17,
-            top: 148,
-            child: _CardDivider(),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 20,
-            child: Center(
-              child: _AddEntryButton(label: actionLabel, width: buttonWidth),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CardDivider extends StatelessWidget {
-  const _CardDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Divider(height: 1, thickness: 1, color: Color(0x4C514EB6));
-  }
-}
-
-class _AddEntryButton extends StatelessWidget {
-  final String label;
-  final double width;
-
-  const _AddEntryButton({required this.label, required this.width});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: 44,
-      decoration: ShapeDecoration(
-        color: AppColors.primary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        shadows: const [
-          BoxShadow(
-            color: Color(0x7F514EB6),
-            blurRadius: 4,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.add, color: AppColors.background, size: 28),
-          const SizedBox(width: 2),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.background,
-              fontSize: 20,
-              fontFamily: 'Roboto',
-              fontWeight: FontWeight.w700,
-              height: 1.1,
-            ),
-          ),
-        ],
       ),
     );
   }
