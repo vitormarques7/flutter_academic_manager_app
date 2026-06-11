@@ -28,6 +28,18 @@ service cloud.firestore {
       match /disciplines/{disciplineId} {
         allow read, create, update, delete: if isOwner(userId);
       }
+
+      match /assessments/{assessmentId} {
+        allow read, create, update, delete: if isOwner(userId);
+      }
+
+      match /subjectNotes/{noteId} {
+        allow read, create, update, delete: if isOwner(userId);
+      }
+
+      match /subjectEvents/{eventId} {
+        allow read, create, update, delete: if isOwner(userId);
+      }
     }
   }
 }
