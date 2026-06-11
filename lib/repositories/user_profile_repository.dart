@@ -110,6 +110,22 @@ class UserProfileRepository {
     });
   }
 
+  Future<void> updateCurrentUserProfile({
+    String? displayName,
+    String? email,
+  }) async {
+    final user = _currentUser;
+    final normalizedDisplayName = _normalizeString(displayName);
+    final normalizedEmail = _normalizeString(email);
+
+    await _guardFirestoreCall(() {
+      return _upsertUserDocument(user.uid, {
+        'displayName': ?normalizedDisplayName,
+        'email': ?normalizedEmail,
+      });
+    });
+  }
+
   User get _currentUser {
     final user = _firebaseAuth.currentUser;
     if (user == null) {

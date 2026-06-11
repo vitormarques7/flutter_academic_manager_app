@@ -60,9 +60,7 @@ class UserProfilePage extends StatelessWidget {
                   icon: Icons.badge_outlined,
                   iconColor: AppColors.primary,
                   iconBackgroundColor: const Color(0x4C514EB6),
-                  onTap: () {
-                    // TODO: abrir edição de dados pessoais.
-                  },
+                  onTap: () => AppRoutes.toPersonalData(context),
                 ),
                 const SizedBox(height: 18),
                 _SettingsTile(

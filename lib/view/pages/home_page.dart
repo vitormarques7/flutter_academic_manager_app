@@ -153,7 +153,7 @@ class _HomeDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<AcademicTask>>(
-      stream: taskRepository.watchTasks(),
+      stream: taskRepository.watchTasks(studyCycleId: activeStudyCycleId),
       builder: (context, taskSnapshot) {
         return StreamBuilder<List<Schedule>>(
           stream: scheduleRepository.watchSchedules(
