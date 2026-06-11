@@ -2,6 +2,7 @@ import 'package:academic_manager_app/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 import '../../config/routes/app_routes.dart';
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_design_tokens.dart';
 import '../../config/theme/app_text_styles.dart';
 import '../../models/study_cycle.dart';
 import '../../repositories/study_cycle_repository.dart';
@@ -32,8 +33,8 @@ class UserProfilePage extends StatelessWidget {
         child: Container(
           width: double.infinity,
           decoration: const BoxDecoration(
-            color: Color(0xFFEFF0FB),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+            color: AppColors.surfaceAlt,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(34)),
           ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(24, 23, 24, 48),
@@ -96,10 +97,12 @@ class _ProfileSummaryCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(30),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(color: AppColors.outline),
+        boxShadow: AppShadows.card,
       ),
-      padding: const EdgeInsets.fromLTRB(24, 22, 24, 34),
+      padding: const EdgeInsets.fromLTRB(24, 18, 24, 26),
       child: Column(
         children: [
           Align(
@@ -116,26 +119,26 @@ class _ProfileSummaryCard extends StatelessWidget {
               tooltip: 'Voltar',
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 2),
           const _ProfileAvatar(),
-          const SizedBox(height: 56),
+          const SizedBox(height: 26),
           Text(
             displayName == null || displayName.isEmpty
                 ? 'Usuário'
                 : displayName,
             textAlign: TextAlign.center,
             style: AppTextStyles.headline2.copyWith(
-              fontSize: 32,
-              height: 0.69,
+              fontSize: 28,
+              height: 1.08,
               letterSpacing: 0,
             ),
           ),
-          const SizedBox(height: 42),
+          const SizedBox(height: 24),
           _ProfileAcademicInfo(
             userProfileRepository: _userProfileRepository,
             studyCycleRepository: _studyCycleRepository,
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 22),
           Text(
             email == null || email.isEmpty ? 'E-mail não disponível' : email,
             textAlign: TextAlign.center,
@@ -276,16 +279,17 @@ class _ProfileAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 140,
-      height: 140,
+      width: 112,
+      height: 112,
       decoration: const ShapeDecoration(
-        color: AppColors.primary,
+        gradient: AppGradients.brand,
         shape: OvalBorder(),
+        shadows: AppShadows.subtle,
       ),
       child: const Icon(
         Icons.person_outline_rounded,
         color: AppColors.background,
-        size: 116,
+        size: 88,
       ),
     );
   }
@@ -304,16 +308,10 @@ class _ProfileInfoPill extends StatelessWidget {
       alignment: Alignment.center,
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: const Color(0x66587DBD)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0xFFE4E4FF),
-            blurRadius: 4,
-            offset: Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: AppColors.outline),
+        boxShadow: AppShadows.subtle,
       ),
       child: Text(
         label,
@@ -353,17 +351,11 @@ class _SettingsTile extends StatelessWidget {
         width: double.infinity,
         height: 74,
         decoration: ShapeDecoration(
-          color: AppColors.background,
+          color: AppColors.surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
-          shadows: const [
-            BoxShadow(
-              color: Color(0x66587DBD),
-              blurRadius: 4,
-              offset: Offset(0, 4),
-            ),
-          ],
+          shadows: AppShadows.subtle,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 17),
         child: Row(

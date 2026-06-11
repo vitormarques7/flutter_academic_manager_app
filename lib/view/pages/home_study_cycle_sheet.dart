@@ -19,21 +19,10 @@ class _StudyCycleSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
-      child: Container(
+      child: AppSurface.card(
         margin: const EdgeInsets.all(12),
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0x33514EB6)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x33000000),
-              blurRadius: 18,
-              offset: Offset(0, 8),
-            ),
-          ],
-        ),
+        borderRadius: AppRadius.xl,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -118,11 +107,9 @@ class _StudyCycleSheet extends StatelessWidget {
             const SizedBox(height: 14),
             Material(
               color: AppColors.primary,
-              borderRadius: BorderRadius.circular(16),
-              shadowColor: const Color(0x33587DBD),
-              elevation: 3,
+              borderRadius: BorderRadius.circular(AppRadius.md),
               child: InkWell(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadius.md),
                 onTap: onCreateCycle,
                 child: const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -271,13 +258,8 @@ class _CurrentCycleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppSurface.soft(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF0FB),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x33514EB6)),
-      ),
       child: Row(
         children: [
           Container(
@@ -360,12 +342,12 @@ class _PreviousCyclesTile extends StatelessWidget {
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x1F514EB6)),
-      ),
+    return AppSurface(
+      padding: EdgeInsets.zero,
+      color: AppColors.surfaceAlt,
+      border: Border.all(color: AppColors.outline),
+      shadows: const [],
+      borderRadius: AppRadius.md,
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 14),
@@ -459,14 +441,13 @@ class _StudyCycleSheetStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppSurface(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 14, vertical: dense ? 13 : 20),
-      decoration: BoxDecoration(
-        color: dense ? const Color(0xFFF5F5F5) : const Color(0xFFEFF0FB),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x1F514EB6)),
-      ),
+      color: dense ? AppColors.surfaceAlt : AppColors.surface,
+      border: Border.all(color: AppColors.outline),
+      shadows: const [],
+      borderRadius: AppRadius.md,
       child: Row(
         children: [
           Icon(icon, color: AppColors.primary, size: dense ? 22 : 26),
