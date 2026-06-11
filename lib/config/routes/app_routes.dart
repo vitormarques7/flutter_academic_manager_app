@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:academic_manager_app/view/pages/auth_gate_page.dart';
 import 'package:academic_manager_app/view/pages/login_page.dart';
+import 'package:academic_manager_app/view/pages/personal_data_page.dart';
 import 'package:academic_manager_app/view/pages/study_cycle_setup_page.dart';
 import 'package:academic_manager_app/view/pages/user_profile_page.dart';
 import 'package:academic_manager_app/view/shell/main_shell.dart';
@@ -28,6 +29,7 @@ class AppRoutes {
   static const String schedule = '/schedule';
   static const String studyCycleSetup = '/study-cycle-setup';
   static const String profile = '/profile';
+  static const String personalData = '/personal-data';
 
   static final Map<String, WidgetBuilder> routes = {
     authGate: (_) => const AuthGatePage(),
@@ -44,6 +46,7 @@ class AppRoutes {
     schedule: (_) => const MainShell(initialIndex: 3),
     studyCycleSetup: (_) => const StudyCycleSetupPage(),
     profile: (_) => const UserProfilePage(),
+    personalData: (_) => const PersonalDataPage(),
   };
 
   static Route<T> slideRoute<T>({
@@ -125,6 +128,10 @@ class AppRoutes {
     Navigator.of(context).push(
       slideRoute(page: const UserProfilePage(), begin: const Offset(-1, 0)),
     );
+  }
+
+  static void toPersonalData(BuildContext context) {
+    Navigator.of(context).push(slideRoute(page: const PersonalDataPage()));
   }
 
   static void toWelcomeClearingStack(BuildContext context) {

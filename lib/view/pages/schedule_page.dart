@@ -18,6 +18,7 @@ import '../widgets/dialogs/schedule_event_dialog.dart';
 import '../widgets/schedules/course_schedule_view.dart';
 import '../widgets/schedules/month_calendar.dart';
 import '../widgets/schedules/schedule_header.dart';
+import '../widgets/schedules/schedule_editor_sheet.dart';
 import '../widgets/schedules/schedule_models.dart';
 import '../widgets/schedules/selected_day_schedule_card.dart';
 
@@ -79,22 +80,6 @@ class _SchedulePageState extends State<SchedulePage> {
             }
 
             final schedules = snapshot.data ?? [];
-            final disciplineColors = _disciplineColorsForSchedules(schedules);
-            final courseScheduleDays = _scheduleDaysFromSchedules(
-              schedules,
-              disciplineColors,
-            );
-
-            if (_isShowingCourseSchedule) {
-              return CourseScheduleView(
-                days: courseScheduleDays,
-                subtitle: activeStudyCycleInfo.label,
-                shiftLabel: _shiftLabelFromSchedules(schedules),
-                onBack: () => setState(() => _isShowingCourseSchedule = false),
-                onEdit: () =>
-                    _showComingSoon('Edição da grade em desenvolvimento.'),
-              );
-            }
 
             return StreamBuilder<List<Discipline>>(
               stream: _disciplineRepository.watchDisciplines(
@@ -103,6 +88,30 @@ class _SchedulePageState extends State<SchedulePage> {
               builder: (context, disciplineSnapshot) {
                 final disciplines =
                     disciplineSnapshot.data ?? const <Discipline>[];
+                final disciplineColors = _disciplineColorsForSchedules(
+                  schedules,
+                  disciplines,
+                );
+                final courseScheduleDays = _scheduleDaysFromSchedules(
+                  schedules,
+                  disciplineColors,
+                  disciplines,
+                );
+
+                if (_isShowingCourseSchedule) {
+                  return CourseScheduleView(
+                    days: courseScheduleDays,
+                    subtitle: activeStudyCycleInfo.label,
+                    shiftLabel: _shiftLabelFromSchedules(schedules),
+                    onBack: () =>
+                        setState(() => _isShowingCourseSchedule = false),
+                    onEdit: () => _openScheduleEditor(
+                      activeStudyCycleInfo: activeStudyCycleInfo,
+                      schedules: schedules,
+                      disciplines: disciplines,
+                    ),
+                  );
+                }
 
                 return StreamBuilder<List<SubjectEvent>>(
                   stream: _eventRepository.watchEvents(
@@ -270,12 +279,6 @@ class _SchedulePageState extends State<SchedulePage> {
     });
   }
 
-  void _showComingSoon(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
-    );
-  }
-
   void _showSuccess(String message) {
     if (!mounted) return;
 
@@ -293,6 +296,37 @@ class _SchedulePageState extends State<SchedulePage> {
         backgroundColor: Colors.red.shade700,
         behavior: SnackBarBehavior.floating,
       ),
+    );
+  }
+
+  Future<void> _openScheduleEditor({
+    required _ActiveStudyCycleInfo activeStudyCycleInfo,
+    required List<Schedule> schedules,
+    required List<Discipline> disciplines,
+  }) async {
+    final activeStudyCycleId = activeStudyCycleInfo.id;
+    if (activeStudyCycleId == null) {
+      _showError('Configure um ciclo de estudos antes de editar a grade.');
+      return;
+    }
+
+    if (!mounted) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return ScheduleEditorSheet(
+          studyCycleId: activeStudyCycleId,
+          schedules: schedules,
+          disciplines: disciplines,
+          onCreate: _scheduleRepository.createSchedule,
+          onUpdate: (scheduleId, input) =>
+              _scheduleRepository.updateSchedule(id: scheduleId, input: input),
+          onDelete: _scheduleRepository.deleteSchedule,
+        );
+      },
     );
   }
 
@@ -320,7 +354,7 @@ class _SchedulePageState extends State<SchedulePage> {
       }
     }
 
-    return const _ActiveStudyCycleInfo(label: 'Ciclo acadêmico ativo');
+    return const _ActiveStudyCycleInfo(label: 'Ciclo não encontrado');
   }
 
   String _activeStudyCycleLabel(StudyCycle studyCycle) {
@@ -428,6 +462,7 @@ class _SchedulePageState extends State<SchedulePage> {
   List<ScheduleDay> _scheduleDaysFromSchedules(
     List<Schedule> schedules,
     Map<String, Color> disciplineColors,
+    List<Discipline> disciplines,
   ) {
     final days = <ScheduleDay>[];
 
@@ -445,8 +480,11 @@ class _SchedulePageState extends State<SchedulePage> {
           weekday: _weekdayName(weekdayIndex),
           classes: schedulesForDay
               .map(
-                (schedule) =>
-                    _toPeriodScheduleClass(schedule, disciplineColors),
+                (schedule) => _toPeriodScheduleClass(
+                  schedule,
+                  disciplineColors,
+                  disciplines,
+                ),
               )
               .toList(),
         ),
@@ -587,15 +625,19 @@ class _SchedulePageState extends State<SchedulePage> {
   PeriodScheduleClass _toPeriodScheduleClass(
     Schedule schedule,
     Map<String, Color> disciplineColors,
+    List<Discipline> disciplines,
   ) {
     final color = _scheduleColor(schedule, disciplineColors);
+    final discipline = _findDisciplineForSchedule(schedule, disciplines);
+    final teacher = discipline?.teacher.trim();
 
     return PeriodScheduleClass(
       timeRange: schedule.formattedTimeRange,
       title: schedule.disciplineName,
       shortTitle: _shortTitle(schedule.disciplineName),
-      code: 'Horário',
-      teacher: 'Cadastrado',
+      detail: teacher == null || teacher.isEmpty
+          ? 'Professor não informado'
+          : teacher,
       color: color.withValues(alpha: 0.12),
       accentColor: color,
     );
@@ -619,12 +661,18 @@ class _SchedulePageState extends State<SchedulePage> {
         Color(Schedule.colorValueForDisciplineName(disciplineName));
   }
 
-  Map<String, Color> _disciplineColorsForSchedules(List<Schedule> schedules) {
-    final disciplineNames = schedules
-        .map((schedule) => _normalizedDisciplineName(schedule.disciplineName))
-        .nonNulls
-        .toSet()
-        .toList();
+  Map<String, Color> _disciplineColorsForSchedules(
+    List<Schedule> schedules,
+    List<Discipline> disciplines,
+  ) {
+    final disciplineNames = {
+      ...schedules
+          .map((schedule) => _normalizedDisciplineName(schedule.disciplineName))
+          .nonNulls,
+      ...disciplines
+          .map((discipline) => _normalizedDisciplineName(discipline.name))
+          .nonNulls,
+    }.toList();
 
     disciplineNames.sort((a, b) {
       final preferredColorComparison = _preferredPaletteIndex(
@@ -641,6 +689,15 @@ class _SchedulePageState extends State<SchedulePage> {
 
     for (var i = 0; i < disciplineNames.length; i++) {
       final disciplineName = disciplineNames[i];
+      final disciplineColor = _disciplineColorValue(
+        disciplineName,
+        disciplines,
+      );
+      if (disciplineColor != null) {
+        disciplineColors[disciplineName] = Color(disciplineColor);
+        continue;
+      }
+
       final preferredIndex = _preferredPaletteIndex(disciplineName);
       final colorIndex = _availablePaletteIndex(
         preferredIndex: preferredIndex,
@@ -652,6 +709,19 @@ class _SchedulePageState extends State<SchedulePage> {
     }
 
     return disciplineColors;
+  }
+
+  int? _disciplineColorValue(
+    String disciplineName,
+    List<Discipline> disciplines,
+  ) {
+    for (final discipline in disciplines) {
+      if (_normalizedDisciplineName(discipline.name) == disciplineName) {
+        return discipline.colorValue;
+      }
+    }
+
+    return null;
   }
 
   int _availablePaletteIndex({

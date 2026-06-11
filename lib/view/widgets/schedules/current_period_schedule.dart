@@ -279,7 +279,7 @@ class _PeriodClassRow extends StatelessWidget {
                         ),
                         const SizedBox(height: 5),
                         Text(
-                          '${classInfo.code} • ${classInfo.teacher}',
+                          classInfo.detail,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(

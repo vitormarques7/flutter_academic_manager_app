@@ -64,8 +64,7 @@ class PeriodScheduleClass {
   final String timeRange;
   final String title;
   final String shortTitle;
-  final String code;
-  final String teacher;
+  final String detail;
   final String? note;
   final Color color;
   final Color accentColor;
@@ -74,8 +73,7 @@ class PeriodScheduleClass {
     required this.timeRange,
     required this.title,
     required this.shortTitle,
-    required this.code,
-    required this.teacher,
+    required this.detail,
     required this.color,
     required this.accentColor,
     this.note,
