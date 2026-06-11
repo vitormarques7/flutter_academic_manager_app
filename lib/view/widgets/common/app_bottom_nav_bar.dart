@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_design_tokens.dart';
 import '../../../config/theme/app_text_styles.dart';
 
 class AppBottomNavBar extends StatelessWidget {
@@ -41,15 +42,22 @@ class AppBottomNavBar extends StatelessWidget {
 
     return DecoratedBox(
       decoration: const BoxDecoration(
-        color: AppColors.background,
-        border: Border(top: BorderSide(color: Color(0x33514EB6))),
+        color: AppColors.surface,
+        border: Border(top: BorderSide(color: AppColors.outline)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x10111827),
+            blurRadius: 18,
+            offset: Offset(0, -8),
+          ),
+        ],
       ),
       child: SafeArea(
         top: false,
         child: Padding(
           padding: EdgeInsets.fromLTRB(20, 6, 20, bottomInset > 0 ? 6 : 8),
           child: SizedBox(
-            height: 58,
+            height: 60,
             child: Row(
               children: List.generate(_items.length, (index) {
                 final item = _items[index];
@@ -90,7 +98,7 @@ class _AnimatedNavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isSelected ? AppColors.navActive : AppColors.navInactive;
-    final activeBackground = AppColors.navActive.withValues(alpha: 0.1);
+    final activeBackground = AppColors.primary.withValues(alpha: 0.08);
 
     return Semantics(
       button: true,
@@ -102,13 +110,16 @@ class _AnimatedNavItem extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(18),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
+            duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
-            margin: const EdgeInsets.symmetric(horizontal: 4),
+            margin: const EdgeInsets.symmetric(horizontal: 3),
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
             decoration: BoxDecoration(
               color: isSelected ? activeBackground : Colors.transparent,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: isSelected
+                  ? Border.all(color: AppColors.primary.withValues(alpha: 0.10))
+                  : null,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -116,10 +127,10 @@ class _AnimatedNavItem extends StatelessWidget {
               children: [
                 AnimatedScale(
                   scale: isSelected ? 1.08 : 1,
-                  duration: const Duration(milliseconds: 180),
+                  duration: const Duration(milliseconds: 150),
                   curve: Curves.easeOutCubic,
                   child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 160),
+                    duration: const Duration(milliseconds: 130),
                     switchInCurve: Curves.easeOutCubic,
                     switchOutCurve: Curves.easeInCubic,
                     transitionBuilder: (child, animation) {
@@ -138,7 +149,7 @@ class _AnimatedNavItem extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 180),
+                  duration: const Duration(milliseconds: 150),
                   curve: Curves.easeOutCubic,
                   style: AppTextStyles.navLabel.copyWith(
                     color: color,

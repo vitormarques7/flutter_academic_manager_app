@@ -46,39 +46,91 @@ class AppRoutes {
     profile: (_) => const UserProfilePage(),
   };
 
-  static void toLogin(BuildContext context) =>
-      Navigator.pushNamed(context, login);
+  static Route<T> slideRoute<T>({
+    required Widget page,
+    Offset begin = const Offset(1, 0),
+    Duration duration = const Duration(milliseconds: 230),
+  }) {
+    return PageRouteBuilder<T>(
+      transitionDuration: duration,
+      reverseTransitionDuration: const Duration(milliseconds: 190),
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
 
-  static void toRegister(BuildContext context) =>
-      Navigator.pushNamed(context, register);
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: begin,
+            end: Offset.zero,
+          ).animate(curvedAnimation),
+          child: child,
+        );
+      },
+    );
+  }
 
-  static void toStudentProfile(BuildContext context) =>
-      Navigator.pushReplacementNamed(context, studentProfile);
+  static void toLogin(BuildContext context) {
+    Navigator.of(context).push(slideRoute(page: const LoginPage()));
+  }
 
-  static void toStudentProfileClearingStack(BuildContext context) =>
-      Navigator.pushNamedAndRemoveUntil(context, studentProfile, (_) => false);
+  static void toRegister(BuildContext context) {
+    Navigator.of(context).push(slideRoute(page: const RegisterPage()));
+  }
 
-  static void toUniversityConfig(BuildContext context) =>
-      Navigator.pushNamed(context, universityConfig);
+  static void toStudentProfile(BuildContext context) {
+    Navigator.of(
+      context,
+    ).pushReplacement(slideRoute(page: const StudentFilteringPage()));
+  }
 
-  static void toHighSchoolConfig(BuildContext context) =>
-      Navigator.pushNamed(context, highSchoolConfig);
+  static void toStudentProfileClearingStack(BuildContext context) {
+    Navigator.of(context).pushAndRemoveUntil(
+      slideRoute(page: const StudentFilteringPage()),
+      (_) => false,
+    );
+  }
 
-  static void toIndependentConfig(BuildContext context) =>
-      Navigator.pushNamed(context, independentConfig);
+  static void toUniversityConfig(BuildContext context) {
+    Navigator.of(context).push(slideRoute(page: const UniversityConfigPage()));
+  }
 
-  static void toHome(BuildContext context) =>
-      Navigator.pushNamed(context, home);
+  static void toHighSchoolConfig(BuildContext context) {
+    Navigator.of(context).push(slideRoute(page: const HighSchoolConfigPage()));
+  }
 
-  static void toHomeClearingStack(BuildContext context) =>
-      Navigator.pushNamedAndRemoveUntil(context, home, (_) => false);
+  static void toIndependentConfig(BuildContext context) {
+    Navigator.of(context).push(slideRoute(page: const IndependentConfigPage()));
+  }
 
-  static void toStudyCycleSetup(BuildContext context) =>
-      Navigator.pushNamed(context, studyCycleSetup);
+  static void toHome(BuildContext context) {
+    Navigator.of(context).push(slideRoute(page: const MainShell()));
+  }
 
-  static void toProfile(BuildContext context) =>
-      Navigator.pushNamed(context, profile);
+  static void toHomeClearingStack(BuildContext context) {
+    Navigator.of(context).pushAndRemoveUntil(
+      slideRoute(page: const MainShell(), begin: const Offset(0, 0.08)),
+      (_) => false,
+    );
+  }
 
-  static void toWelcomeClearingStack(BuildContext context) =>
-      Navigator.pushNamedAndRemoveUntil(context, welcome, (_) => false);
+  static void toStudyCycleSetup(BuildContext context) {
+    Navigator.of(context).push(slideRoute(page: const StudyCycleSetupPage()));
+  }
+
+  static void toProfile(BuildContext context) {
+    Navigator.of(context).push(
+      slideRoute(page: const UserProfilePage(), begin: const Offset(-1, 0)),
+    );
+  }
+
+  static void toWelcomeClearingStack(BuildContext context) {
+    Navigator.of(context).pushAndRemoveUntil(
+      slideRoute(page: const WelcomePage(), begin: const Offset(-1, 0)),
+      (_) => false,
+    );
+  }
 }

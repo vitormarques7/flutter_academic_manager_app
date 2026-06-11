@@ -3,6 +3,7 @@ import 'package:academic_manager_app/services/auth/auth_service.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
 import '../../config/routes/app_routes.dart';
+import '../widgets/auth/animated_auth_panel.dart';
 import '../widgets/buttons/primary_button.dart';
 import '../widgets/inputs/auth_text_field.dart';
 import '../widgets/inputs/visibility_toggle.dart';
@@ -95,7 +96,6 @@ class _LoginPageState extends State<LoginPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Título (fundo claro)
               SafeArea(
                 bottom: false,
                 child: Padding(
@@ -107,142 +107,141 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   child: Text(
                     'Bem vindo\nde volta',
-                    style: AppTextStyles.headline1,
+                    style: AppTextStyles.headline1.copyWith(height: 1.04),
                   ),
                 ),
               ),
 
-              // Formulário (fundo roxo)
               Expanded(
-                child: Container(
-                  width: double.infinity,
-                  decoration: const ShapeDecoration(
-                    color: AppColors.primary,
-                    shape: RoundedRectangleBorder(
+                child: AnimatedAuthPanel(
+                  child: Container(
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [AppColors.primary, AppColors.primaryDark],
+                      ),
                       borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(45),
+                        top: Radius.circular(34),
                       ),
                     ),
-                  ),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 37),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 40),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 37),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 40),
 
-                          // Campo E-mail
-                          AuthTextField(
-                            controller: _emailController,
-                            hint: 'E-mail',
-                            keyboardType: TextInputType.emailAddress,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Por favor, insira seu e-mail';
-                              }
-                              if (!_emailRegex.hasMatch(value)) {
-                                return 'Por favor, insira um e-mail válido';
-                              }
-                              return null;
-                            },
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // Campo Senha
-                          AuthTextField(
-                            controller: _passwordController,
-                            hint: 'Senha',
-                            obscureText: _obscurePassword,
-                            suffixIcon: VisibilityToggle(
-                              isObscureText: _obscurePassword,
-                              onTap: () => setState(
-                                () => _obscurePassword = !_obscurePassword,
-                              ),
+                            AuthTextField(
+                              controller: _emailController,
+                              hint: 'E-mail',
+                              keyboardType: TextInputType.emailAddress,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Por favor, insira seu e-mail';
+                                }
+                                if (!_emailRegex.hasMatch(value)) {
+                                  return 'Por favor, insira um e-mail válido';
+                                }
+                                return null;
+                              },
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Por favor, insira sua senha';
-                              }
-                              return null;
-                            },
-                          ),
 
-                          const SizedBox(height: 12),
+                            const SizedBox(height: 16),
 
-                          // Esqueceu a senha
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: GestureDetector(
-                              onTap: _isSendingPasswordReset
-                                  ? null
-                                  : _onPasswordReset,
-                              child: Text(
-                                _isSendingPasswordReset
-                                    ? 'Enviando...'
-                                    : 'Esqueceu a senha?',
-                                style: const TextStyle(
-                                  color: Color(0x7FE7E7E7),
-                                  fontSize: 20,
-                                  fontFamily: 'Roboto',
-                                  fontWeight: FontWeight.w500,
-                                  letterSpacing: 0,
+                            AuthTextField(
+                              controller: _passwordController,
+                              hint: 'Senha',
+                              obscureText: _obscurePassword,
+                              suffixIcon: VisibilityToggle(
+                                isObscureText: _obscurePassword,
+                                onTap: () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
                                 ),
                               ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Por favor, insira sua senha';
+                                }
+                                return null;
+                              },
                             ),
-                          ),
 
-                          const SizedBox(height: 60),
+                            const SizedBox(height: 12),
 
-                          // Botão Entrar (fundo branco sobre roxo)
-                          PrimaryButton(
-                            label: 'Entrar',
-                            isLoading: _isLoading,
-                            onPressed: _onLogin,
-                            backgroundColor: AppColors.background,
-                            textColor: AppColors.textDark,
-                          ),
-
-                          const SizedBox(height: 80),
-
-                          // Rodapé: Ainda não possui cadastro?
-                          Center(
-                            child: Column(
-                              children: [
-                                const Text(
-                                  'Ainda não possui um cadastro?',
-                                  style: TextStyle(
+                            // Esqueceu a senha
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: GestureDetector(
+                                onTap: _isSendingPasswordReset
+                                    ? null
+                                    : _onPasswordReset,
+                                child: Text(
+                                  _isSendingPasswordReset
+                                      ? 'Enviando...'
+                                      : 'Esqueceu a senha?',
+                                  style: const TextStyle(
                                     color: Color(0x7FE7E7E7),
-                                    fontSize: 20,
+                                    fontSize: 14,
                                     fontFamily: 'Roboto',
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: FontWeight.w700,
                                     letterSpacing: 0,
                                   ),
                                 ),
-                                GestureDetector(
-                                  onTap: () => AppRoutes.toRegister(context),
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(10),
-                                    child: Text(
-                                      'Cadastrar',
-                                      style: TextStyle(
-                                        color: Color(0xFFF5F5F5),
-                                        fontSize: 20,
-                                        fontFamily: 'Roboto',
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 0,
+                              ),
+                            ),
+
+                            const SizedBox(height: 46),
+
+                            PrimaryButton(
+                              label: 'Entrar',
+                              isLoading: _isLoading,
+                              onPressed: _onLogin,
+                              backgroundColor: AppColors.background,
+                              textColor: AppColors.textDark,
+                            ),
+
+                            const SizedBox(height: 54),
+
+                            Center(
+                              child: Column(
+                                children: [
+                                  const Text(
+                                    'Ainda não possui um cadastro?',
+                                    style: TextStyle(
+                                      color: Color(0x7FE7E7E7),
+                                      fontSize: 14,
+                                      fontFamily: 'Roboto',
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0,
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () => AppRoutes.toRegister(context),
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(10),
+                                      child: Text(
+                                        'Cadastrar',
+                                        style: TextStyle(
+                                          color: Color(0xFFF5F5F5),
+                                          fontSize: 15,
+                                          fontFamily: 'Roboto',
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
 
-                          const SizedBox(height: 40),
-                        ],
+                            const SizedBox(height: 40),
+                          ],
+                        ),
                       ),
                     ),
                   ),

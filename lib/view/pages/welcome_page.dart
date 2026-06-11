@@ -64,7 +64,10 @@ class _WelcomePageState extends State<WelcomePage> {
 
               const Spacer(flex: 2),
 
-              Text('Bem vindo', style: AppTextStyles.headline1),
+              Text(
+                'Bem-vindo',
+                style: AppTextStyles.headline1.copyWith(height: 1.05),
+              ),
 
               const SizedBox(height: 16),
 
@@ -73,6 +76,8 @@ class _WelcomePageState extends State<WelcomePage> {
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyBold.copyWith(
                   color: AppColors.textLight,
+                  fontSize: 15,
+                  height: 1.35,
                 ),
               ),
 

@@ -16,6 +16,7 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   late int _currentIndex;
+  int? _previousIndex;
   int _navigationDirection = 1;
 
   static const List<Widget> _pages = [
@@ -34,24 +35,35 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 260),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        transitionBuilder: (child, animation) {
-          final slideAnimation = Tween<Offset>(
-            begin: Offset(0.04 * _navigationDirection, 0),
-            end: Offset.zero,
-          ).animate(animation);
-
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(position: slideAnimation, child: child),
-          );
-        },
-        child: KeyedSubtree(
+      body: ClipRect(
+        child: TweenAnimationBuilder<double>(
           key: ValueKey(_currentIndex),
-          child: _pages[_currentIndex],
+          tween: Tween<double>(begin: _previousIndex == null ? 1 : 0, end: 1),
+          duration: _previousIndex == null
+              ? Duration.zero
+              : const Duration(milliseconds: 210),
+          curve: Curves.easeOutCubic,
+          onEnd: () {
+            if (_previousIndex == null || !mounted) return;
+            setState(() => _previousIndex = null);
+          },
+          builder: (context, value, child) {
+            final previousIndex = _previousIndex;
+            if (previousIndex == null) return _pages[_currentIndex];
+
+            return Stack(
+              children: [
+                _TabPageSlide(
+                  translation: Offset(-_navigationDirection * value, 0),
+                  child: _pages[previousIndex],
+                ),
+                _TabPageSlide(
+                  translation: Offset(_navigationDirection * (1 - value), 0),
+                  child: _pages[_currentIndex],
+                ),
+              ],
+            );
+          },
         ),
       ),
       bottomNavigationBar: AppBottomNavBar(
@@ -60,11 +72,26 @@ class _MainShellState extends State<MainShell> {
           if (index == _currentIndex) return;
 
           setState(() {
+            _previousIndex = _currentIndex;
             _navigationDirection = index > _currentIndex ? 1 : -1;
             _currentIndex = index;
           });
         },
       ),
+    );
+  }
+}
+
+class _TabPageSlide extends StatelessWidget {
+  final Offset translation;
+  final Widget child;
+
+  const _TabPageSlide({required this.translation, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: FractionalTranslation(translation: translation, child: child),
     );
   }
 }
