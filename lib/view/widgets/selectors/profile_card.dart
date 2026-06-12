@@ -21,7 +21,6 @@ class ProfileCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
         child: Ink(
-          height: 150,
           decoration: BoxDecoration(
             color: AppColors.primary,
             borderRadius: BorderRadius.circular(18),
@@ -34,29 +33,31 @@ class ProfileCard extends StatelessWidget {
             ],
           ),
           padding: const EdgeInsets.fromLTRB(28, 25, 28, 15),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Color(0xFFF5F5F5),
-                        fontSize: 28,
-                        fontFamily: 'Roboto',
-                        fontWeight: FontWeight.w500,
-                        height: 1,
-                        letterSpacing: 0,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 110),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: Color(0xFFF5F5F5),
+                          fontSize: 28,
+                          fontFamily: 'Roboto',
+                          fontWeight: FontWeight.w500,
+                          height: 1,
+                          letterSpacing: 0,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: 190,
-                      child: Text(
+                      const SizedBox(height: 8),
+                      Text(
                         subtitle,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Color(0x7FE7E7E7),
                           fontSize: 16,
@@ -66,16 +67,17 @@ class ProfileCard extends StatelessWidget {
                           letterSpacing: 0,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const Icon(
-                Icons.chevron_right,
-                color: Color(0xFFF5F5F5),
-                size: 36,
-              ),
-            ],
+                const SizedBox(width: 12),
+                const Icon(
+                  Icons.chevron_right,
+                  color: Color(0xFFF5F5F5),
+                  size: 36,
+                ),
+              ],
+            ),
           ),
         ),
       ),
