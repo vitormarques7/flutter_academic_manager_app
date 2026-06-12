@@ -1,10 +1,14 @@
 import 'package:academic_manager_app/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
+import '../../models/academic_task.dart';
+import '../../repositories/task_repository.dart';
 import '../widgets/common/page_header.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
+
+  static final TaskRepository _taskRepository = TaskRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -45,34 +49,31 @@ class HomePage extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              const _SectionTitle(title: 'PRÓXIMAS TAREFAS'),
-              const SizedBox(height: 12),
+              StreamBuilder<List<AcademicTask>>(
+                stream: _taskRepository.watchTasks(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting &&
+                      !snapshot.hasData) {
+                    return const _HomeTasksLoading();
+                  }
 
-              const _HomeCardBase(
-                child: Column(
-                  children: [
-                    _TaskRow(
-                      title: 'Entrega de trabalho - Programação',
-                      date: '24/04',
-                    ),
-                    _Divider(),
-                    _TaskRow(title: 'Revisar matéria de BD', date: '26/04'),
-                    _Divider(),
-                    _TaskRow(
-                      title: 'Revisar matéria de Cálculo 1',
-                      date: '30/04',
-                    ),
-                  ],
-                ),
-              ),
+                  final tasks = snapshot.data ?? [];
+                  final upcomingTasks = _upcomingTasks(tasks);
+                  final alertTasks = _alertTasks(tasks);
 
-              const SizedBox(height: 24),
-
-              const _SectionTitle(title: 'ALERTAS'),
-              const SizedBox(height: 12),
-
-              const _HomeCardBase(
-                child: Column(children: [_AlertRow(title: 'Prova de Cálculo')]),
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _SectionTitle(title: 'PRÓXIMAS TAREFAS'),
+                      const SizedBox(height: 12),
+                      _UpcomingTasksCard(tasks: upcomingTasks),
+                      const SizedBox(height: 24),
+                      const _SectionTitle(title: 'ALERTAS'),
+                      const SizedBox(height: 12),
+                      _AlertsCard(tasks: alertTasks),
+                    ],
+                  );
+                },
               ),
             ],
           ),
@@ -89,7 +90,154 @@ class HomePage extends StatelessWidget {
   }
 }
 
+List<AcademicTask> _upcomingTasks(List<AcademicTask> tasks) {
+  final pending = tasks.where((task) => !task.isChecked).toList();
+
+  pending.sort((a, b) {
+    final aDate = _parseDeadline(a.deadline);
+    final bDate = _parseDeadline(b.deadline);
+
+    if (aDate == null && bDate == null) return 0;
+    if (aDate == null) return 1;
+    if (bDate == null) return -1;
+
+    return aDate.compareTo(bDate);
+  });
+
+  return pending.take(3).toList();
+}
+
+List<AcademicTask> _alertTasks(List<AcademicTask> tasks) {
+  return tasks
+      .where(
+        (task) => !task.isChecked && task.visualPriority == 'Prova',
+      )
+      .take(3)
+      .toList();
+}
+
+DateTime? _parseDeadline(String deadline) {
+  final parts = deadline.split('/');
+  if (parts.length != 3) return null;
+
+  final day = int.tryParse(parts[0]);
+  final month = int.tryParse(parts[1]);
+  final year = int.tryParse(parts[2]);
+
+  if (day == null || month == null || year == null) return null;
+
+  return DateTime(year, month, day);
+}
+
+String _shortDeadlineLabel(String deadline) {
+  final parts = deadline.split('/');
+  if (parts.length == 3) {
+    return '${parts[0]}/${parts[1]}';
+  }
+
+  return deadline.isEmpty ? '—' : deadline;
+}
+
 // ——— Componentes privados da HomePage ———
+
+class _HomeTasksLoading extends StatelessWidget {
+  const _HomeTasksLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionTitle(title: 'PRÓXIMAS TAREFAS'),
+        SizedBox(height: 12),
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: 24),
+          child: Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _UpcomingTasksCard extends StatelessWidget {
+  final List<AcademicTask> tasks;
+
+  const _UpcomingTasksCard({required this.tasks});
+
+  @override
+  Widget build(BuildContext context) {
+    if (tasks.isEmpty) {
+      return const _HomeCardBase(
+        child: _HomeEmptyMessage(message: 'Nenhuma tarefa pendente.'),
+      );
+    }
+
+    return _HomeCardBase(
+      child: Column(
+        children: [
+          for (var i = 0; i < tasks.length; i++) ...[
+            if (i > 0) const _Divider(),
+            _TaskRow(
+              title: tasks[i].title,
+              date: _shortDeadlineLabel(tasks[i].deadline),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _AlertsCard extends StatelessWidget {
+  final List<AcademicTask> tasks;
+
+  const _AlertsCard({required this.tasks});
+
+  @override
+  Widget build(BuildContext context) {
+    if (tasks.isEmpty) {
+      return const _HomeCardBase(
+        child: _HomeEmptyMessage(message: 'Nenhum alerta no momento.'),
+      );
+    }
+
+    return _HomeCardBase(
+      child: Column(
+        children: [
+          for (var i = 0; i < tasks.length; i++) ...[
+            if (i > 0) const _Divider(),
+            _AlertRow(title: 'Prova de ${tasks[i].subject}'),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeEmptyMessage extends StatelessWidget {
+  final String message;
+
+  const _HomeEmptyMessage({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      child: Text(
+        message,
+        style: const TextStyle(
+          color: Color(0xFF464552),
+          fontSize: 15,
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w500,
+          height: 1.47,
+        ),
+      ),
+    );
+  }
+}
 
 class _SectionTitle extends StatelessWidget {
   final String title;
