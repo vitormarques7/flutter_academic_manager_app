@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
 import '../../models/study_cycle.dart';
+import '../../repositories/study_cycle_repository.dart';
+import '../../repositories/user_profile_repository.dart';
 import '../../services/setup/academic_setup_service.dart';
 import '../widgets/buttons/cancel_button.dart';
 import '../widgets/buttons/primary_button.dart';
@@ -21,6 +23,8 @@ class StudyCycleSetupPage extends StatefulWidget {
 class _StudyCycleSetupPageState extends State<StudyCycleSetupPage> {
   final _formKey = GlobalKey<FormState>();
   final _setupService = AcademicSetupService();
+  final _studyCycleRepository = StudyCycleRepository();
+  final _userProfileRepository = UserProfileRepository();
   final _courseController = TextEditingController();
   final _goalController = TextEditingController();
 
@@ -31,10 +35,60 @@ class _StudyCycleSetupPageState extends State<StudyCycleSetupPage> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    _prefillCourseName();
+  }
+
+  @override
   void dispose() {
     _courseController.dispose();
     _goalController.dispose();
     super.dispose();
+  }
+
+  Future<void> _prefillCourseName() async {
+    try {
+      final activeStudyCycleId = await _userProfileRepository
+          .resolveActiveStudyCycleId();
+      final studyCycles = await _studyCycleRepository.fetchStudyCycles();
+      final courseName = _preferredCourseName(
+        studyCycles: studyCycles,
+        activeStudyCycleId: activeStudyCycleId,
+      );
+
+      if (!mounted ||
+          courseName == null ||
+          _courseController.text.trim().isNotEmpty) {
+        return;
+      }
+
+      setState(() => _courseController.text = courseName);
+    } catch (_) {
+      // The field remains editable even when the previous course cannot load.
+    }
+  }
+
+  String? _preferredCourseName({
+    required List<StudyCycle> studyCycles,
+    required String? activeStudyCycleId,
+  }) {
+    for (final studyCycle in studyCycles) {
+      if (studyCycle.id == activeStudyCycleId &&
+          studyCycle.type == StudyCycleType.university &&
+          studyCycle.courseName != null) {
+        return studyCycle.courseName;
+      }
+    }
+
+    for (final studyCycle in studyCycles) {
+      if (studyCycle.type == StudyCycleType.university &&
+          studyCycle.courseName != null) {
+        return studyCycle.courseName;
+      }
+    }
+
+    return null;
   }
 
   Future<void> _onSave() async {

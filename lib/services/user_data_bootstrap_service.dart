@@ -16,7 +16,7 @@ class UserDataBootstrapService {
   final TaskRepository _taskRepository;
   final ScheduleRepository _scheduleRepository;
 
-  Future<void> ensureCurrentUserData({
+  Future<String?> ensureCurrentUserData({
     String? displayName,
     String? email,
   }) async {
@@ -27,9 +27,11 @@ class UserDataBootstrapService {
 
     final activeStudyCycleId = await _userProfileRepository
         .resolveActiveStudyCycleId();
-    if (activeStudyCycleId == null) return;
+    if (activeStudyCycleId == null) return null;
 
     await _taskRepository.backfillStudyCycleId(activeStudyCycleId);
     await _scheduleRepository.backfillStudyCycleId(activeStudyCycleId);
+
+    return activeStudyCycleId;
   }
 }
