@@ -1,7 +1,9 @@
 import 'package:academic_manager_app/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
+import '../../models/academic_subject.dart';
 import '../../models/academic_task.dart';
+import '../../repositories/subject_repository.dart';
 import '../../repositories/task_repository.dart';
 import '../widgets/common/page_header.dart';
 
@@ -9,6 +11,7 @@ class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   static final TaskRepository _taskRepository = TaskRepository();
+  static final SubjectRepository _subjectRepository = SubjectRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -32,19 +35,41 @@ class HomePage extends StatelessWidget {
               const _SectionTitle(title: 'VISÃO GERAL'),
               const SizedBox(height: 12),
 
-              const _PerformanceCard(
-                title: 'CARD DE DESEMPENHO',
-                subtitle: 'Média geral',
-                value: '8.5',
-              ),
+              StreamBuilder<List<AcademicSubject>>(
+                stream: _subjectRepository.watchSubjects(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting &&
+                      !snapshot.hasData) {
+                    return const _HomeOverviewLoading();
+                  }
 
-              const SizedBox(height: 12),
+                  final subjects = snapshot.data ?? [];
+                  final overallAverage = _overallAverage(subjects);
+                  final overallFrequency = _overallFrequency(subjects);
 
-              const _FrequencyCard(
-                title: 'CARD DE FREQUÊNCIA',
-                subtitle: 'Percentual total',
-                percent: 0.92,
-                percentLabel: '92%',
+                  return Column(
+                    children: [
+                      _PerformanceCard(
+                        title: 'CARD DE DESEMPENHO',
+                        subtitle: 'Média geral',
+                        value: _formatOverallAverage(
+                          overallAverage,
+                          hasSubjects: subjects.isNotEmpty,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _FrequencyCard(
+                        title: 'CARD DE FREQUÊNCIA',
+                        subtitle: 'Percentual total',
+                        percent: overallFrequency,
+                        percentLabel: _formatOverallFrequencyLabel(
+                          overallFrequency,
+                          hasSubjects: subjects.isNotEmpty,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
 
               const SizedBox(height: 24),
@@ -88,6 +113,36 @@ class HomePage extends StatelessWidget {
 
     return trimmedName.split(RegExp(r'\s+')).first;
   }
+}
+
+double _overallAverage(List<AcademicSubject> subjects) {
+  if (subjects.isEmpty) return 0;
+
+  final total = subjects.fold<double>(0, (sum, subject) => sum + subject.average);
+  return total / subjects.length;
+}
+
+double _overallFrequency(List<AcademicSubject> subjects) {
+  if (subjects.isEmpty) return 0;
+
+  final total = subjects.fold<double>(
+    0,
+    (sum, subject) => sum + subject.frequency.clamp(0, 1),
+  );
+
+  return (total / subjects.length).clamp(0, 1);
+}
+
+String _formatOverallAverage(double average, {required bool hasSubjects}) {
+  if (!hasSubjects) return '—';
+
+  return average.toStringAsFixed(1);
+}
+
+String _formatOverallFrequencyLabel(double frequency, {required bool hasSubjects}) {
+  if (!hasSubjects) return '—';
+
+  return '${(frequency * 100).round()}%';
 }
 
 List<AcademicTask> _upcomingTasks(List<AcademicTask> tasks) {
@@ -139,6 +194,24 @@ String _shortDeadlineLabel(String deadline) {
 }
 
 // ——— Componentes privados da HomePage ———
+
+class _HomeOverviewLoading extends StatelessWidget {
+  const _HomeOverviewLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: 40),
+          child: Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 class _HomeTasksLoading extends StatelessWidget {
   const _HomeTasksLoading();

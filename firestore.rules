@@ -17,6 +17,10 @@ service cloud.firestore {
         allow read, create, update, delete: if isOwner(userId);
       }
 
+      match /subjects/{subjectId} {
+        allow read, create, update, delete: if isOwner(userId);
+      }
+
       match /schedules/{scheduleId} {
         allow read, create, update, delete: if isOwner(userId);
       }

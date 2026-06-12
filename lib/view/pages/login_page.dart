@@ -46,7 +46,7 @@ class _LoginPageState extends State<LoginPage> {
         _passwordController.text,
       );
 
-      if (mounted) AppRoutes.toHomeClearingStack(context);
+      if (mounted) AppRoutes.toAuthGateClearingStack(context);
     } on AuthException catch (error) {
       if (mounted) _showMessage(error.message);
     } finally {

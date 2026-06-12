@@ -70,6 +70,9 @@ class AppRoutes {
   static void toHomeClearingStack(BuildContext context) =>
       Navigator.pushNamedAndRemoveUntil(context, home, (_) => false);
 
+  static void toAuthGateClearingStack(BuildContext context) =>
+      Navigator.pushNamedAndRemoveUntil(context, authGate, (_) => false);
+
   static void toProfile(BuildContext context) =>
       Navigator.pushNamed(context, profile);
 

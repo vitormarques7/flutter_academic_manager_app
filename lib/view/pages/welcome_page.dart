@@ -32,7 +32,7 @@ class _WelcomePageState extends State<WelcomePage> {
       if (isNewUser) {
         AppRoutes.toStudentProfileClearingStack(context);
       } else {
-        AppRoutes.toHomeClearingStack(context);
+        AppRoutes.toAuthGateClearingStack(context);
       }
     } on AuthException catch (error) {
       if (mounted) _showMessage(error.message);

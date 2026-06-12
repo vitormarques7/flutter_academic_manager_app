@@ -19,6 +19,14 @@ class AuthService {
   final FirebaseAuth _firebaseAuth;
   final GoogleSignIn _googleSignIn;
 
+  Future<void> ensureInitialized() async {
+    if (kIsWeb) {
+      await _firebaseAuth.setPersistence(Persistence.LOCAL);
+    }
+
+    await _firebaseAuth.authStateChanges().first;
+  }
+
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
 
   User? get currentUser => _firebaseAuth.currentUser;

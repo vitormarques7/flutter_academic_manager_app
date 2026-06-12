@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../models/academic_task.dart';
+import '../../repositories/subject_repository.dart';
 import '../../repositories/task_repository.dart';
 import '../../config/theme/app_colors.dart';
 import '../widgets/common/page_header.dart';
 import '../widgets/common/section_label.dart';
 import '../widgets/selectors/task_filter_chip.dart';
-import '../widgets/cards/task_card.dart';
+import '../widgets/cards/swipeable_task_card.dart';
 import '../widgets/common/floating_add_button.dart';
 import '../widgets/dialogs/task_dialog.dart';
 
@@ -19,13 +20,7 @@ class TasksPage extends StatefulWidget {
 class _TasksPageState extends State<TasksPage> {
   String _selectedFilter = 'Todas';
   final TaskRepository _taskRepository = TaskRepository();
-
-  final List<String> _subjects = const [
-    'Programação',
-    'Cálculo I',
-    'Banco de Dados',
-    'Inteligência Artificial',
-  ];
+  final SubjectRepository _subjectRepository = SubjectRepository();
 
   List<AcademicTask> _filterTasks(List<AcademicTask> tasks) {
     return tasks.where((task) {
@@ -39,11 +34,26 @@ class _TasksPageState extends State<TasksPage> {
   }
 
   Future<void> _openTaskDialog({AcademicTask? task}) async {
+    List<String> subjects = [];
+
+    try {
+      final savedSubjects = await _subjectRepository.watchSubjects().first;
+      subjects = savedSubjects.map((subject) => subject.name).toList();
+    } on SubjectRepositoryException catch (error) {
+      _showError(error.message);
+      return;
+    } catch (_) {
+      _showError('Não foi possível carregar suas disciplinas.');
+      return;
+    }
+
+    if (!mounted) return;
+
     await showDialog<void>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.28),
       builder: (_) => TaskDialog(
-        subjects: _subjects,
+        subjects: subjects,
         initialTask: task == null
             ? null
             : TaskDialogResult(
@@ -68,6 +78,43 @@ class _TasksPageState extends State<TasksPage> {
         },
       ),
     );
+  }
+
+  Future<bool> _confirmDeleteTask(AcademicTask task) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Excluir tarefa'),
+          content: Text(
+            'Deseja excluir "${task.title}"? Esta ação não pode ser desfeita.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Excluir'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return confirmed ?? false;
+  }
+
+  Future<void> _deleteTask(AcademicTask task) async {
+    try {
+      await _taskRepository.deleteTask(task.id);
+    } on TaskRepositoryException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Não foi possível excluir a tarefa. Tente novamente.');
+    }
   }
 
   Future<void> _updateTaskCompletion(AcademicTask task, bool value) async {
@@ -173,11 +220,14 @@ class _TasksPageState extends State<TasksPage> {
                           children: tasks.map((task) {
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 12),
-                              child: TaskCard(
+                              child: SwipeableTaskCard(
+                                dismissKey: task.id,
                                 title: task.title,
                                 subject: task.subject,
                                 deadline: task.deadlineLabel,
                                 isChecked: task.isChecked,
+                                onConfirmDelete: () => _confirmDeleteTask(task),
+                                onDismissed: () => _deleteTask(task),
                                 onChanged: (value) {
                                   _updateTaskCompletion(task, value ?? false);
                                 },

@@ -1,4 +1,5 @@
 import 'package:academic_manager_app/config/routes/app_routes.dart';
+import 'package:academic_manager_app/services/auth/auth_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -11,6 +12,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('pt_BR');
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await AuthService().ensureInitialized();
   runApp(const MyApp());
 }
 

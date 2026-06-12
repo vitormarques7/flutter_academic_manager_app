@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../../models/academic_subject.dart';
+import '../../repositories/subject_repository.dart';
 import '../widgets/buttons/cancel_button.dart';
 import '../widgets/buttons/primary_button.dart';
 import '../widgets/common/section_label.dart';
@@ -18,11 +20,19 @@ class UniversityConfigPage extends StatefulWidget {
 
 class _UniversityConfigPageState extends State<UniversityConfigPage> {
   final formKey = GlobalKey<FormState>();
+  final _disciplineSetupKey = GlobalKey<DisciplineSetupListState>();
+  final _subjectRepository = SubjectRepository();
 
   final courseController = TextEditingController();
 
   int? selectedPeriod;
   bool isLoading = false;
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
 
   @override
   void dispose() {
@@ -36,10 +46,25 @@ class _UniversityConfigPageState extends State<UniversityConfigPage> {
     setState(() => isLoading = true);
 
     try {
-      await Future.delayed(const Duration(seconds: 1));
+      final disciplineNames =
+          _disciplineSetupKey.currentState?.confirmedNames ?? [];
+
+      if (disciplineNames.isNotEmpty) {
+        await _subjectRepository.createSubjects(
+          disciplineNames
+              .map((name) => SubjectInput(name: name))
+              .toList(),
+        );
+      }
 
       if (mounted) {
         AppRoutes.toHome(context);
+      }
+    } on SubjectRepositoryException catch (error) {
+      if (mounted) _showMessage(error.message);
+    } catch (_) {
+      if (mounted) {
+        _showMessage('Não foi possível salvar suas disciplinas. Tente novamente.');
       }
     } finally {
       if (mounted) {
@@ -214,7 +239,7 @@ class _UniversityConfigPageState extends State<UniversityConfigPage> {
 
                       const SizedBox(height: 10),
 
-                      const DisciplineSetupList(),
+                      DisciplineSetupList(key: _disciplineSetupKey),
                     ],
                   ),
                 ),

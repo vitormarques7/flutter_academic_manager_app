@@ -7,10 +7,18 @@ class DisciplineSetupList extends StatefulWidget {
   const DisciplineSetupList({super.key});
 
   @override
-  State<DisciplineSetupList> createState() => _DisciplineSetupListState();
+  State<DisciplineSetupList> createState() => DisciplineSetupListState();
 }
 
-class _DisciplineSetupListState extends State<DisciplineSetupList> {
+class DisciplineSetupListState extends State<DisciplineSetupList> {
+  List<String> get confirmedNames {
+    return _disciplines
+        .where((discipline) => discipline.isConfirmed)
+        .map((discipline) => discipline.controller.text.trim())
+        .where((name) => name.isNotEmpty)
+        .toList();
+  }
+
   final List<_DisciplineDraft> _disciplines = [
     _DisciplineDraft(controller: TextEditingController()),
   ];

@@ -38,7 +38,6 @@ class SubjectCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Coluna esquerda: nome, professor, frequência
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,10 +95,7 @@ class SubjectCard extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(width: 12),
-
-            // Coluna direita: média atual
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [

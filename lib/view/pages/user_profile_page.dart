@@ -10,7 +10,7 @@ class UserProfilePage extends StatelessWidget {
   Future<void> _onSignOut(BuildContext context) async {
     try {
       await AuthService().signOut();
-      if (context.mounted) AppRoutes.toWelcomeClearingStack(context);
+      if (context.mounted) AppRoutes.toAuthGateClearingStack(context);
     } on AuthException catch (error) {
       if (!context.mounted) return;
 
