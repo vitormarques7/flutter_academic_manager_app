@@ -10,7 +10,7 @@ class OrDivider extends StatelessWidget {
   const OrDivider({
     super.key,
     this.text = 'ou',
-    this.color = AppColors.divider,
+    this.color = AppColors.textSubtle,
     this.fontSize = 18,
   });
 

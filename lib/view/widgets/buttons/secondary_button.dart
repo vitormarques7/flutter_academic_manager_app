@@ -10,6 +10,7 @@ class SecondaryButton extends StatelessWidget {
   final Color backgroundColor;
   final Color borderColor;
   final Color textColor;
+  final Gradient? backgroundGradient;
   final double borderRadius;
   final double height;
   final EdgeInsets padding;
@@ -25,6 +26,7 @@ class SecondaryButton extends StatelessWidget {
     this.backgroundColor = AppColors.background,
     this.borderColor = AppColors.primary,
     this.textColor = AppColors.textDark,
+    this.backgroundGradient,
     this.borderRadius = AppRadius.pill,
     this.height = 56,
     this.padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
@@ -56,11 +58,12 @@ class SecondaryButton extends StatelessWidget {
           height: height,
           padding: padding,
           decoration: ShapeDecoration(
-            color: Colors.transparent,
+            color: backgroundGradient == null ? Colors.transparent : null,
             shape: RoundedRectangleBorder(
               side: BorderSide(width: 1.4, color: borderColor),
               borderRadius: BorderRadius.circular(borderRadius),
             ),
+            gradient: effectiveDisabled ? null : backgroundGradient,
             shadows: effectiveDisabled
                 ? null
                 : [
