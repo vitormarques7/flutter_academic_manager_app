@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../config/routes/app_routes.dart';
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_design_tokens.dart';
 import '../../../config/theme/app_text_styles.dart';
 
@@ -14,28 +13,23 @@ class PageHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Material(
-          color: AppColors.surface,
-          shape: const CircleBorder(),
-          elevation: 0,
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: () => AppRoutes.toProfile(context),
-            child: Ink(
-              width: 58,
-              height: 58,
-              decoration: ShapeDecoration(
-                color: AppColors.primarySoft,
-                shape: OvalBorder(),
-                shadows: AppShadows.subtle,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(9),
-                child: Image.asset(
-                  'lib/view/assets/image_profile_icon.png',
-                  fit: BoxFit.contain,
-                  color: AppColors.primary,
-                ),
+        Container(
+          width: 58,
+          height: 58,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: AppShadows.subtle,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: Ink.image(
+              image: const AssetImage('lib/view/assets/profile_pic_v2.png'),
+              fit: BoxFit.cover,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () => AppRoutes.toProfile(context),
               ),
             ),
           ),

@@ -93,33 +93,66 @@ class _PersonalDataPageState extends State<PersonalDataPage> {
     }
   }
 
-  Future<void> _editActiveStudyCycle(_PersonalData data) async {
+  Future<void> _manageActiveStudyCycle(_PersonalData data) async {
     final activeCycle = data.activeStudyCycle;
     if (activeCycle == null) {
       _showError('Nenhum ciclo ativo para editar.');
       return;
     }
 
-    final input = await showDialog<StudyCycleInput>(
+    final result = await showModalBottomSheet<_StudyCycleManagementResult>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.28),
-      builder: (_) => _StudyCycleEditDialog(cycle: activeCycle),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _StudyCycleManagementSheet(data: data),
     );
 
-    if (input == null || !mounted) return;
+    if (result == null || !mounted) return;
 
+    switch (result.type) {
+      case _StudyCycleManagementResultType.update:
+        await _updateActiveStudyCycle(
+          activeCycle: activeCycle,
+          input: result.input!,
+        );
+      case _StudyCycleManagementResultType.activate:
+        await _activateStudyCycle(result.studyCycleId!);
+    }
+  }
+
+  Future<void> _updateActiveStudyCycle({
+    required StudyCycle activeCycle,
+    required StudyCycleInput input,
+  }) async {
     setState(() => _isSaving = true);
     try {
       await _studyCycleRepository.updateStudyCycle(
         id: activeCycle.id,
         input: input,
       );
+      if (!mounted) return;
       _showSuccess('Dados acadêmicos atualizados.');
       _reload();
     } on StudyCycleRepositoryException catch (error) {
       _showError(error.message);
     } catch (_) {
       _showError('Não foi possível atualizar seus dados acadêmicos.');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _activateStudyCycle(String studyCycleId) async {
+    setState(() => _isSaving = true);
+    try {
+      await _userProfileRepository.setActiveStudyCycleId(studyCycleId);
+      if (!mounted) return;
+      _showSuccess('Ciclo atual alterado.');
+      _reload();
+    } on UserProfileRepositoryException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Não foi possível alterar o ciclo atual.');
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -186,10 +219,14 @@ class _PersonalDataPageState extends State<PersonalDataPage> {
                     data: data,
                     onEdit: _isSaving
                         ? null
-                        : () => _editActiveStudyCycle(data),
+                        : () => _manageActiveStudyCycle(data),
                   ),
                   const SizedBox(height: 18),
-                  _CyclesCard(cycles: data.studyCycles),
+                  _CyclesCard(
+                    cycles: data.studyCycles,
+                    activeCycleId: data.activeStudyCycle?.id,
+                    onActivate: _isSaving ? null : _activateStudyCycle,
+                  ),
                   const SizedBox(height: 18),
                   _DisciplinesCard(disciplines: data.disciplines),
                 ],
@@ -361,10 +398,22 @@ class _AcademicCard extends StatelessWidget {
                   ),
                 ),
               ),
-              IconButton(
-                tooltip: 'Editar ciclo atual',
+              TextButton.icon(
                 onPressed: activeCycle == null ? null : onEdit,
-                icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
+                icon: const Icon(Icons.tune_rounded, size: 19),
+                label: const Text('Gerenciar'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 13,
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ),
             ],
           ),
@@ -414,8 +463,14 @@ class _AcademicCard extends StatelessWidget {
 
 class _CyclesCard extends StatelessWidget {
   final List<StudyCycle> cycles;
+  final String? activeCycleId;
+  final ValueChanged<String>? onActivate;
 
-  const _CyclesCard({required this.cycles});
+  const _CyclesCard({
+    required this.cycles,
+    required this.activeCycleId,
+    required this.onActivate,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -448,7 +503,13 @@ class _CyclesCard extends StatelessWidget {
             ...cycles.map(
               (cycle) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: _CycleRow(cycle: cycle),
+                child: _CycleRow(
+                  cycle: cycle,
+                  isCurrent: cycle.id == activeCycleId,
+                  onActivate: cycle.id == activeCycleId || onActivate == null
+                      ? null
+                      : () => onActivate!(cycle.id),
+                ),
               ),
             ),
         ],
@@ -459,8 +520,14 @@ class _CyclesCard extends StatelessWidget {
 
 class _CycleRow extends StatelessWidget {
   final StudyCycle cycle;
+  final bool isCurrent;
+  final VoidCallback? onActivate;
 
-  const _CycleRow({required this.cycle});
+  const _CycleRow({
+    required this.cycle,
+    required this.isCurrent,
+    required this.onActivate,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -475,11 +542,7 @@ class _CycleRow extends StatelessWidget {
               color: AppColors.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.school_outlined,
-              color: AppColors.primary,
-              size: 22,
-            ),
+            child: Icon(_cycleIcon(cycle), color: AppColors.primary, size: 22),
           ),
           const SizedBox(width: 11),
           Expanded(
@@ -512,7 +575,53 @@ class _CycleRow extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(width: 8),
+          if (isCurrent)
+            const _CurrentCycleBadge()
+          else
+            TextButton.icon(
+              onPressed: onActivate,
+              icon: const Icon(Icons.check_circle_outline_rounded, size: 17),
+              label: const Text('Ativar'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 12,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
         ],
+      ),
+    );
+  }
+}
+
+class _CurrentCycleBadge extends StatelessWidget {
+  const _CurrentCycleBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: const Text(
+        'Atual',
+        style: TextStyle(
+          color: AppColors.primary,
+          fontSize: 11,
+          fontFamily: 'Roboto',
+          fontWeight: FontWeight.w900,
+          height: 1,
+        ),
       ),
     );
   }
@@ -629,31 +738,61 @@ class _NameDialogState extends State<_NameDialog> {
   }
 }
 
-class _StudyCycleEditDialog extends StatefulWidget {
-  final StudyCycle cycle;
+enum _StudyCycleManagementMode { activate, edit }
 
-  const _StudyCycleEditDialog({required this.cycle});
+enum _StudyCycleManagementResultType { update, activate }
 
-  @override
-  State<_StudyCycleEditDialog> createState() => _StudyCycleEditDialogState();
+class _StudyCycleManagementResult {
+  final _StudyCycleManagementResultType type;
+  final String? studyCycleId;
+  final StudyCycleInput? input;
+
+  const _StudyCycleManagementResult.activate(this.studyCycleId)
+    : type = _StudyCycleManagementResultType.activate,
+      input = null;
+
+  const _StudyCycleManagementResult.update(this.input)
+    : type = _StudyCycleManagementResultType.update,
+      studyCycleId = null;
 }
 
-class _StudyCycleEditDialogState extends State<_StudyCycleEditDialog> {
+class _StudyCycleManagementSheet extends StatefulWidget {
+  final _PersonalData data;
+
+  const _StudyCycleManagementSheet({required this.data});
+
+  @override
+  State<_StudyCycleManagementSheet> createState() =>
+      _StudyCycleManagementSheetState();
+}
+
+class _StudyCycleManagementSheetState
+    extends State<_StudyCycleManagementSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _courseController;
   late final TextEditingController _goalController;
+  late _StudyCycleManagementMode _mode;
   late int _period;
   late int _schoolYear;
+
+  StudyCycle get _activeCycle => widget.data.activeStudyCycle!;
+
+  bool get _hasPreviousCycles {
+    return widget.data.studyCycles.any((cycle) => cycle.id != _activeCycle.id);
+  }
 
   @override
   void initState() {
     super.initState();
+    _mode = _hasPreviousCycles
+        ? _StudyCycleManagementMode.activate
+        : _StudyCycleManagementMode.edit;
     _courseController = TextEditingController(
-      text: widget.cycle.courseName ?? '',
+      text: _activeCycle.courseName ?? '',
     );
-    _goalController = TextEditingController(text: widget.cycle.goal ?? '');
-    _period = widget.cycle.period ?? 0;
-    _schoolYear = widget.cycle.schoolYear ?? 1;
+    _goalController = TextEditingController(text: _activeCycle.goal ?? '');
+    _period = _activeCycle.period ?? 0;
+    _schoolYear = _activeCycle.schoolYear ?? 1;
   }
 
   @override
@@ -666,7 +805,7 @@ class _StudyCycleEditDialogState extends State<_StudyCycleEditDialog> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    final input = switch (widget.cycle.type) {
+    final input = switch (_activeCycle.type) {
       StudyCycleType.university => StudyCycleInput(
         type: StudyCycleType.university,
         courseName: _courseController.text,
@@ -682,22 +821,96 @@ class _StudyCycleEditDialogState extends State<_StudyCycleEditDialog> {
       ),
     };
 
-    Navigator.of(context).pop(input);
+    Navigator.of(context).pop(_StudyCycleManagementResult.update(input));
+  }
+
+  void _activateCycle(String studyCycleId) {
+    Navigator.of(
+      context,
+    ).pop(_StudyCycleManagementResult.activate(studyCycleId));
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Editar ciclo atual'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: switch (widget.cycle.type) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.88;
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, 0, 12, 12 + bottomInset),
+        child: AppSurface.card(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+          borderRadius: AppRadius.xl,
+          child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Gerenciar ciclo atual',
+                        style: TextStyle(
+                          color: AppColors.textDark,
+                          fontSize: 22,
+                          fontFamily: 'Roboto',
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Fechar',
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _CycleManagementModeSwitch(
+                  mode: _mode,
+                  canActivate: _hasPreviousCycles,
+                  onChanged: (mode) => setState(() => _mode = mode),
+                ),
+                const SizedBox(height: 16),
+                if (_mode == _StudyCycleManagementMode.activate)
+                  _CycleActivationList(
+                    cycles: widget.data.studyCycles,
+                    activeCycleId: _activeCycle.id,
+                    onActivate: _activateCycle,
+                  )
+                else
+                  _buildEditForm(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEditForm() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ...switch (_activeCycle.type) {
             StudyCycleType.university => [
               TextFormField(
                 controller: _courseController,
-                decoration: const InputDecoration(labelText: 'Curso'),
+                textInputAction: TextInputAction.next,
+                decoration: _sheetInputDecoration(
+                  label: 'Curso',
+                  icon: Icons.school_outlined,
+                ),
                 validator: (value) {
                   if ((value?.trim() ?? '').isEmpty) {
                     return 'Informe o curso.';
@@ -708,7 +921,10 @@ class _StudyCycleEditDialogState extends State<_StudyCycleEditDialog> {
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
                 initialValue: _period,
-                decoration: const InputDecoration(labelText: 'Período'),
+                decoration: _sheetInputDecoration(
+                  label: 'Período',
+                  icon: Icons.layers_outlined,
+                ),
                 items: [
                   const DropdownMenuItem(
                     value: 0,
@@ -731,7 +947,10 @@ class _StudyCycleEditDialogState extends State<_StudyCycleEditDialog> {
             StudyCycleType.highSchool => [
               DropdownButtonFormField<int>(
                 initialValue: _schoolYear,
-                decoration: const InputDecoration(labelText: 'Ano letivo'),
+                decoration: _sheetInputDecoration(
+                  label: 'Ano letivo',
+                  icon: Icons.auto_stories_outlined,
+                ),
                 items: List.generate(3, (index) {
                   final year = index + 1;
                   return DropdownMenuItem(
@@ -748,27 +967,285 @@ class _StudyCycleEditDialogState extends State<_StudyCycleEditDialog> {
             StudyCycleType.independent => [
               TextFormField(
                 controller: _goalController,
-                decoration: const InputDecoration(labelText: 'Meta'),
+                textInputAction: TextInputAction.done,
+                decoration: _sheetInputDecoration(
+                  label: 'Meta',
+                  icon: Icons.flag_outlined,
+                ),
                 validator: (value) {
                   if ((value?.trim() ?? '').isEmpty) {
                     return 'Informe sua meta.';
                   }
                   return null;
                 },
+                onFieldSubmitted: (_) => _submit(),
               ),
             ],
           },
-        ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton(
+                  onPressed: _submit,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.textOnPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                  ),
+                  child: const Text('Salvar'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancelar'),
+    );
+  }
+}
+
+class _CycleManagementModeSwitch extends StatelessWidget {
+  final _StudyCycleManagementMode mode;
+  final bool canActivate;
+  final ValueChanged<_StudyCycleManagementMode> onChanged;
+
+  const _CycleManagementModeSwitch({
+    required this.mode,
+    required this.canActivate,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _CycleManagementModeButton(
+            icon: Icons.swap_horiz_rounded,
+            label: 'Trocar',
+            selected: mode == _StudyCycleManagementMode.activate,
+            enabled: canActivate,
+            onPressed: () => onChanged(_StudyCycleManagementMode.activate),
+          ),
         ),
-        FilledButton(onPressed: _submit, child: const Text('Salvar')),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _CycleManagementModeButton(
+            icon: Icons.edit_outlined,
+            label: 'Editar',
+            selected: mode == _StudyCycleManagementMode.edit,
+            onPressed: () => onChanged(_StudyCycleManagementMode.edit),
+          ),
+        ),
       ],
     );
   }
+}
+
+class _CycleManagementModeButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  const _CycleManagementModeButton({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onPressed,
+    this.enabled = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final style = selected
+        ? FilledButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.textOnPrimary,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+          )
+        : OutlinedButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            side: const BorderSide(color: AppColors.outlineStrong),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+          );
+
+    final child = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, size: 18),
+        const SizedBox(width: 7),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontFamily: 'Roboto',
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
+    );
+
+    if (selected) {
+      return FilledButton(
+        onPressed: enabled ? onPressed : null,
+        style: style,
+        child: child,
+      );
+    }
+
+    return OutlinedButton(
+      onPressed: enabled ? onPressed : null,
+      style: style,
+      child: child,
+    );
+  }
+}
+
+class _CycleActivationList extends StatelessWidget {
+  final List<StudyCycle> cycles;
+  final String activeCycleId;
+  final ValueChanged<String> onActivate;
+
+  const _CycleActivationList({
+    required this.cycles,
+    required this.activeCycleId,
+    required this.onActivate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: cycles.map((cycle) {
+        final isCurrent = cycle.id == activeCycleId;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: _CycleActivationRow(
+            cycle: cycle,
+            isCurrent: isCurrent,
+            onActivate: isCurrent ? null : () => onActivate(cycle.id),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _CycleActivationRow extends StatelessWidget {
+  final StudyCycle cycle;
+  final bool isCurrent;
+  final VoidCallback? onActivate;
+
+  const _CycleActivationRow({
+    required this.cycle,
+    required this.isCurrent,
+    required this.onActivate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppSurface.soft(
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(_cycleIcon(cycle), color: AppColors.primary, size: 22),
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _cycleTitle(cycle),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textDark,
+                    fontSize: 14,
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  _cycleLabel(cycle),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textMedium,
+                    fontSize: 12,
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          if (isCurrent)
+            const _CurrentCycleBadge()
+          else
+            FilledButton.icon(
+              onPressed: onActivate,
+              icon: const Icon(Icons.check_circle_outline_rounded, size: 17),
+              label: const Text('Ativar'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.textOnPrimary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 12,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+InputDecoration _sheetInputDecoration({
+  required String label,
+  required IconData icon,
+}) {
+  return InputDecoration(
+    labelText: label,
+    prefixIcon: Icon(icon, color: AppColors.primary),
+    filled: true,
+    fillColor: AppColors.surface,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      borderSide: const BorderSide(color: AppColors.outlineStrong),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      borderSide: const BorderSide(color: AppColors.outline),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+    ),
+  );
 }
 
 class _PersonalData {
@@ -806,5 +1283,13 @@ String _cycleLabel(StudyCycle cycle) {
           ? 'Ano letivo não informado'
           : '${cycle.schoolYear}º ano',
     StudyCycleType.independent => 'Estudo independente',
+  };
+}
+
+IconData _cycleIcon(StudyCycle cycle) {
+  return switch (cycle.type) {
+    StudyCycleType.university => Icons.school_outlined,
+    StudyCycleType.highSchool => Icons.auto_stories_outlined,
+    StudyCycleType.independent => Icons.flag_outlined,
   };
 }

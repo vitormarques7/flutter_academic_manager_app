@@ -66,7 +66,12 @@ class _StudyCycleSheet extends StatelessWidget {
                     children: [
                       _CurrentCycleCard(cycle: activeCycle),
                       const SizedBox(height: 12),
-                      _PreviousCyclesTile(cycles: previousCycles),
+                      _PreviousCyclesTile(
+                        cycles: previousCycles,
+                        onActivate: (cycleId) {
+                          Navigator.of(context).pop(cycleId);
+                        },
+                      ),
                     ],
                   );
                 }
@@ -329,8 +334,9 @@ class _CurrentCycleCard extends StatelessWidget {
 
 class _PreviousCyclesTile extends StatelessWidget {
   final List<_StudyCycleSummary> cycles;
+  final ValueChanged<String> onActivate;
 
-  const _PreviousCyclesTile({required this.cycles});
+  const _PreviousCyclesTile({required this.cycles, required this.onActivate});
 
   @override
   Widget build(BuildContext context) {
@@ -368,7 +374,10 @@ class _PreviousCyclesTile extends StatelessWidget {
             .map(
               (cycle) => Padding(
                 padding: const EdgeInsets.only(top: 8),
-                child: _PreviousCycleRow(cycle: cycle),
+                child: _PreviousCycleRow(
+                  cycle: cycle,
+                  onActivate: () => onActivate(cycle.id),
+                ),
               ),
             )
             .toList(),
@@ -379,51 +388,80 @@ class _PreviousCyclesTile extends StatelessWidget {
 
 class _PreviousCycleRow extends StatelessWidget {
   final _StudyCycleSummary cycle;
+  final VoidCallback onActivate;
 
-  const _PreviousCycleRow({required this.cycle});
+  const _PreviousCycleRow({required this.cycle, required this.onActivate});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: const BoxDecoration(
-            color: AppColors.primary,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onActivate,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
             children: [
-              Text(
-                cycle.label,
-                style: const TextStyle(
-                  color: AppColors.textDark,
-                  fontSize: 14,
-                  fontFamily: 'Roboto',
-                  fontWeight: FontWeight.w800,
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                cycle.detail,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 12,
-                  fontFamily: 'Roboto',
-                  fontWeight: FontWeight.w600,
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      cycle.title,
+                      style: const TextStyle(
+                        color: AppColors.textDark,
+                        fontSize: 14,
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${cycle.label} • ${cycle.detail}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 12,
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              TextButton.icon(
+                onPressed: onActivate,
+                icon: const Icon(Icons.check_circle_outline_rounded, size: 17),
+                label: const Text('Ativar'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 12,
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-      ],
+      ),
     );
   }
 }

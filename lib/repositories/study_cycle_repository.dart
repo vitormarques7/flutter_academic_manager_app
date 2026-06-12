@@ -69,6 +69,47 @@ class StudyCycleRepository {
     });
   }
 
+  Future<void> renameUniversityCourse({
+    required String currentName,
+    required String newName,
+  }) async {
+    final uid = _currentUserId;
+    final normalizedCurrentName = _normalizeString(currentName);
+    final normalizedNewName = _normalizeString(newName);
+
+    if (normalizedCurrentName == null || normalizedNewName == null) {
+      throw const StudyCycleRepositoryException('Informe o nome do curso.');
+    }
+
+    if (_courseNameKey(normalizedCurrentName) ==
+        _courseNameKey(normalizedNewName)) {
+      return;
+    }
+
+    await _guardFirestoreCall(() async {
+      final snapshot = await _studyCyclesCollection(uid).get();
+      final matchingDocuments = snapshot.docs.where((document) {
+        final studyCycle = StudyCycle.fromFirestore(document);
+        return studyCycle.type == StudyCycleType.university &&
+            studyCycle.courseName != null &&
+            _courseNameKey(studyCycle.courseName!) ==
+                _courseNameKey(normalizedCurrentName);
+      }).toList();
+
+      if (matchingDocuments.isEmpty) return;
+
+      final batch = _firestore.batch();
+      for (final document in matchingDocuments) {
+        batch.update(document.reference, {
+          'courseName': normalizedNewName,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
+    });
+  }
+
   Future<void> deleteStudyCycle(String id) {
     final uid = _currentUserId;
 
@@ -116,5 +157,15 @@ class StudyCycleRepository {
       'not-found' => 'Não encontramos esse ciclo de estudos para atualizar.',
       _ => error.message ?? 'Não foi possível salvar seu ciclo de estudos.',
     };
+  }
+
+  static String? _normalizeString(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) return null;
+    return trimmed;
+  }
+
+  static String _courseNameKey(String value) {
+    return value.trim().toLowerCase();
   }
 }

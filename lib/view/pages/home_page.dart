@@ -67,9 +67,7 @@ class _HomePageState extends State<HomePage> {
             children: [
               PageHeader(
                 title: 'Olá, $firstName',
-                trailing: _StudyCycleMenuButton(
-                  onTap: () => _openStudyCycleMenu(context),
-                ),
+                trailing: _StudyCycleMenuButton(onTap: _openStudyCycleMenu),
               ),
               const SizedBox(height: 24),
               FutureBuilder<String?>(
@@ -118,8 +116,9 @@ class _HomePageState extends State<HomePage> {
     return trimmedName.split(RegExp(r'\s+')).first;
   }
 
-  void _openStudyCycleMenu(BuildContext context) {
-    showModalBottomSheet<void>(
+  Future<void> _openStudyCycleMenu() async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final selectedStudyCycleId = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -132,6 +131,41 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+
+    if (selectedStudyCycleId == null || !mounted) return;
+
+    try {
+      await _userProfileRepository.setActiveStudyCycleId(selectedStudyCycleId);
+      if (!mounted) return;
+      setState(() {
+        _activeStudyCycleIdFuture = _userProfileRepository
+            .resolveActiveStudyCycleId();
+      });
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(
+          content: Text('Ciclo atual alterado.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } on UserProfileRepositoryException catch (error) {
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(error.message),
+          backgroundColor: AppColors.danger,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível alterar o ciclo atual.'),
+          backgroundColor: AppColors.danger,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 }
 

@@ -31,13 +31,17 @@ class _StudyCycleSetupPageState extends State<StudyCycleSetupPage> {
   _StudyCycleType _selectedType = _StudyCycleType.university;
   int? _selectedPeriod;
   int _selectedSeriesIndex = 0;
+  List<String> _courseOptions = const [];
+  String? _selectedCourseName;
   List<AcademicSetupDisciplineDraft> _disciplines = const [];
   bool _isLoading = false;
+  bool _isLoadingCourses = false;
+  bool _isSavingCourse = false;
 
   @override
   void initState() {
     super.initState();
-    _prefillCourseName();
+    _loadCourseOptions();
   }
 
   @override
@@ -47,26 +51,56 @@ class _StudyCycleSetupPageState extends State<StudyCycleSetupPage> {
     super.dispose();
   }
 
-  Future<void> _prefillCourseName() async {
+  Future<void> _loadCourseOptions() async {
+    if (mounted) setState(() => _isLoadingCourses = true);
+
     try {
       final activeStudyCycleId = await _userProfileRepository
           .resolveActiveStudyCycleId();
       final studyCycles = await _studyCycleRepository.fetchStudyCycles();
-      final courseName = _preferredCourseName(
-        studyCycles: studyCycles,
-        activeStudyCycleId: activeStudyCycleId,
-      );
+      final courseOptions = _courseNamesFromStudyCycles(studyCycles);
+      final preferredCourseName =
+          _preferredCourseName(
+            studyCycles: studyCycles,
+            activeStudyCycleId: activeStudyCycleId,
+          ) ??
+          (courseOptions.isEmpty ? null : courseOptions.first);
 
-      if (!mounted ||
-          courseName == null ||
-          _courseController.text.trim().isNotEmpty) {
-        return;
+      if (!mounted) return;
+
+      setState(() {
+        _courseOptions = courseOptions;
+        _selectedCourseName = preferredCourseName;
+        if (preferredCourseName != null &&
+            _courseController.text.trim().isEmpty) {
+          _courseController.text = preferredCourseName;
+        }
+      });
+    } catch (_) {
+      // The field remains editable even when previous courses cannot load.
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingCourses = false);
+      }
+    }
+  }
+
+  List<String> _courseNamesFromStudyCycles(List<StudyCycle> studyCycles) {
+    final courseNamesByKey = <String, String>{};
+
+    for (final studyCycle in studyCycles) {
+      final courseName = studyCycle.courseName;
+      if (studyCycle.type != StudyCycleType.university || courseName == null) {
+        continue;
       }
 
-      setState(() => _courseController.text = courseName);
-    } catch (_) {
-      // The field remains editable even when the previous course cannot load.
+      courseNamesByKey.putIfAbsent(
+        _courseNameKey(courseName),
+        () => courseName,
+      );
     }
+
+    return courseNamesByKey.values.toList();
   }
 
   String? _preferredCourseName({
@@ -89,6 +123,186 @@ class _StudyCycleSetupPageState extends State<StudyCycleSetupPage> {
     }
 
     return null;
+  }
+
+  void _selectCourse(String? courseName) {
+    setState(() {
+      _selectedCourseName = courseName;
+      _courseController.text = courseName ?? '';
+    });
+  }
+
+  Future<void> _addCourse() async {
+    final courseName = await _showCourseNameDialog(
+      title: 'Novo curso',
+      confirmLabel: 'Adicionar',
+    );
+    if (courseName == null) return;
+
+    final existingCourseName = _findExistingCourseName(courseName);
+    final selectedCourseName = existingCourseName ?? courseName;
+
+    setState(() {
+      if (existingCourseName == null) {
+        _courseOptions = [..._courseOptions, courseName];
+      }
+      _selectedCourseName = selectedCourseName;
+      _courseController.text = selectedCourseName;
+    });
+  }
+
+  Future<void> _editSelectedCourse() async {
+    final currentCourseName = _selectedCourseName ?? _courseController.text;
+    final normalizedCurrentCourseName = _normalizeCourseName(currentCourseName);
+
+    if (normalizedCurrentCourseName == null) {
+      await _addCourse();
+      return;
+    }
+
+    final newCourseName = await _showCourseNameDialog(
+      title: 'Editar curso',
+      confirmLabel: 'Salvar',
+      initialValue: normalizedCurrentCourseName,
+    );
+    if (newCourseName == null) return;
+
+    if (_courseNameKey(newCourseName) ==
+        _courseNameKey(normalizedCurrentCourseName)) {
+      setState(() {
+        _selectedCourseName = normalizedCurrentCourseName;
+        _courseController.text = normalizedCurrentCourseName;
+      });
+      return;
+    }
+
+    setState(() => _isSavingCourse = true);
+    try {
+      await _studyCycleRepository.renameUniversityCourse(
+        currentName: normalizedCurrentCourseName,
+        newName: newCourseName,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _courseOptions = _renamedCourseOptions(
+          currentName: normalizedCurrentCourseName,
+          newName: newCourseName,
+        );
+        _selectedCourseName = newCourseName;
+        _courseController.text = newCourseName;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nome do curso atualizado.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } on StudyCycleRepositoryException catch (error) {
+      if (mounted) _showError(error.message);
+    } catch (_) {
+      if (mounted) _showError('Não foi possível atualizar o curso.');
+    } finally {
+      if (mounted) setState(() => _isSavingCourse = false);
+    }
+  }
+
+  List<String> _renamedCourseOptions({
+    required String currentName,
+    required String newName,
+  }) {
+    final nextCourseOptions = <String>[];
+    final currentKey = _courseNameKey(currentName);
+    final newKey = _courseNameKey(newName);
+
+    for (final courseOption in _courseOptions) {
+      final optionKey = _courseNameKey(courseOption);
+      if (optionKey == currentKey || optionKey == newKey) continue;
+      nextCourseOptions.add(courseOption);
+    }
+
+    return [newName, ...nextCourseOptions];
+  }
+
+  String? _findExistingCourseName(String courseName) {
+    final courseNameKey = _courseNameKey(courseName);
+
+    for (final courseOption in _courseOptions) {
+      if (_courseNameKey(courseOption) == courseNameKey) {
+        return courseOption;
+      }
+    }
+
+    return null;
+  }
+
+  Future<String?> _showCourseNameDialog({
+    required String title,
+    required String confirmLabel,
+    String initialValue = '',
+  }) async {
+    final formKey = GlobalKey<FormState>();
+    final controller = TextEditingController(text: initialValue);
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(title),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: controller,
+              autofocus: true,
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(labelText: 'Nome do curso'),
+              validator: (value) {
+                if (_normalizeCourseName(value) == null) {
+                  return 'Informe o nome do curso.';
+                }
+                return null;
+              },
+              onFieldSubmitted: (_) {
+                if (!formKey.currentState!.validate()) return;
+                Navigator.of(
+                  dialogContext,
+                ).pop(_normalizeCourseName(controller.text));
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (!formKey.currentState!.validate()) return;
+                Navigator.of(
+                  dialogContext,
+                ).pop(_normalizeCourseName(controller.text));
+              },
+              child: Text(confirmLabel),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+    return result;
+  }
+
+  String? _normalizeCourseName(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) return null;
+    return trimmed;
+  }
+
+  String _courseNameKey(String value) {
+    return value.trim().toLowerCase();
   }
 
   Future<void> _onSave() async {
@@ -171,9 +385,16 @@ class _StudyCycleSetupPageState extends State<StudyCycleSetupPage> {
                     key: ValueKey(_selectedType),
                     type: _selectedType,
                     courseController: _courseController,
+                    courseOptions: _courseOptions,
+                    selectedCourseName: _selectedCourseName,
+                    isLoadingCourses: _isLoadingCourses,
+                    isSavingCourse: _isSavingCourse,
                     goalController: _goalController,
                     selectedPeriod: _selectedPeriod,
                     selectedSeriesIndex: _selectedSeriesIndex,
+                    onCourseChanged: _selectCourse,
+                    onEditCourse: _editSelectedCourse,
+                    onAddCourse: _addCourse,
                     onPeriodChanged: (value) {
                       setState(() => _selectedPeriod = value);
                     },
@@ -297,11 +518,7 @@ class _CycleTypeSelector extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    type.icon,
-                    size: 17,
-                    color: isSelected ? Colors.white : AppColors.primary,
-                  ),
+                  _CycleTypeIcon(type: type, isSelected: isSelected),
                   const SizedBox(width: 7),
                   Text(
                     type.chipLabel,
@@ -322,12 +539,46 @@ class _CycleTypeSelector extends StatelessWidget {
   }
 }
 
+class _CycleTypeIcon extends StatelessWidget {
+  final _StudyCycleType type;
+  final bool isSelected;
+
+  const _CycleTypeIcon({required this.type, required this.isSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    if (type == _StudyCycleType.highSchool) {
+      return Image.asset(
+        'lib/view/assets/highschool_icon.png',
+        width: 18,
+        height: 18,
+        fit: BoxFit.contain,
+        color: isSelected ? Colors.white : null,
+        colorBlendMode: isSelected ? BlendMode.srcIn : null,
+      );
+    }
+
+    return Icon(
+      type.icon,
+      size: 17,
+      color: isSelected ? Colors.white : AppColors.primary,
+    );
+  }
+}
+
 class _CycleFields extends StatelessWidget {
   final _StudyCycleType type;
   final TextEditingController courseController;
+  final List<String> courseOptions;
+  final String? selectedCourseName;
+  final bool isLoadingCourses;
+  final bool isSavingCourse;
   final TextEditingController goalController;
   final int? selectedPeriod;
   final int selectedSeriesIndex;
+  final ValueChanged<String?> onCourseChanged;
+  final VoidCallback onEditCourse;
+  final VoidCallback onAddCourse;
   final ValueChanged<int?> onPeriodChanged;
   final ValueChanged<int> onSeriesChanged;
 
@@ -335,9 +586,16 @@ class _CycleFields extends StatelessWidget {
     super.key,
     required this.type,
     required this.courseController,
+    required this.courseOptions,
+    required this.selectedCourseName,
+    required this.isLoadingCourses,
+    required this.isSavingCourse,
     required this.goalController,
     required this.selectedPeriod,
     required this.selectedSeriesIndex,
+    required this.onCourseChanged,
+    required this.onEditCourse,
+    required this.onAddCourse,
     required this.onPeriodChanged,
     required this.onSeriesChanged,
   });
@@ -348,16 +606,17 @@ class _CycleFields extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: switch (type) {
         _StudyCycleType.university => [
-          const SectionLabel(label: 'NOME DO CURSO'),
+          const SectionLabel(label: 'CURSO'),
           const SizedBox(height: 8),
-          ConfigTextField(
+          _CoursePicker(
             controller: courseController,
-            validator: (value) {
-              if ((value?.trim() ?? '').isEmpty) {
-                return 'Informe o nome do curso.';
-              }
-              return null;
-            },
+            courseOptions: courseOptions,
+            selectedCourseName: selectedCourseName,
+            isLoadingCourses: isLoadingCourses,
+            isSavingCourse: isSavingCourse,
+            onCourseChanged: onCourseChanged,
+            onEditCourse: onEditCourse,
+            onAddCourse: onAddCourse,
           ),
           const SizedBox(height: 24),
           const SectionLabel(label: 'PERÍODO'),
@@ -418,6 +677,186 @@ class _CycleFields extends StatelessWidget {
           ),
         ],
       },
+    );
+  }
+}
+
+class _CoursePicker extends StatelessWidget {
+  final TextEditingController controller;
+  final List<String> courseOptions;
+  final String? selectedCourseName;
+  final bool isLoadingCourses;
+  final bool isSavingCourse;
+  final ValueChanged<String?> onCourseChanged;
+  final VoidCallback onEditCourse;
+  final VoidCallback onAddCourse;
+
+  const _CoursePicker({
+    required this.controller,
+    required this.courseOptions,
+    required this.selectedCourseName,
+    required this.isLoadingCourses,
+    required this.isSavingCourse,
+    required this.onCourseChanged,
+    required this.onEditCourse,
+    required this.onAddCourse,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoadingCourses) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+        decoration: BoxDecoration(
+          color: AppColors.defaultFieldBackground,
+          borderRadius: BorderRadius.circular(35),
+          border: Border.all(color: AppColors.defaultFieldBorder, width: 1.5),
+        ),
+        child: Row(
+          children: [
+            const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.2,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Carregando cursos...',
+              style: AppTextStyles.bodyRegular.copyWith(
+                color: AppColors.textMuted,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (courseOptions.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ConfigTextField(
+            controller: controller,
+            validator: _validateCourseName,
+          ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _CourseActionButton(
+              icon: Icons.add,
+              label: 'Novo curso',
+              onPressed: isSavingCourse ? null : onAddCourse,
+            ),
+          ),
+        ],
+      );
+    }
+
+    final hasSelectedOption = courseOptions.contains(selectedCourseName);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DropdownButtonFormField<String>(
+          key: ValueKey(
+            'course-${selectedCourseName ?? 'none'}-${courseOptions.length}',
+          ),
+          initialValue: hasSelectedOption ? selectedCourseName : null,
+          menuMaxHeight: 280,
+          hint: Text(
+            'Selecione o curso',
+            style: AppTextStyles.bodyRegular.copyWith(
+              color: AppColors.textMuted,
+            ),
+          ),
+          icon: const Icon(
+            Icons.keyboard_arrow_down,
+            color: AppColors.primary,
+            size: 28,
+          ),
+          decoration: const InputDecoration(
+            contentPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+          ),
+          items: courseOptions.map((courseName) {
+            return DropdownMenuItem(
+              value: courseName,
+              child: Text(
+                courseName,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            );
+          }).toList(),
+          onChanged: isSavingCourse ? null : onCourseChanged,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Selecione ou adicione um curso.';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            _CourseActionButton(
+              icon: Icons.edit_outlined,
+              label: 'Editar',
+              onPressed: isSavingCourse ? null : onEditCourse,
+            ),
+            _CourseActionButton(
+              icon: Icons.add,
+              label: 'Novo curso',
+              onPressed: isSavingCourse ? null : onAddCourse,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String? _validateCourseName(String? value) {
+    if ((value?.trim() ?? '').isEmpty) {
+      return 'Informe o nome do curso.';
+    }
+    return null;
+  }
+}
+
+class _CourseActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+
+  const _CourseActionButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 18),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.primary,
+        minimumSize: const Size(0, 44),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        side: const BorderSide(color: AppColors.primary, width: 1.2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        textStyle: const TextStyle(
+          fontSize: 14,
+          fontFamily: 'Roboto',
+          fontWeight: FontWeight.w800,
+        ),
+      ),
     );
   }
 }
