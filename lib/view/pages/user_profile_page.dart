@@ -27,52 +27,45 @@ class UserProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.surfaceAlt,
       body: SafeArea(
         bottom: false,
-        child: Container(
-          width: double.infinity,
-          decoration: const BoxDecoration(
-            color: AppColors.surfaceAlt,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(34)),
-          ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 23, 24, 48),
-            physics: const ClampingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _ProfileSummaryCard(),
-                const SizedBox(height: 28),
-                const Text(
-                  'CONFIGURAÇÕES',
-                  style: TextStyle(
-                    color: AppColors.textDark,
-                    fontSize: 15,
-                    fontFamily: 'Roboto',
-                    fontWeight: FontWeight.w500,
-                    height: 1.47,
-                  ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 23, 24, 48),
+          physics: const ClampingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _ProfileSummaryCard(),
+              const SizedBox(height: 28),
+              const Text(
+                'CONFIGURAÇÕES',
+                style: TextStyle(
+                  color: AppColors.textDark,
+                  fontSize: 15,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w500,
+                  height: 1.47,
                 ),
-                const SizedBox(height: 14),
-                _SettingsTile(
-                  label: 'Dados pessoais',
-                  icon: Icons.badge_outlined,
-                  iconColor: AppColors.primary,
-                  iconBackgroundColor: const Color(0x4C514EB6),
-                  onTap: () => AppRoutes.toPersonalData(context),
-                ),
-                const SizedBox(height: 18),
-                _SettingsTile(
-                  label: 'Sair',
-                  icon: Icons.logout,
-                  iconColor: const Color(0xFFED2B2B),
-                  iconBackgroundColor: const Color(0x66FF8989),
-                  textColor: const Color(0xFFED2B2B),
-                  onTap: () => _onSignOut(context),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 14),
+              _SettingsTile(
+                label: 'Dados pessoais',
+                icon: Icons.badge_outlined,
+                iconColor: AppColors.primary,
+                iconBackgroundColor: const Color(0x4C514EB6),
+                onTap: () => AppRoutes.toPersonalData(context),
+              ),
+              const SizedBox(height: 18),
+              _SettingsTile(
+                label: 'Sair',
+                icon: Icons.logout,
+                iconColor: const Color(0xFFED2B2B),
+                iconBackgroundColor: const Color(0x66FF8989),
+                textColor: const Color(0xFFED2B2B),
+                onTap: () => _onSignOut(context),
+              ),
+            ],
           ),
         ),
       ),
@@ -279,15 +272,14 @@ class _ProfileAvatar extends StatelessWidget {
     return Container(
       width: 112,
       height: 112,
-      decoration: const ShapeDecoration(
-        gradient: AppGradients.brand,
-        shape: OvalBorder(),
-        shadows: AppShadows.subtle,
+      clipBehavior: Clip.antiAlias,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: AppShadows.subtle,
       ),
-      child: const Icon(
-        Icons.person_outline_rounded,
-        color: AppColors.background,
-        size: 88,
+      child: Image.asset(
+        'lib/view/assets/profile_pic_v2.png',
+        fit: BoxFit.cover,
       ),
     );
   }

@@ -70,6 +70,8 @@ flutter:
     - lib/view/assets/image_discipline_trash.png
     - lib/view/assets/image_white_back.webp
     - lib/view/assets/image_profile_icon.png
+    - lib/view/assets/profile_pic_v2.png
+    - lib/view/assets/highschool_icon.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

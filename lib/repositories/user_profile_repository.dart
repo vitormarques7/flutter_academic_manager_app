@@ -103,7 +103,17 @@ class UserProfileRepository {
     final normalizedStudyCycleId = _normalizeString(studyCycleId);
     if (normalizedStudyCycleId == null) return;
 
-    await _guardFirestoreCall(() {
+    await _guardFirestoreCall(() async {
+      final studyCycleSnapshot = await _studyCyclesCollection(
+        user.uid,
+      ).doc(normalizedStudyCycleId).get();
+
+      if (!studyCycleSnapshot.exists) {
+        throw const UserProfileRepositoryException(
+          'Este ciclo não está disponível para ativação.',
+        );
+      }
+
       return _upsertUserDocument(user.uid, {
         'activeStudyCycleId': normalizedStudyCycleId,
       });
