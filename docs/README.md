@@ -1,13 +1,15 @@
 # Documentacao do Academic Manager App
 
 Este diretorio concentra a documentacao tecnica e funcional do app. A ideia e
-evitar conhecimento espalhado entre telas, comentarios e memoria de implementacao.
+evitar conhecimento espalhado entre telas, comentarios e memoria de
+implementacao.
 
 ## Indice
 
 - [Visao geral do projeto](project_overview.md)
 - [Setup de desenvolvimento](development_setup.md)
 - [Arquitetura](architecture.md)
+- [Camada de dados e servicos](data_layer.md)
 - [Navegacao e fluxos](navigation_and_flows.md)
 - [Firebase e Firestore](firebase.md)
 - [Schema do Firestore](firestore_schema.md)
@@ -17,19 +19,20 @@ evitar conhecimento espalhado entre telas, comentarios e memoria de implementaca
 
 ## Estado atual resumido
 
-- Autenticacao com Firebase Auth.
-- Firestore configurado por usuario em `users/{uid}` e subcolecoes.
-- Tarefas persistem no Firestore via `TaskRepository`, com criacao,
-  edicao, conclusao e exclusao, vinculando `studyCycleId` quando ha ciclo ativo.
-- Setup academico inicial persiste `studyCycles`, `disciplines`, `schedules` e
+- App Flutter para organizacao academica com perfis universitario, ensino medio
+  e estudo independente.
+- Autenticacao com Firebase Auth, e-mail/senha, Google Sign-In quando suportado
+  e recuperacao de senha.
+- Persistencia em Cloud Firestore isolada por usuario no padrao
+  `users/{uid}` e subcolecoes privadas.
+- Setup academico inicial cria ciclo de estudo, disciplinas, horarios e grava
   `activeStudyCycleId`.
-- Disciplinas sao lidas do Firestore na tela `SubjectsPage`; criar disciplina
-  pela tela tambem persiste a disciplina e seus horarios.
-- A tela de agenda/calendario le horarios reais via `ScheduleRepository`,
-  marca dias recorrentes, filtra a grade diaria pelo dia selecionado e permite
-  criar novos horarios.
-- A tela de perfil usa nome/e-mail do Firebase Auth e dados academicos reais do
-  ciclo ativo.
+- Home, disciplinas, tarefas, agenda, perfil e detalhes de disciplina consomem
+  dados reais do Firestore por repositories.
+- Repositories concentram CRUD, streams em tempo real, filtros por ciclo e
+  tratamento de erros de persistencia.
+- Services cuidam de autenticacao, bootstrap de dados do usuario e
+  orquestracao do setup academico.
 - Regras locais do Firestore ficam em `firestore.rules`.
 
 ## Comandos mais usados
@@ -40,3 +43,11 @@ flutter analyze
 flutter test
 flutter run -d chrome
 ```
+
+## Onde olhar primeiro
+
+- Para entender o app como produto: `project_overview.md`.
+- Para entender como o codigo esta dividido: `architecture.md`.
+- Para entender CRUD, repositories, models e services: `data_layer.md`.
+- Para conferir colecoes e campos no Firestore: `firestore_schema.md`.
+- Para testar manualmente os fluxos principais: `manual_testing.md`.

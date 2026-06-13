@@ -31,10 +31,13 @@ Cores principais:
 ```txt
 primary: #514EB6
 background: #F8F9FF
+surface: #FFFFFF
+surfaceAlt: #F4F5FD
 textDark: #191820
 textMedium: #444444
 textLight: #6B6B6B
 textMuted: #656565
+danger: vermelho de alerta
 ```
 
 ## Tipografia
@@ -55,13 +58,32 @@ Estilos principais:
 - `button`: 24, medium.
 - `sectionLabel`: 12, bold, caps lock.
 
+## Tokens visuais
+
+Arquivo:
+
+```txt
+lib/config/theme/app_design_tokens.dart
+```
+
+Use tokens compartilhados para:
+
+- raios;
+- sombras;
+- espacamentos;
+- bordas;
+- superficies.
+
 ## Padroes de layout
 
 - Telas principais usam `SafeArea`.
 - Listas longas usam `SingleChildScrollView`.
 - O comportamento global de scroll vem de `AppScrollBehavior`.
-- Cards usam fundo `#EFF0FB`, borda arredondada e sombra leve.
+- Cards usam superficies claras, bordas suaves e sombra leve.
 - Botoes principais usam roxo com cantos arredondados grandes.
+- Estados vazios usam `EmptyStateCard`.
+- Containers de area de conteudo devem preferir `AppSurface` quando fizer
+  sentido.
 
 ## Componentes comuns
 
@@ -78,32 +100,41 @@ SummaryMetricTile
 ListSectionHeader
 MetadataChip
 EmptyStateCard
+AppSurface
 ```
 
-## Dialogs
+## Dialogs e sheets
 
-Dialogs atuais:
+Dialogs/sheets principais:
 
 - `TaskDialog`
 - `SubjectDialog`
 - `ScheduleDialog`
+- `ScheduleEventDialog`
+- `ScheduleEditorSheet`
+- Dialogs internos de nota, evento e anotacao em `SubjectDetailsPage`
+- Sheets internos de ciclo em `HomePage` e `PersonalDataPage`
 
 Padrao visual:
 
-- Container branco.
-- Borda `#E2E4F0`.
-- Raio de 16 ou mais.
-- Titulo roxo.
+- Container claro.
+- Borda leve.
+- Raio consistente com os tokens.
+- Titulo em destaque.
 - Campos com borda clara.
 - Acoes no rodape.
 - Estados de loading/erro dentro do modal quando ha operacao assincrona.
 
-Observacao: `ScheduleDialog` e usado tanto no setup academico quanto na
-`SchedulePage`. Na agenda, ele exibe tambem o campo de disciplina para criar
+Observacao: `ScheduleDialog` e usado no setup academico. A edicao da grade na
+agenda usa `ScheduleEditorSheet`, que abre dialogs internos para criar/editar
 horarios reais em `users/{uid}/schedules`.
 
 ## Observacoes de consistencia
 
-- Evitar chamadas diretas a cores soltas quando ja houver equivalente em `AppColors`.
+- Evitar chamadas diretas a cores soltas quando ja houver equivalente em
+  `AppColors`.
 - Preferir componentes existentes antes de criar novos.
 - Novos formularios devem manter validacao clara e mensagens em portugues.
+- Novas telas devem tratar loading, erro e estado vazio.
+- Se um widget usa dados em tempo real, mantenha o estado visual previsivel
+  durante reconnect/loading do Firestore.

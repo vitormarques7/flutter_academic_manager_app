@@ -13,9 +13,8 @@ flutter test
 flutter run -d chrome
 ```
 
-Observacao: os testes automatizados atuais cobrem `AuthException`,
-`AcademicTask`, `TaskInput`, `Schedule`, `Discipline`, `StudyCycle` e
-`UserProfile`.
+Observacao: os testes automatizados atuais cobrem models, inputs, excecoes de
+repositories, `AuthException` e helpers de data brasileira.
 
 ## Autenticacao
 
@@ -53,6 +52,7 @@ Resultado esperado:
 - App navega para home.
 - Documento raiz do usuario existe em `users/{uid}` com `displayName`, `email`,
   `createdAt` e `updatedAt` quando esses dados estiverem disponiveis.
+- Se o usuario nao tiver ciclo ativo, o app direciona para selecao de perfil.
 
 ### Recuperacao de senha
 
@@ -71,8 +71,9 @@ Resultado esperado:
 2. Preencher curso.
 3. Escolher periodo no dropdown.
 4. Adicionar disciplina.
-5. Confirmar disciplina.
-6. Salvar e continuar.
+5. Informar dias e horarios.
+6. Confirmar disciplina.
+7. Salvar e continuar.
 
 Resultado esperado:
 
@@ -83,14 +84,15 @@ Resultado esperado:
 - `users/{uid}` recebe `activeStudyCycleId`.
 - Disciplinas sao criadas em `users/{uid}/disciplines`.
 - Horarios informados sao criados em `users/{uid}/schedules` com
-  `studyCycleId`.
+  `studyCycleId` e `disciplineId`.
 
 ### Ensino medio
 
 1. Selecionar perfil ensino medio.
 2. Escolher serie.
 3. Adicionar disciplina.
-4. Salvar e continuar.
+4. Informar horarios.
+5. Salvar e continuar.
 
 Resultado esperado:
 
@@ -103,31 +105,53 @@ Resultado esperado:
 1. Selecionar perfil independente.
 2. Preencher objetivo.
 3. Adicionar disciplinas.
-4. Salvar e continuar.
+4. Informar horarios.
+5. Salvar e continuar.
 
 Resultado esperado:
 
 - Layout permanece responsivo.
 - Objetivo, disciplinas e horarios sao persistidos no Firestore.
 
+## Home
+
+1. Entrar com usuario que possui ciclo ativo.
+2. Criar uma disciplina com horario.
+3. Criar tarefas pendentes, concluidas e com prazo.
+4. Criar uma nota nos detalhes da disciplina.
+5. Criar um evento na agenda ou nos detalhes da disciplina.
+6. Voltar para Home.
+
+Resultado esperado:
+
+- Home mostra saudacao com primeiro nome.
+- Painel usa dados do ciclo ativo.
+- Media reflete notas cadastradas.
+- Proxima aula vem da grade.
+- Tarefas proximas e alertas refletem dados reais.
+- Eventos proximos aparecem no resumo.
+- Menu de ciclo permite trocar o ciclo ativo.
+
 ## Tarefas
 
 ### Criacao valida
 
 1. Fazer login.
-2. Ir para "Suas Tarefas".
-3. Clicar no botao `+`.
-4. Preencher titulo.
-5. Selecionar disciplina.
-6. Informar prazo de hoje ou futuro, ou deixar vazio.
-7. Escolher prioridade visual.
-8. Salvar.
+2. Garantir que ha pelo menos uma disciplina no ciclo ativo.
+3. Ir para "Suas Tarefas".
+4. Clicar no botao `+`.
+5. Preencher titulo.
+6. Selecionar disciplina no dropdown real.
+7. Informar prazo de hoje ou futuro, ou deixar vazio.
+8. Escolher prioridade visual.
+9. Salvar.
 
 Resultado esperado:
 
 - Modal mostra loading.
 - Documento e criado em `users/{uid}/tasks/{taskId}`.
 - Documento recebe `studyCycleId` quando ha ciclo academico ativo.
+- Documento recebe `disciplineId` quando a disciplina veio do Firestore.
 - Tarefa aparece na lista.
 - Resumo de progresso e contadores sao atualizados.
 
@@ -135,8 +159,9 @@ Resultado esperado:
 
 1. Abrir modal de nova tarefa.
 2. Tentar salvar sem titulo.
-3. Tentar salvar com data invalida.
-4. Tentar salvar com data passada.
+3. Tentar salvar sem disciplina.
+4. Tentar salvar com data invalida.
+5. Tentar salvar com data passada.
 
 Resultado esperado:
 
@@ -146,13 +171,24 @@ Resultado esperado:
 ### Edicao
 
 1. Tocar em uma tarefa existente.
-2. Alterar titulo, prazo ou prioridade.
+2. Alterar titulo, prazo, disciplina, descricao ou prioridade.
 3. Salvar.
 
 Resultado esperado:
 
 - Documento existente e atualizado.
 - A tarefa permanece no mesmo usuario.
+- Lista atualiza via stream.
+
+### Conclusao
+
+1. Marcar uma tarefa pendente como concluida.
+2. Desmarcar a mesma tarefa.
+
+Resultado esperado:
+
+- Campo `isChecked` muda no Firestore.
+- Contadores e filtros refletem a mudanca.
 
 ### Exclusao
 
@@ -166,16 +202,6 @@ Resultado esperado:
 - Modal fecha.
 - Tarefa deixa de aparecer na lista.
 
-### Cancelamento
-
-1. Abrir nova tarefa.
-2. Preencher dados.
-3. Clicar em cancelar ou fechar.
-
-Resultado esperado:
-
-- Dados nao sao salvos.
-
 ### Filtros
 
 1. Criar tarefas pendentes e concluidas.
@@ -185,19 +211,9 @@ Resultado esperado:
 
 - Lista muda conforme filtro.
 
-## Firestore/regras
-
-### Revisao de regras
-
-1. Publicar `firestore.rules`.
-2. Criar tarefa com usuario A.
-3. Entrar com usuario B.
-
-Resultado esperado:
-
-- Usuario B nao ve tarefas do usuario A.
-
 ## Disciplinas
+
+### Criacao
 
 1. Ir para "Suas Disciplinas".
 2. Clicar no botao `+`.
@@ -212,36 +228,113 @@ Resultado esperado:
 - Horarios informados sao criados em `users/{uid}/schedules`.
 - Ao reiniciar ou fazer logout/login, a disciplina continua aparecendo.
 
+### Busca
+
+1. Criar disciplinas com nomes e professores diferentes.
+2. Buscar por parte do nome.
+3. Buscar por parte do professor.
+
+Resultado esperado:
+
+- Lista filtra localmente os resultados carregados do ciclo ativo.
+
+### Exclusao
+
+1. Abrir acao de excluir disciplina.
+2. Selecionar uma disciplina que tenha horarios.
+3. Confirmar exclusao.
+
+Resultado esperado:
+
+- Disciplina e removida.
+- Horarios vinculados a ela tambem sao removidos.
+- Agenda deixa de mostrar os horarios daquela disciplina.
+
+## Detalhes de disciplina
+
+1. Abrir uma disciplina.
+2. Criar uma nota.
+3. Criar um evento.
+4. Criar uma anotacao.
+5. Criar uma tarefa para a mesma disciplina pela tela de tarefas.
+6. Voltar aos detalhes da disciplina.
+
+Resultado esperado:
+
+- Nota aparece na secao de avaliacoes e altera a media.
+- Evento aparece na lista de eventos relacionados.
+- Anotacao aparece na lista de anotacoes.
+- Tarefa relacionada aparece nos detalhes.
+- Excluir nota/evento/anotacao remove o documento correspondente.
+
 ## Agenda
 
 1. Ir para agenda.
 2. Navegar entre dias usando setas, swipe ou selecao no calendario.
 3. Selecionar hoje, o dia anterior/proximo e trocar de mes.
 4. Abrir o card "Grade de Horario".
-5. Clicar no botao `+` e criar um novo horario.
+5. Editar a grade criando um horario.
+6. Editar um horario existente.
+7. Excluir um horario existente.
+8. Voltar para o calendario.
+9. Clicar no botao `+` e criar um evento.
 
 Resultado esperado:
 
 - Calendario responde a selecao e permanece em `pt_BR`.
 - Dias recorrentes com horarios salvos exibem marcador no calendario.
-- Ao trocar de dia, a lista mostra apenas horarios daquele dia da semana.
-- Dias sem horario mostram "Nenhum horário para este dia".
+- Eventos exibem marcador no calendario.
+- Ao trocar de dia, a lista mostra apenas horarios daquele dia da semana e
+  eventos daquele dia.
+- Dias sem horario mostram estado vazio.
 - A grade semanal abre em uma nova visualizacao dentro da tela com dados reais.
-- Novo horario e salvo em `users/{uid}/schedules`.
-- Editar grade mostra mensagem de fluxo em desenvolvimento.
+- Criar, editar e excluir horario atualiza `users/{uid}/schedules`.
+- Criar evento salva em `users/{uid}/subjectEvents`.
 
-## Perfil
+## Perfil e dados pessoais
 
 1. Fazer login.
 2. Abrir a tela de perfil.
 3. Conferir nome e e-mail.
 4. Conferir curso/periodo, ano letivo ou meta conforme o perfil cadastrado.
 5. Tocar em "Dados pessoais".
-6. Tocar em "Sair".
+6. Atualizar o nome.
+7. Editar os dados academicos do ciclo ativo.
+8. Ativar outro ciclo, se existir.
+9. Voltar ao perfil e a Home.
+10. Tocar em "Sair".
 
 Resultado esperado:
 
 - Nome e e-mail refletem o usuario autenticado quando disponiveis.
 - Dados academicos refletem o ciclo ativo salvo no Firestore.
-- "Dados pessoais" ainda nao executa acao visivel.
+- Nome atualizado aparece no Firebase Auth e em `users/{uid}`.
+- Alteracoes do ciclo ativo aparecem no perfil/Home.
+- Troca de ciclo altera os dados exibidos nas telas principais.
 - "Sair" desloga e volta para a tela inicial.
+
+## Firestore/regras
+
+### Isolamento por usuario
+
+1. Publicar `firestore.rules`.
+2. Criar dados com usuario A.
+3. Entrar com usuario B.
+
+Resultado esperado:
+
+- Usuario B nao ve dados do usuario A.
+- Tentativas manuais de acessar path de outro usuario devem falhar por
+  `permission-denied`.
+
+### Colecoes cobertas
+
+Validar leitura/escrita nas colecoes:
+
+- `tasks`
+- `schedules`
+- `studyCycles`
+- `disciplines`
+- `assessments`
+- `subjectNotes`
+- `subjectEvents`

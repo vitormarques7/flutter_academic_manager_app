@@ -1,17 +1,51 @@
-# academic_manager_app
+# Academic Manager App
 
-A new Flutter project.
+App Flutter para organizacao academica. O projeto permite acompanhar ciclos de
+estudo, disciplinas, tarefas, agenda, notas, eventos e anotacoes.
 
-## Getting Started
+## Stack
 
-This project is a starting point for a Flutter application.
+- Flutter.
+- Firebase Auth.
+- Cloud Firestore.
+- Google Sign-In.
+- `table_calendar`.
 
-A few resources to get you started if this is your first Flutter project:
+## Rodando localmente
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```bash
+flutter pub get
+flutter analyze
+flutter test
+flutter run -d chrome
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Documentacao
+
+A documentacao principal fica em [`docs/`](docs/README.md).
+
+Leitura recomendada:
+
+- [`docs/project_overview.md`](docs/project_overview.md): visao funcional.
+- [`docs/architecture.md`](docs/architecture.md): divisao de camadas.
+- [`docs/data_layer.md`](docs/data_layer.md): models, repositories, services e
+  CRUD.
+- [`docs/firestore_schema.md`](docs/firestore_schema.md): colecoes e campos do
+  Firestore.
+- [`docs/manual_testing.md`](docs/manual_testing.md): roteiros de validacao.
+
+## Firebase
+
+Os dados privados seguem o padrao:
+
+```txt
+users/{uid}/...
+```
+
+As regras locais ficam em:
+
+```txt
+firestore.rules
+```
+
+Elas permitem acesso somente ao usuario autenticado dono do `{uid}`.

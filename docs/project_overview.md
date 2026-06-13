@@ -1,8 +1,8 @@
 # Visao geral do projeto
 
-O Academic Manager App e um app Flutter para organizacao academica. Ele permite
-que estudantes acompanhem disciplinas, tarefas, agenda e informacoes gerais de
-desempenho.
+O Academic Manager App e um app Flutter para organizacao academica. Ele ajuda o
+estudante a acompanhar ciclos de estudo, disciplinas, tarefas, agenda, notas,
+eventos e anotacoes.
 
 ## Publico-alvo
 
@@ -21,29 +21,44 @@ O app atende tres perfis de estudante:
 - Login com Google quando a plataforma suporta.
 - Recuperacao de senha por e-mail.
 - Controle de sessao via `AuthGatePage`.
+- Criacao/atualizacao automatica do documento `users/{uid}` apos login ou
+  cadastro.
 
 ### Configuracao inicial
 
 Depois do cadastro, o usuario escolhe seu perfil de estudante e passa por uma
 tela de configuracao:
 
-- Universitario: curso, periodo e disciplinas.
-- Ensino medio: serie e disciplinas.
-- Independente: objetivo e disciplinas.
+- Universitario: curso, periodo, disciplinas e horarios.
+- Ensino medio: serie, disciplinas e horarios.
+- Independente: objetivo, disciplinas e horarios.
 
 As telas de configuracao persistem o ciclo academico, disciplinas e horarios no
 Firestore. O ciclo criado tambem passa a ser salvo como `activeStudyCycleId` em
 `users/{uid}`.
 
+### Ciclos de estudo
+
+- O usuario pode ter mais de um ciclo academico.
+- O ciclo ativo fica em `users/{uid}.activeStudyCycleId`.
+- Home, disciplinas, tarefas, agenda e perfil usam o ciclo ativo como contexto.
+- A Home possui seletor de ciclo e entrada para criar novo ciclo.
+- A tela de dados pessoais permite editar dados do ciclo ativo e ativar outro
+  ciclo existente.
+
 ### Home
 
-A home mostra:
+A Home consome dados reais do Firestore para o ciclo ativo:
 
-- Saudacao com primeiro nome do usuario.
-- Card de foco do dia com media, frequencia, proxima aula e tarefas pendentes.
-- Indicadores de media, frequencia e pendencias.
-- Proximas tarefas mockadas.
-- Alertas mockados.
+- Tarefas pendentes/concluidas por `TaskRepository`.
+- Proxima aula por `ScheduleRepository`.
+- Eventos proximos por `SubjectEventRepository`.
+- Media geral por `AssessmentRepository`.
+- Alertas derivados de tarefas atrasadas, entregas de hoje, eventos proximos,
+  grade vazia ou ausencia de notas.
+
+Quando nao ha ciclo ativo, a Home mostra uma chamada para configurar o primeiro
+ciclo de estudos.
 
 ### Disciplinas
 
@@ -52,11 +67,23 @@ A tela de disciplinas usa Firestore em tempo real.
 Ela permite:
 
 - Buscar disciplina por nome ou professor.
-- Ver resumo com total de disciplinas do ciclo ativo.
+- Ver resumo com total de disciplinas, media geral e quantidade de notas.
 - Abrir detalhes da disciplina.
-- Criar uma nova disciplina no Firestore por modal.
-- Informar dias e horarios da disciplina no modal, criando horarios em
+- Criar nova disciplina no Firestore por modal.
+- Informar dias e horarios no modal, criando horarios em
   `users/{uid}/schedules`.
+- Excluir disciplina junto com horarios vinculados.
+
+### Detalhes de disciplina
+
+A tela de detalhes da disciplina usa dados reais relacionados a disciplina:
+
+- Notas em `users/{uid}/assessments`.
+- Tarefas relacionadas em `users/{uid}/tasks`.
+- Eventos em `users/{uid}/subjectEvents`.
+- Anotacoes em `users/{uid}/subjectNotes`.
+
+Ela permite criar e excluir notas, eventos e anotacoes.
 
 ### Tarefas
 
@@ -65,6 +92,8 @@ A tela de tarefas usa Firestore em tempo real.
 Ela permite:
 
 - Listar tarefas do usuario logado.
+- Filtrar pelo ciclo academico ativo.
+- Usar disciplinas reais no dropdown do `TaskDialog`.
 - Ver resumo de progresso, pendencias, tarefas para hoje e tarefas atrasadas.
 - Filtrar por pendentes, concluidas e todas.
 - Criar tarefa.
@@ -83,25 +112,37 @@ A tela de agenda mostra um calendario mensal com `table_calendar`.
 Estado atual:
 
 - O calendario inicia no dia atual.
-- Horarios reais do Firestore marcam os dias recorrentes no calendario.
+- Horarios reais do Firestore marcam dias recorrentes no calendario.
+- Eventos proximos tambem aparecem na agenda.
 - O card "Grade de Horario" abre uma visualizacao semanal com horarios reais.
-- O botao `+` abre o modal real de horario e salva em `users/{uid}/schedules`.
-- A edicao da grade ainda exibe mensagem de "em desenvolvimento".
+- A edicao da grade permite criar, atualizar e excluir horarios via
+  `ScheduleEditorSheet`.
+- O botao `+` na agenda cria eventos academicos em `subjectEvents`.
 
-### Perfil
+### Perfil e dados pessoais
 
 A tela de perfil mostra:
 
-- Nome e e-mail vindos do usuario autenticado no Firebase Auth.
+- Nome e e-mail vindos do Firebase Auth.
 - Dados academicos vindos do ciclo ativo:
   - curso e periodo para universitario;
   - ano letivo para ensino medio;
   - meta para estudante independente.
 - Acao de logout real via `AuthService.signOut`.
-- Tile "Dados pessoais" ainda sem fluxo implementado.
+- Acesso a tela de dados pessoais.
+
+A tela de dados pessoais permite:
+
+- Ver nome, e-mail, ciclo ativo e disciplinas do ciclo.
+- Atualizar o nome do usuario.
+- Editar dados do ciclo ativo.
+- Ativar outro ciclo existente.
 
 ## Funcionalidades ainda pendentes
 
-- Integrar disciplinas reais ao dropdown de tarefas.
-- Trocar cards mockados da home por dados reais.
-- Implementar lembretes de atividade.
+- Validar schemas e campos obrigatorios nas regras do Firestore.
+- Adicionar edicao para notas, eventos e anotacoes; hoje esses fluxos criam e
+  excluem.
+- Expandir testes automatizados para repositories com Firebase fake/mock.
+- Evoluir metricas academicas, como frequencia real e calculos por disciplina.
+- Implementar lembretes de atividade, se o produto seguir por esse caminho.

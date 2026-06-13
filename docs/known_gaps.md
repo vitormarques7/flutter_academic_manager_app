@@ -1,81 +1,111 @@
 # Lacunas conhecidas e proximos passos
 
 Este arquivo registra pontos ainda incompletos para evitar confundir mock,
-prototipo e fluxo real.
+prototipo, fluxo real e melhoria futura.
 
-## Dados ainda mockados ou locais
+## Produto e UX
 
-### Home
+### Metricas academicas
 
-- Card de desempenho e frequencia sao mockados.
-- Proximas tarefas sao mockadas.
-- Alertas sao mockados.
+- A Home ja usa dados reais para tarefas, horarios, eventos e notas.
+- Frequencia ainda nao e calculada a partir de presencas reais.
+- Media geral e media por disciplina usam avaliacoes cadastradas, mas ainda nao
+  consideram pesos, recuperacao, tipos de avaliacao ou regras especificas de
+  cada instituicao.
 
-### Disciplinas
+Proximo passo recomendado: modelar regras de avaliacao/frequencia antes de
+adicionar calculos mais avancados.
 
-- Media e frequencia das disciplinas ainda usam valores iniciais simples.
-- A tela de detalhes da disciplina ainda nao le dados completos do Firestore.
+### Edicao de entidades complementares
 
-### Dropdown de disciplinas em tarefas
+Os fluxos de detalhes de disciplina permitem criar e excluir:
 
-- O dropdown de disciplinas do `TaskDialog` usa lista fixa:
-  - Programacao
-  - Calculo I
-  - Banco de Dados
-  - Inteligencia Artificial
+- notas;
+- eventos;
+- anotacoes.
 
-Proximo passo recomendado: alimentar o dropdown com `DisciplineRepository` e
-filtrar pelo ciclo academico ativo.
+Ainda falta implementar edicao dessas entidades depois de criadas.
 
-### Agenda
+### Lembretes
 
-- Editar grade exibe mensagem de "em desenvolvimento".
+Ainda nao ha lembretes locais ou notificacoes push para:
 
-### Perfil
+- tarefas proximas do prazo;
+- eventos proximos;
+- horarios de aula;
+- rotina de estudo.
 
-- O tile "Dados pessoais" ainda nao abre fluxo de edicao.
+## Persistencia e consistencia
 
-## Persistencia pendente
+### Regras do Firestore
 
-As principais colecoes academicas ja possuem repositories e parte da UI
-integrada. Ainda falta consumir dados reais em telas especificas:
+As regras atuais garantem propriedade por usuario, mas nao validam schema.
 
-- Tarefas: alimentar o dropdown de disciplinas com `DisciplineRepository`.
-- Detalhes de disciplina: carregar dados completos do Firestore.
+Melhorias possiveis:
 
-## Firestore futuro
+- validar campos obrigatorios por colecao;
+- validar tipos;
+- validar ranges, como nota entre 0 e 10;
+- impedir campos inesperados quando o schema estabilizar.
 
-Possiveis caminhos:
+### Operacoes multi-documento
 
-```txt
-users/{uid}/subjects/{subjectId}
-users/{uid}/activityReminders/{reminderId}
-```
+Alguns fluxos escrevem em mais de uma colecao:
 
-Observacao: `subjects` e `activityReminders` ainda nao existem nas regras
-locais. Inclua essas subcolecoes em `firestore.rules` antes de usar.
+- setup academico cria ciclo, disciplinas e horarios;
+- criacao de disciplina pode criar horarios;
+- exclusao de disciplina remove horarios vinculados.
 
-## Regras futuras
+Hoje esses fluxos sao executados sequencialmente em services/pages/repository.
+Se o produto exigir atomicidade mais forte, avaliar batches ou transactions nos
+pontos apropriados.
 
-As regras atuais liberam leitura/escrita para o documento `users/{uid}` e para
-as subcolecoes `tasks`, `schedules`, `studyCycles` e `disciplines` quando o
-usuario autenticado e dono daquele `uid`.
+### Cascatas de exclusao
 
-Quando os schemas amadurecerem, uma melhoria possivel e validar tipos e campos
-obrigatorios nas regras.
+`deleteDisciplineWithSchedules` remove a disciplina e horarios relacionados,
+mas outras entidades relacionadas por `disciplineId` continuam existindo:
+
+- tarefas;
+- avaliacoes;
+- eventos;
+- anotacoes.
+
+Isso pode ser desejado para preservar historico, mas precisa de uma decisao de
+produto. Se a escolha for remover tudo, a cascata deve ser ampliada com cuidado.
 
 ## Testes automatizados
 
 Estado atual:
 
-- Ha teste unitario simples para `AuthException`.
-- Ha testes unitarios para `AcademicTask.fromMap`.
-- Ha testes unitarios para `TaskInput.toCreateMap` e `TaskInput.toUpdateMap`.
+- Testes unitarios para models e inputs principais.
+- Testes de helpers de data.
+- Testes simples para excecoes de repositories.
 
 Proximos testes recomendados:
 
-- Validacao de prazo de tarefa.
-- `TaskRepository` com fake/mock de Firestore.
-- Widget test do `TaskDialog`.
-- Widget test dos fluxos de configuracao inicial.
-- Widget test de exclusao de tarefa.
+- Repositories com fake/mock de Firestore e Firebase Auth.
+- `AcademicSetupService` com fakes para validar orquestracao.
+- `UserDataBootstrapService` para cenarios com e sem ciclo ativo.
+- Widget tests para `TaskDialog`, `SubjectDialog` e `ScheduleEditorSheet`.
+- Widget tests dos fluxos de configuracao inicial.
+- Testes de regressao para troca de ciclo ativo.
+
+## Infraestrutura futura
+
+Possiveis caminhos, ainda nao implementados:
+
+```txt
+users/{uid}/activityReminders/{reminderId}
+users/{uid}/attendanceRecords/{recordId}
+```
+
+Observacao: essas subcolecoes ainda nao existem nas regras locais. Inclua em
+`firestore.rules` e documente em `docs/firestore_schema.md` antes de usar.
+
+## Documentacao futura
+
+Manter estes documentos atualizados junto das features:
+
+- `docs/firestore_schema.md` sempre que uma colecao ou campo mudar.
+- `docs/data_layer.md` sempre que um repository/service novo for criado.
+- `docs/manual_testing.md` sempre que um fluxo de UI mudar.
