@@ -5,19 +5,21 @@ class _DetailsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       height: 64,
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFFE4E4FF), width: 1)),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: colors.divider, width: 1)),
       ),
       child: Row(
         children: [
           const SizedBox(width: 8),
           IconButton(
             onPressed: () => Navigator.of(context).maybePop(),
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios_new_rounded,
-              color: AppColors.textDark,
+              color: colors.textDark,
               size: 28,
             ),
             tooltip: 'Voltar',
@@ -28,6 +30,7 @@ class _DetailsHeader extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.headline3.copyWith(
+                color: colors.textDark,
                 fontWeight: FontWeight.w800,
                 height: 1.1,
                 letterSpacing: 0,
@@ -62,12 +65,12 @@ class _SubjectSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppSurface(
+    final colors = context.appColors;
+
+    return AppSurface.soft(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      gradient: AppGradients.softSurface,
-      border: Border.all(color: AppColors.outline),
-      shadows: AppShadows.card,
+      shadows: colors.cardShadows,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -92,8 +95,8 @@ class _SubjectSummaryCard extends StatelessWidget {
                             name,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppColors.textDark,
+                            style: TextStyle(
+                              color: colors.textDark,
                               fontSize: 22,
                               fontFamily: 'Roboto',
                               fontWeight: FontWeight.w800,
@@ -103,9 +106,9 @@ class _SubjectSummaryCard extends StatelessWidget {
                           const SizedBox(height: 6),
                           Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.person_outline,
-                                color: AppColors.textMuted,
+                                color: colors.textMuted,
                                 size: 18,
                               ),
                               const SizedBox(width: 5),
@@ -114,8 +117,8 @@ class _SubjectSummaryCard extends StatelessWidget {
                                   teacher,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: AppColors.textMuted,
+                                  style: TextStyle(
+                                    color: colors.textMuted,
                                     fontSize: 14,
                                     fontFamily: 'Roboto',
                                     fontWeight: FontWeight.w700,
@@ -180,6 +183,8 @@ class _AverageRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return SizedBox(
       width: 86,
       child: Column(
@@ -196,14 +201,14 @@ class _AverageRing extends StatelessWidget {
                   child: CircularProgressIndicator(
                     value: (average / 10).clamp(0.0, 1.0),
                     strokeWidth: 5,
-                    backgroundColor: AppColors.surface,
+                    backgroundColor: colors.surface,
                     color: _statusColor,
                   ),
                 ),
                 Text(
                   average.toStringAsFixed(1),
-                  style: const TextStyle(
-                    color: AppColors.textDark,
+                  style: TextStyle(
+                    color: colors.textDark,
                     fontSize: 25,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w800,
@@ -214,11 +219,11 @@ class _AverageRing extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 7),
-          const Text(
+          Text(
             'Média',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: AppColors.textMuted,
+              color: colors.textMuted,
               fontSize: 12,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w700,
@@ -238,13 +243,15 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Row(
       children: [
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(
-              color: AppColors.textDark,
+            style: TextStyle(
+              color: colors.textDark,
               fontSize: 22,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w800,
@@ -271,8 +278,10 @@ class _InlineActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Material(
-      color: AppColors.surface,
+      color: colors.surface,
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
@@ -281,9 +290,7 @@ class _InlineActionButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.18),
-            ),
+            border: Border.all(color: colors.primary.withValues(alpha: 0.18)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -386,6 +393,8 @@ class _SubjectEventRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -405,8 +414,8 @@ class _SubjectEventRow extends StatelessWidget {
                       event.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textDark,
+                      style: TextStyle(
+                        color: colors.textDark,
                         fontSize: 15,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w800,
@@ -445,8 +454,8 @@ class _SubjectEventRow extends StatelessWidget {
                         event.description,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
+                        style: TextStyle(
+                          color: colors.textMuted,
                           fontSize: 13,
                           fontFamily: 'Roboto',
                           fontWeight: FontWeight.w600,
@@ -458,7 +467,7 @@ class _SubjectEventRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.chevron_right, color: AppColors.textMuted),
+              Icon(Icons.chevron_right, color: colors.textMuted),
             ],
           ),
         ),
@@ -537,6 +546,8 @@ class _AssessmentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
       child: Row(
@@ -551,8 +562,8 @@ class _AssessmentRow extends StatelessWidget {
                   assessment.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textDark,
+                  style: TextStyle(
+                    color: colors.textDark,
                     fontSize: 15,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w800,
@@ -561,8 +572,8 @@ class _AssessmentRow extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   assessment.displayDateLabel,
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
+                  style: TextStyle(
+                    color: colors.textMuted,
                     fontSize: 12,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w700,
@@ -707,6 +718,8 @@ class _SubjectNoteRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -726,8 +739,8 @@ class _SubjectNoteRow extends StatelessWidget {
                       note.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textDark,
+                      style: TextStyle(
+                        color: colors.textDark,
                         fontSize: 15,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w800,
@@ -738,8 +751,8 @@ class _SubjectNoteRow extends StatelessWidget {
                       note.content,
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textMuted,
+                      style: TextStyle(
+                        color: colors.textMuted,
                         fontSize: 13,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w600,
@@ -750,7 +763,7 @@ class _SubjectNoteRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.chevron_right, color: AppColors.textMuted),
+              Icon(Icons.chevron_right, color: colors.textMuted),
             ],
           ),
         ),
@@ -783,6 +796,8 @@ class _TaskRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -802,7 +817,7 @@ class _TaskRow extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: AppColors.textDark,
+                        color: colors.textDark,
                         fontSize: 15,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w800,
@@ -844,7 +859,7 @@ class _TaskRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.chevron_right, color: AppColors.textMuted),
+              Icon(Icons.chevron_right, color: colors.textMuted),
             ],
           ),
         ),
@@ -877,19 +892,21 @@ class _StatusPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return _PanelCard(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
         child: Row(
           children: [
             const SizedBox(width: 2),
-            Icon(icon, color: AppColors.primary, size: 28),
+            Icon(icon, color: colors.primary, size: 28),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 message,
-                style: const TextStyle(
-                  color: AppColors.textDark,
+                style: TextStyle(
+                  color: colors.textDark,
                   fontSize: 14,
                   fontFamily: 'Roboto',
                   fontWeight: FontWeight.w700,
@@ -908,10 +925,12 @@ class _PanelDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(
+    final colors = context.appColors;
+
+    return Divider(
       height: 1,
       thickness: 1,
-      color: Color(0xFFE2E4F0),
+      color: colors.divider,
       indent: 12,
       endIndent: 12,
     );
@@ -947,13 +966,15 @@ class _GradeBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       width: 54,
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.78),
+        color: colors.surface.withValues(alpha: 0.78),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.32)),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.32)),
       ),
       child: Text(
         label,

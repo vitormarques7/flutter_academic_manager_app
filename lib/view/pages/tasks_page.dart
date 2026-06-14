@@ -405,16 +405,15 @@ class _TasksOverview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final progress = total == 0 ? 0.0 : completed / total;
     final progressPercent = (progress * 100).round();
     final focusText = _focusText();
 
-    return AppSurface(
+    return AppSurface.soft(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      gradient: AppGradients.softSurface,
-      border: Border.all(color: AppColors.outline),
-      shadows: AppShadows.card,
+      shadows: colors.cardShadows,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -430,14 +429,14 @@ class _TasksOverview extends StatelessWidget {
                   child: CircularProgressIndicator(
                     value: progress,
                     strokeWidth: 7,
-                    backgroundColor: Colors.white.withValues(alpha: 0.72),
-                    color: AppColors.primary,
+                    backgroundColor: colors.surface.withValues(alpha: 0.72),
+                    color: colors.primary,
                   ),
                 ),
                 Text(
                   '$progressPercent%',
-                  style: const TextStyle(
-                    color: Color(0xFF191820),
+                  style: TextStyle(
+                    color: colors.textDark,
                     fontSize: 16,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w800,
@@ -456,8 +455,8 @@ class _TasksOverview extends StatelessWidget {
                   focusText,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF191820),
+                  style: TextStyle(
+                    color: colors.textDark,
                     fontSize: 18,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w800,
@@ -471,8 +470,8 @@ class _TasksOverview extends StatelessWidget {
                       : '$completed de $total ${_plural(total, 'tarefa', 'tarefas')} concluídas',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF464552),
+                  style: TextStyle(
+                    color: colors.textMedium,
                     fontSize: 12,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w700,
@@ -535,6 +534,7 @@ class _GroupedTaskList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final groups = _TaskTimelineGroup.fromTasks(tasks);
 
     return Column(
@@ -545,8 +545,8 @@ class _GroupedTaskList extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 10),
             child: Text(
               group.label,
-              style: const TextStyle(
-                color: AppColors.textMedium,
+              style: TextStyle(
+                color: colors.textMedium,
                 fontSize: 12,
                 fontFamily: 'Roboto',
                 fontWeight: FontWeight.w900,
@@ -646,10 +646,11 @@ class _TaskInsightPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final foreground = isAlert ? const Color(0xFF9A3412) : AppColors.primary;
+    final colors = context.appColors;
+    final foreground = isAlert ? colors.warning : colors.primary;
     final background = isAlert
-        ? const Color(0xFFFFF3E8)
-        : Colors.white.withValues(alpha: 0.76);
+        ? colors.warningSurface
+        : colors.surface.withValues(alpha: 0.76);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
@@ -657,7 +658,9 @@ class _TaskInsightPill extends StatelessWidget {
         color: background,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: isAlert ? const Color(0xFFFFD6AD) : const Color(0xFFE2E4F0),
+          color: isAlert
+              ? colors.warning.withValues(alpha: 0.26)
+              : colors.outline,
         ),
       ),
       child: Row(
@@ -668,9 +671,7 @@ class _TaskInsightPill extends StatelessWidget {
           Text(
             '$value $label',
             style: TextStyle(
-              color: isAlert
-                  ? const Color(0xFF7C2D12)
-                  : const Color(0xFF464552),
+              color: isAlert ? colors.warning : colors.textMedium,
               fontSize: 11,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w800,
@@ -700,12 +701,14 @@ class _TaskFilterTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return AppSurface(
       height: 46,
       padding: const EdgeInsets.all(4),
-      color: AppColors.surface,
-      border: Border.all(color: AppColors.outline),
-      shadows: AppShadows.subtle,
+      color: colors.surface,
+      border: Border.all(color: colors.outline),
+      shadows: colors.subtleShadows,
       borderRadius: AppRadius.md,
       child: Row(
         children: _filters.map((filter) {
@@ -719,14 +722,14 @@ class _TaskFilterTabs extends StatelessWidget {
                 curve: Curves.easeOut,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : Colors.transparent,
+                  color: isSelected ? colors.primary : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: isSelected
-                      ? const [
+                      ? [
                           BoxShadow(
-                            color: Color(0x33587DBD),
+                            color: colors.primary.withValues(alpha: 0.22),
                             blurRadius: 8,
-                            offset: Offset(0, 3),
+                            offset: const Offset(0, 3),
                           ),
                         ]
                       : null,
@@ -736,7 +739,9 @@ class _TaskFilterTabs extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: isSelected ? Colors.white : const Color(0xFF464552),
+                    color: isSelected
+                        ? colors.textOnPrimary
+                        : colors.textMedium,
                     fontSize: 12,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w800,

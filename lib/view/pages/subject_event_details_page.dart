@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../config/theme/app_colors.dart';
-import '../../config/theme/app_design_tokens.dart';
+import '../../config/theme/app_theme_colors.dart';
 import '../../models/subject_event.dart';
 import '../widgets/common/app_surface.dart';
 import '../widgets/common/metadata_chip.dart';
@@ -88,6 +87,7 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final disciplineLabel = widget.event.disciplineName.isEmpty
         ? 'Sem disciplina'
         : widget.event.disciplineName;
@@ -122,8 +122,8 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
                         widget.event.description.isEmpty
                             ? 'Nenhuma descrição cadastrada para este evento.'
                             : widget.event.description,
-                        style: const TextStyle(
-                          color: AppColors.textDark,
+                        style: TextStyle(
+                          color: colors.textDark,
                           fontSize: 14,
                           fontFamily: 'Roboto',
                           fontWeight: FontWeight.w600,
@@ -200,10 +200,12 @@ class _EventDetailsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       height: 64,
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFFE4E4FF), width: 1)),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: colors.divider, width: 1)),
       ),
       child: Row(
         children: [
@@ -211,19 +213,19 @@ class _EventDetailsHeader extends StatelessWidget {
           IconButton(
             tooltip: 'Voltar',
             onPressed: onBack,
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios_new_rounded,
-              color: AppColors.textDark,
+              color: colors.textDark,
               size: 28,
             ),
           ),
-          const Expanded(
+          Expanded(
             child: Text(
               'Detalhes do evento',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: AppColors.textDark,
+                color: colors.textDark,
                 fontSize: 25,
                 fontFamily: 'Roboto',
                 fontWeight: FontWeight.w800,
@@ -257,11 +259,11 @@ class _EventHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppSurface(
+    final colors = context.appColors;
+
+    return AppSurface.soft(
       padding: const EdgeInsets.all(16),
-      gradient: AppGradients.softSurface,
-      border: Border.all(color: AppColors.outline),
-      shadows: AppShadows.card,
+      shadows: colors.cardShadows,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -275,8 +277,8 @@ class _EventHeroCard extends StatelessWidget {
                   title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textDark,
+                  style: TextStyle(
+                    color: colors.textDark,
                     fontSize: 24,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w800,
@@ -326,6 +328,8 @@ class _EventInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return AppSurface.card(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -337,8 +341,8 @@ class _EventInfoSection extends StatelessWidget {
               const SizedBox(width: 10),
               Text(
                 title,
-                style: const TextStyle(
-                  color: AppColors.textDark,
+                style: TextStyle(
+                  color: colors.textDark,
                   fontSize: 17,
                   fontFamily: 'Roboto',
                   fontWeight: FontWeight.w800,
