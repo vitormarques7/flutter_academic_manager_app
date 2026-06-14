@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
 
 class AppTextStyles {
   AppTextStyles._();
@@ -12,7 +11,6 @@ class AppTextStyles {
     fontFamily: _font,
     fontSize: 36,
     fontWeight: FontWeight.w800,
-    color: AppColors.textDark,
     letterSpacing: _letterSpacing,
   );
 
@@ -20,7 +18,6 @@ class AppTextStyles {
     fontFamily: _font,
     fontSize: 28,
     fontWeight: FontWeight.w800,
-    color: AppColors.textDark,
     letterSpacing: _letterSpacing,
   );
 
@@ -28,7 +25,6 @@ class AppTextStyles {
     fontFamily: _font,
     fontSize: 22,
     fontWeight: FontWeight.w800,
-    color: AppColors.textDark,
     letterSpacing: _letterSpacing,
   );
 
@@ -37,7 +33,6 @@ class AppTextStyles {
     fontFamily: _font,
     fontSize: 16,
     fontWeight: FontWeight.w800,
-    color: AppColors.textMedium,
     letterSpacing: _letterSpacing,
     height: 1.38,
   );
@@ -46,7 +41,6 @@ class AppTextStyles {
     fontFamily: _font,
     fontSize: 16,
     fontWeight: FontWeight.w500,
-    color: AppColors.textLight,
     letterSpacing: _letterSpacing,
     height: 1.38,
   );
@@ -64,7 +58,6 @@ class AppTextStyles {
     fontFamily: _font,
     fontSize: 12,
     fontWeight: FontWeight.w700,
-    color: AppColors.textMedium,
     letterSpacing: 0.7,
   );
 
@@ -82,7 +75,6 @@ class AppTextStyles {
     fontFamily: _font,
     fontSize: 16,
     fontWeight: FontWeight.w400,
-    color: AppColors.textMuted,
     letterSpacing: _letterSpacing,
   );
 
@@ -91,7 +83,6 @@ class AppTextStyles {
     fontFamily: _font,
     fontSize: 24,
     fontWeight: FontWeight.w700,
-    color: AppColors.textOnPrimary,
     letterSpacing: _letterSpacing,
   );
 
@@ -99,7 +90,6 @@ class AppTextStyles {
     fontFamily: _font,
     fontSize: 14,
     fontWeight: FontWeight.w400,
-    color: AppColors.textOnPrimary,
     letterSpacing: _letterSpacing,
   );
 }

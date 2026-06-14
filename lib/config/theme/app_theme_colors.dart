@@ -144,7 +144,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
 
   static const AppThemeColors dark = AppThemeColors(
     primary: Color(0xFF9B99FF),
-    primaryDark: Color(0xFF7774E8),
+    primaryDark: Color(0xFF625EE0),
     primarySoft: Color(0xFF272553),
     primarySurface: Color(0xFF232145),
     background: Color(0xFF10121A),
@@ -183,7 +183,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     brandGradient: LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [Color(0xFF8F8DFA), Color(0xFF6865D9)],
+      colors: [Color(0xFF5F5BDC), Color(0xFF4541B5)],
     ),
     subtleShadows: [
       BoxShadow(color: Color(0x26000000), blurRadius: 2, offset: Offset(0, 1)),
