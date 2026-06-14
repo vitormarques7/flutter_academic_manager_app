@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_design_tokens.dart';
+import '../../../config/theme/app_theme_colors.dart';
 import 'app_surface.dart';
 
 class SummaryMetricTile extends StatelessWidget {
@@ -17,6 +17,8 @@ class SummaryMetricTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return AppSurface.card(
       height: 92,
       padding: const EdgeInsets.all(12),
@@ -27,21 +29,19 @@ class SummaryMetricTile extends StatelessWidget {
             width: 26,
             height: 26,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.10),
+              color: colors.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppRadius.xs),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.12),
-              ),
+              border: Border.all(color: colors.primary.withValues(alpha: 0.16)),
             ),
-            child: Icon(icon, color: AppColors.primary, size: 17),
+            child: Icon(icon, color: colors.primary, size: 17),
           ),
           const Spacer(),
           Text(
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.textDark,
+            style: TextStyle(
+              color: colors.textDark,
               fontSize: 20,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w800,
@@ -53,8 +53,8 @@ class SummaryMetricTile extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.textMedium,
+            style: TextStyle(
+              color: colors.textMedium,
               fontSize: 10.5,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w700,

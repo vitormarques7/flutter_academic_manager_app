@@ -4,9 +4,12 @@ import '../../config/routes/app_routes.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_design_tokens.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../../config/theme/app_theme_colors.dart';
+import '../../config/theme/theme_controller_scope.dart';
 import '../../models/study_cycle.dart';
 import '../../repositories/study_cycle_repository.dart';
 import '../../repositories/user_profile_repository.dart';
+import '../widgets/common/theme_mode_selector_sheet.dart';
 
 class UserProfilePage extends StatelessWidget {
   const UserProfilePage({super.key});
@@ -24,10 +27,25 @@ class UserProfilePage extends StatelessWidget {
     }
   }
 
+  Future<void> _openAppearanceSheet(BuildContext context) async {
+    final themeController = ThemeControllerScope.of(context);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return ThemeModeSelectorSheet(controller: themeController);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final themeController = ThemeControllerScope.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.surfaceAlt,
+      backgroundColor: colors.surfaceAlt,
       body: SafeArea(
         bottom: false,
         child: SingleChildScrollView(
@@ -38,10 +56,10 @@ class UserProfilePage extends StatelessWidget {
             children: [
               _ProfileSummaryCard(),
               const SizedBox(height: 28),
-              const Text(
+              Text(
                 'CONFIGURAÇÕES',
                 style: TextStyle(
-                  color: AppColors.textDark,
+                  color: colors.textDark,
                   fontSize: 15,
                   fontFamily: 'Roboto',
                   fontWeight: FontWeight.w500,
@@ -52,9 +70,18 @@ class UserProfilePage extends StatelessWidget {
               _SettingsTile(
                 label: 'Dados pessoais',
                 icon: Icons.badge_outlined,
-                iconColor: AppColors.primary,
-                iconBackgroundColor: const Color(0x4C514EB6),
+                iconColor: colors.primary,
+                iconBackgroundColor: colors.primary.withValues(alpha: 0.18),
                 onTap: () => AppRoutes.toPersonalData(context),
+              ),
+              const SizedBox(height: 18),
+              _SettingsTile(
+                label: 'Aparência',
+                subtitle: _themeModeLabel(themeController.themeMode),
+                icon: Icons.dark_mode_outlined,
+                iconColor: colors.primary,
+                iconBackgroundColor: colors.primary.withValues(alpha: 0.16),
+                onTap: () => _openAppearanceSheet(context),
               ),
               const SizedBox(height: 18),
               _SettingsTile(
@@ -71,6 +98,14 @@ class UserProfilePage extends StatelessWidget {
       ),
     );
   }
+
+  String _themeModeLabel(ThemeMode mode) {
+    return switch (mode) {
+      ThemeMode.system => 'Sistema',
+      ThemeMode.light => 'Claro',
+      ThemeMode.dark => 'Escuro',
+    };
+  }
 }
 
 class _ProfileSummaryCard extends StatelessWidget {
@@ -81,6 +116,7 @@ class _ProfileSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final user = AuthService().currentUser;
     final displayName = user?.displayName?.trim();
     final email = user?.email?.trim();
@@ -88,10 +124,10 @@ class _ProfileSummaryCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(color: AppColors.outline),
-        boxShadow: AppShadows.card,
+        border: Border.all(color: colors.outline),
+        boxShadow: colors.cardShadows,
       ),
       padding: const EdgeInsets.fromLTRB(24, 18, 24, 26),
       child: Column(
@@ -100,11 +136,8 @@ class _ProfileSummaryCard extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: IconButton(
               onPressed: () => Navigator.of(context).maybePop(),
-              icon: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: AppColors.textDark,
-                size: 32,
-              ),
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 32),
+              color: colors.textDark,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints.tightFor(width: 48, height: 48),
               tooltip: 'Voltar',
@@ -119,6 +152,7 @@ class _ProfileSummaryCard extends StatelessWidget {
                 : displayName,
             textAlign: TextAlign.center,
             style: AppTextStyles.headline2.copyWith(
+              color: colors.textDark,
               fontSize: 28,
               height: 1.08,
               letterSpacing: 0,
@@ -134,7 +168,7 @@ class _ProfileSummaryCard extends StatelessWidget {
             email == null || email.isEmpty ? 'E-mail não disponível' : email,
             textAlign: TextAlign.center,
             style: AppTextStyles.bodyRegular.copyWith(
-              color: AppColors.textDark,
+              color: colors.textDark,
               fontSize: 15,
               letterSpacing: 0,
             ),
@@ -292,22 +326,24 @@ class _ProfileInfoPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       width: double.infinity,
       constraints: const BoxConstraints(maxWidth: 296, minHeight: 54),
       alignment: Alignment.center,
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppColors.outline),
-        boxShadow: AppShadows.subtle,
+        border: Border.all(color: colors.outline),
+        boxShadow: colors.subtleShadows,
       ),
       child: Text(
         label,
         textAlign: TextAlign.center,
         style: AppTextStyles.bodyRegular.copyWith(
-          color: AppColors.textDark,
+          color: colors.textDark,
           fontSize: 15,
           letterSpacing: 0,
         ),
@@ -318,6 +354,7 @@ class _ProfileInfoPill extends StatelessWidget {
 
 class _SettingsTile extends StatelessWidget {
   final String label;
+  final String? subtitle;
   final IconData icon;
   final Color iconColor;
   final Color iconBackgroundColor;
@@ -326,6 +363,7 @@ class _SettingsTile extends StatelessWidget {
 
   const _SettingsTile({
     required this.label,
+    this.subtitle,
     required this.icon,
     required this.iconColor,
     required this.iconBackgroundColor,
@@ -335,17 +373,22 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final effectiveTextColor = textColor == AppColors.textDark
+        ? colors.textDark
+        : textColor;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: double.infinity,
         height: 74,
         decoration: ShapeDecoration(
-          color: AppColors.surface,
+          color: colors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
-          shadows: AppShadows.subtle,
+          shadows: colors.subtleShadows,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 17),
         child: Row(
@@ -361,14 +404,36 @@ class _SettingsTile extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                label,
-                style: AppTextStyles.bodyRegular.copyWith(
-                  color: textColor,
-                  fontSize: 20,
-                  height: 1.1,
-                  letterSpacing: 0,
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodyRegular.copyWith(
+                      color: effectiveTextColor,
+                      fontSize: 20,
+                      height: 1.1,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.bodyRegular.copyWith(
+                        color: colors.textMuted,
+                        fontSize: 13,
+                        height: 1.1,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],

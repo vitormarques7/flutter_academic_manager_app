@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../config/theme/app_theme_colors.dart';
+
 class CancelButton extends StatelessWidget {
   final VoidCallback? onTap;
 
@@ -7,18 +9,20 @@ class CancelButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Center(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap ?? () => Navigator.of(context).maybePop(),
           borderRadius: BorderRadius.circular(8),
-          child: const Padding(
-            padding: EdgeInsets.all(10),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
             child: Text(
               'Cancelar',
               style: TextStyle(
-                color: Colors.black,
+                color: colors.textDark,
                 fontSize: 20,
                 fontFamily: 'Roboto',
                 fontWeight: FontWeight.w700,

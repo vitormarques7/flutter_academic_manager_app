@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_design_tokens.dart';
 import '../../../config/theme/app_text_styles.dart';
+import '../../../config/theme/app_theme_colors.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String label;
@@ -33,6 +34,13 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final effectiveBackgroundColor = backgroundColor == AppColors.primary
+        ? colors.primary
+        : backgroundColor;
+    final effectiveTextColor = textColor == AppColors.textOnPrimary
+        ? colors.textOnPrimary
+        : textColor;
     final bool effectiveDisabled = isDisabled || isLoading;
     final VoidCallback? effectiveOnPressed = effectiveDisabled
         ? null
@@ -40,11 +48,11 @@ class PrimaryButton extends StatelessWidget {
 
     return Material(
       color: effectiveDisabled
-          ? backgroundColor.withValues(alpha: 0.5)
-          : backgroundColor,
+          ? effectiveBackgroundColor.withValues(alpha: 0.5)
+          : effectiveBackgroundColor,
       borderRadius: BorderRadius.circular(borderRadius),
       clipBehavior: Clip.antiAlias,
-      shadowColor: backgroundColor.withValues(alpha: 0.24),
+      shadowColor: effectiveBackgroundColor.withValues(alpha: 0.24),
       elevation: effectiveDisabled ? 0 : 2,
       child: InkWell(
         onTap: effectiveOnPressed,
@@ -66,7 +74,7 @@ class PrimaryButton extends StatelessWidget {
                 ? null
                 : [
                     BoxShadow(
-                      color: backgroundColor.withValues(alpha: 0.24),
+                      color: effectiveBackgroundColor.withValues(alpha: 0.24),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -82,7 +90,9 @@ class PrimaryButton extends StatelessWidget {
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(textColor),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          effectiveTextColor,
+                        ),
                       ),
                     )
                   : Text(
@@ -90,7 +100,7 @@ class PrimaryButton extends StatelessWidget {
                       style:
                           textStyle ??
                           AppTextStyles.button.copyWith(
-                            color: textColor,
+                            color: effectiveTextColor,
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
                           ),

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../config/theme/app_design_tokens.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../../config/theme/app_theme_colors.dart';
 import '../widgets/common/app_logo.dart';
 import '../widgets/buttons/primary_button.dart';
 import '../widgets/buttons/secondary_button.dart';
@@ -53,9 +54,10 @@ class _WelcomePageState extends State<WelcomePage> {
   @override
   Widget build(BuildContext context) {
     final showGoogleSignIn = _authService.isGoogleSignInSupported;
+    final colors = context.appColors;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -95,6 +97,8 @@ class _WelcomeHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: 1),
       duration: const Duration(milliseconds: 760),
@@ -115,7 +119,7 @@ class _WelcomeHero extends StatelessWidget {
             'Tudo que você precisa para uma boa organização dos seus estudos em um só lugar',
             textAlign: TextAlign.center,
             style: AppTextStyles.bodyBold.copyWith(
-              color: AppColors.textLight,
+              color: colors.textLight,
               fontSize: 15,
               height: 1.35,
             ),
@@ -131,7 +135,9 @@ class _WelcomeTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final titleStyle = AppTextStyles.headline1.copyWith(
+      color: colors.textDark,
       height: 1.04,
       fontSize: 34,
     );
@@ -141,7 +147,7 @@ class _WelcomeTitle extends StatelessWidget {
         Text('Boas Vindas ao', textAlign: TextAlign.center, style: titleStyle),
         _PlatinumShimmerText(
           text: 'Nexo Estudos',
-          style: titleStyle.copyWith(color: AppColors.primary),
+          style: titleStyle.copyWith(color: colors.primary),
         ),
       ],
     );
