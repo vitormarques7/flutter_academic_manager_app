@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../config/scroll/app_scroll_behavior.dart';
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_theme_colors.dart';
 import '../../models/discipline.dart';
 import '../../models/schedule.dart';
 import '../../models/study_cycle.dart';
@@ -51,6 +52,8 @@ class _SchedulePageState extends State<SchedulePage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return FutureBuilder<_ActiveStudyCycleInfo>(
       future: _activeStudyCycleInfoFuture,
       builder: (context, activeCycleSnapshot) {
@@ -133,7 +136,7 @@ class _SchedulePageState extends State<SchedulePage> {
                     );
 
                     return Scaffold(
-                      backgroundColor: AppColors.background,
+                      backgroundColor: colors.background,
                       body: SafeArea(
                         child: Stack(
                           children: [
@@ -845,12 +848,12 @@ class _ScheduleLoadingScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.background,
+    final colors = context.appColors;
+
+    return Scaffold(
+      backgroundColor: colors.background,
       body: SafeArea(
-        child: Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
+        child: Center(child: CircularProgressIndicator(color: colors.primary)),
       ),
     );
   }
@@ -863,8 +866,10 @@ class _ScheduleErrorScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -874,9 +879,9 @@ class _ScheduleErrorScaffold extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: 360),
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                color: const Color(0xFFEFF0FB),
+                color: colors.surfaceTint,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFFE2E4F0)),
+                border: Border.all(color: colors.outline),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,

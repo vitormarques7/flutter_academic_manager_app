@@ -279,7 +279,7 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 1,
         onTap: (index) => _onBottomNavTap(context, index),

@@ -7,6 +7,7 @@ import '../../repositories/task_repository.dart';
 import '../../repositories/user_profile_repository.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_design_tokens.dart';
+import '../../config/theme/app_theme_colors.dart';
 import '../widgets/common/app_surface.dart';
 import '../widgets/common/page_header.dart';
 import '../widgets/cards/task_card.dart';
@@ -185,8 +186,10 @@ class _TasksPageState extends State<TasksPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: Stack(
           children: [

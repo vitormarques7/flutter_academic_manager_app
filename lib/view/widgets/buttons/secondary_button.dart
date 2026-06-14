@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_design_tokens.dart';
 import '../../../config/theme/app_text_styles.dart';
+import '../../../config/theme/app_theme_colors.dart';
 
 class SecondaryButton extends StatelessWidget {
   final String label;
@@ -37,6 +38,16 @@ class SecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final effectiveBackgroundColor = backgroundColor == AppColors.background
+        ? colors.background
+        : backgroundColor;
+    final effectiveBorderColor = borderColor == AppColors.primary
+        ? colors.primary
+        : borderColor;
+    final effectiveTextColor = textColor == AppColors.textDark
+        ? colors.textDark
+        : textColor;
     final bool effectiveDisabled = isDisabled || isLoading;
     final VoidCallback? effectiveOnPressed = effectiveDisabled
         ? null
@@ -44,12 +55,12 @@ class SecondaryButton extends StatelessWidget {
 
     return Material(
       color: effectiveDisabled
-          ? backgroundColor.withValues(alpha: 0.5)
-          : backgroundColor,
+          ? effectiveBackgroundColor.withValues(alpha: 0.5)
+          : effectiveBackgroundColor,
       borderRadius: BorderRadius.circular(borderRadius),
       clipBehavior: Clip.antiAlias,
       elevation: effectiveDisabled ? 0 : 1,
-      shadowColor: borderColor.withValues(alpha: 0.10),
+      shadowColor: effectiveBorderColor.withValues(alpha: 0.10),
       child: InkWell(
         onTap: effectiveOnPressed,
         borderRadius: BorderRadius.circular(borderRadius),
@@ -60,7 +71,7 @@ class SecondaryButton extends StatelessWidget {
           decoration: ShapeDecoration(
             color: backgroundGradient == null ? Colors.transparent : null,
             shape: RoundedRectangleBorder(
-              side: BorderSide(width: 1.4, color: borderColor),
+              side: BorderSide(width: 1.4, color: effectiveBorderColor),
               borderRadius: BorderRadius.circular(borderRadius),
             ),
             gradient: effectiveDisabled ? null : backgroundGradient,
@@ -68,7 +79,7 @@ class SecondaryButton extends StatelessWidget {
                 ? null
                 : [
                     BoxShadow(
-                      color: borderColor.withValues(alpha: 0.12),
+                      color: effectiveBorderColor.withValues(alpha: 0.12),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),
@@ -84,7 +95,9 @@ class SecondaryButton extends StatelessWidget {
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(textColor),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          effectiveTextColor,
+                        ),
                       ),
                     )
                   : Text(
@@ -92,7 +105,7 @@ class SecondaryButton extends StatelessWidget {
                       style:
                           textStyle ??
                           AppTextStyles.button.copyWith(
-                            color: textColor,
+                            color: effectiveTextColor,
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
                           ),

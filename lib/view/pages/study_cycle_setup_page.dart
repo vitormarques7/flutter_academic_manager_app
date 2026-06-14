@@ -360,7 +360,7 @@ class _StudyCycleSetupPageState extends State<StudyCycleSetupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Form(
           key: _formKey,

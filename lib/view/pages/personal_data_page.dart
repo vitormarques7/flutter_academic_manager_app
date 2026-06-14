@@ -177,7 +177,7 @@ class _PersonalDataPageState extends State<PersonalDataPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: FutureBuilder<_PersonalData>(
           future: _personalDataFuture,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:academic_manager_app/services/auth/auth_service.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../../config/theme/app_theme_colors.dart';
 import '../../config/routes/app_routes.dart';
 import '../widgets/auth/animated_auth_panel.dart';
 import '../widgets/buttons/primary_button.dart';
@@ -89,8 +90,10 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       body: Stack(
         children: [
           Column(
@@ -107,7 +110,10 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   child: Text(
                     'Bem vindo\nde volta',
-                    style: AppTextStyles.headline1.copyWith(height: 1.04),
+                    style: AppTextStyles.headline1.copyWith(
+                      color: colors.textDark,
+                      height: 1.04,
+                    ),
                   ),
                 ),
               ),
@@ -116,13 +122,9 @@ class _LoginPageState extends State<LoginPage> {
                 child: AnimatedAuthPanel(
                   child: Container(
                     width: double.infinity,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [AppColors.primary, AppColors.primaryDark],
-                      ),
-                      borderRadius: BorderRadius.vertical(
+                    decoration: BoxDecoration(
+                      gradient: colors.brandGradient,
+                      borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(34),
                       ),
                     ),

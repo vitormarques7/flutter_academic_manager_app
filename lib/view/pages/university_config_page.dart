@@ -67,7 +67,7 @@ class _UniversityConfigPageState extends State<UniversityConfigPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Form(
           key: formKey,

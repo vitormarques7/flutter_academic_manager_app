@@ -93,7 +93,7 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
         : widget.event.disciplineName;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [

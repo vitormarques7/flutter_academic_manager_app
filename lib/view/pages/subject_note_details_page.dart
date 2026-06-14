@@ -81,7 +81,7 @@ class _SubjectNoteDetailsPageState extends State<SubjectNoteDetailsPage> {
         : widget.note.disciplineName;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
