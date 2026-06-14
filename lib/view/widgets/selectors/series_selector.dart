@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_text_styles.dart';
+import '../../../config/theme/app_theme_colors.dart';
 
 class SeriesSelector extends StatelessWidget {
   final int selectedIndex;
@@ -14,6 +14,7 @@ class SeriesSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final options = ['1º Ano', '2º Ano', '3º Ano', '4º Ano'];
 
     return Wrap(
@@ -30,20 +31,16 @@ class SeriesSelector extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
-                // O PROJECT_CONTEXT cita AppColors.chipSelected e chipUnselected.
-                // Se não existirem, utilize as cores diretas do Figma: 0xFF514EB6 e 0xFFEFF4FF
-                color: isSelected ? AppColors.primary : const Color(0xFFEFF4FF),
+                color: isSelected ? colors.primary : colors.chipUnselected,
                 border: Border.all(
-                  color: isSelected
-                      ? AppColors.primary
-                      : const Color(0xFFC7C4D8),
+                  color: isSelected ? colors.primary : colors.outlineStrong,
                 ),
                 borderRadius: BorderRadius.circular(9999),
               ),
               child: Text(
                 options[index],
                 style: AppTextStyles.bodyRegular.copyWith(
-                  color: isSelected ? Colors.white : AppColors.textDark,
+                  color: isSelected ? colors.textOnPrimary : colors.textDark,
                   fontFamily: 'Roboto',
                 ),
               ),

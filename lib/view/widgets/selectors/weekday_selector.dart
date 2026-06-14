@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_text_styles.dart';
+import '../../../config/theme/app_theme_colors.dart';
 
 class WeekdaySelector extends StatelessWidget {
   final Set<int> selectedIndexes;
@@ -14,6 +14,7 @@ class WeekdaySelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final options = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
 
     return Wrap(
@@ -32,18 +33,16 @@ class WeekdaySelector extends StatelessWidget {
               height: 34,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF7B79BF) : Colors.white,
+                color: isSelected ? colors.primary : colors.surface,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: isSelected
-                      ? const Color(0xFF7B79BF)
-                      : AppColors.textMuted,
+                  color: isSelected ? colors.primary : colors.outlineStrong,
                 ),
               ),
               child: Text(
                 options[index],
                 style: AppTextStyles.bodyRegular.copyWith(
-                  color: Colors.black,
+                  color: isSelected ? colors.textOnPrimary : colors.textDark,
                   fontSize: 12,
                   height: 1,
                 ),

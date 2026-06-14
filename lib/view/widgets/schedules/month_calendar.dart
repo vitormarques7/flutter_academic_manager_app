@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
-import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_theme_colors.dart';
 import 'schedule_models.dart';
 
 class MonthCalendar extends StatelessWidget {
@@ -22,6 +22,22 @@ class MonthCalendar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final weekdayStyle = TextStyle(
+      color: colors.textMedium,
+      fontSize: 15,
+      fontFamily: 'Roboto',
+      fontWeight: FontWeight.w400,
+      height: 1.1,
+    );
+    final dayStyle = TextStyle(
+      color: colors.textDark,
+      fontSize: 15,
+      fontFamily: 'Roboto',
+      fontWeight: FontWeight.w400,
+      height: 1,
+    );
+
     return TableCalendar<ScheduleCalendarMarker>(
       locale: 'pt_BR',
       firstDay: DateTime.utc(2020, 1, 1),
@@ -46,23 +62,23 @@ class MonthCalendar extends StatelessWidget {
       },
       daysOfWeekStyle: DaysOfWeekStyle(
         dowTextFormatter: (date, locale) => _weekdayLabel(date),
-        weekdayStyle: _weekdayStyle,
-        weekendStyle: _weekdayStyle,
+        weekdayStyle: weekdayStyle,
+        weekendStyle: weekdayStyle,
       ),
-      calendarStyle: const CalendarStyle(
+      calendarStyle: CalendarStyle(
         outsideDaysVisible: true,
         cellMargin: EdgeInsets.zero,
         cellPadding: EdgeInsets.zero,
-        defaultTextStyle: _dayStyle,
-        weekendTextStyle: _dayStyle,
-        outsideTextStyle: _outsideDayStyle,
-        selectedTextStyle: _selectedDayStyle,
-        todayTextStyle: _dayStyle,
+        defaultTextStyle: dayStyle,
+        weekendTextStyle: dayStyle,
+        outsideTextStyle: dayStyle.copyWith(color: colors.textSubtle),
+        selectedTextStyle: dayStyle.copyWith(color: colors.textOnPrimary),
+        todayTextStyle: dayStyle,
         selectedDecoration: BoxDecoration(
-          color: Color(0xFF655DE1),
+          color: colors.primary,
           shape: BoxShape.circle,
         ),
-        todayDecoration: BoxDecoration(color: Colors.transparent),
+        todayDecoration: const BoxDecoration(color: Colors.transparent),
         markerSize: 4,
         markersMaxCount: 1,
         markersAnchor: 0.78,
@@ -76,52 +92,33 @@ class MonthCalendar extends StatelessWidget {
     );
   }
 
-  static const TextStyle _weekdayStyle = TextStyle(
-    color: Colors.black,
-    fontSize: 15,
-    fontFamily: 'Roboto',
-    fontWeight: FontWeight.w400,
-    height: 1.1,
-  );
-
-  static const TextStyle _dayStyle = TextStyle(
-    color: Colors.black,
-    fontSize: 15,
-    fontFamily: 'Roboto',
-    fontWeight: FontWeight.w400,
-    height: 1,
-  );
-
-  static const TextStyle _outsideDayStyle = TextStyle(
-    color: Color(0xFF656565),
-    fontSize: 15,
-    fontFamily: 'Roboto',
-    fontWeight: FontWeight.w400,
-    height: 1,
-  );
-
-  static const TextStyle _selectedDayStyle = TextStyle(
-    color: AppColors.background,
-    fontSize: 15,
-    fontFamily: 'Roboto',
-    fontWeight: FontWeight.w400,
-    height: 1,
-  );
-
   static Widget _selectedDayBuilder(
     BuildContext context,
     DateTime day,
     DateTime focusedDay,
   ) {
+    final colors = context.appColors;
+
     return Center(
       child: Container(
         width: 38,
         height: 38,
-        decoration: const BoxDecoration(
-          color: Color(0xFF655DE1),
+        decoration: BoxDecoration(
+          color: colors.primary,
           shape: BoxShape.circle,
         ),
-        child: Center(child: Text('${day.day}', style: _selectedDayStyle)),
+        child: Center(
+          child: Text(
+            '${day.day}',
+            style: TextStyle(
+              color: colors.textOnPrimary,
+              fontSize: 15,
+              fontFamily: 'Roboto',
+              fontWeight: FontWeight.w400,
+              height: 1,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -131,7 +128,20 @@ class MonthCalendar extends StatelessWidget {
     DateTime day,
     DateTime focusedDay,
   ) {
-    return Center(child: Text('${day.day}', style: _dayStyle));
+    final colors = context.appColors;
+
+    return Center(
+      child: Text(
+        '${day.day}',
+        style: TextStyle(
+          color: colors.textDark,
+          fontSize: 15,
+          fontFamily: 'Roboto',
+          fontWeight: FontWeight.w400,
+          height: 1,
+        ),
+      ),
+    );
   }
 
   static Widget _markerBuilder(
@@ -158,7 +168,7 @@ class MonthCalendar extends StatelessWidget {
           if (hasClass)
             _ActivitySegment(
               width: hasEvent ? 10 : 20,
-              color: AppColors.primary,
+              color: context.appColors.primary,
               leftRadius: true,
               rightRadius: !hasEvent,
             ),

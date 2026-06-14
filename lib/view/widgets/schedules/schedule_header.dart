@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../config/theme/app_theme_colors.dart';
+
 class ScheduleHeader extends StatelessWidget {
   final DateTime selectedDay;
   final DateTime focusedDay;
@@ -19,6 +21,8 @@ class ScheduleHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final shortcutWidth = (constraints.maxWidth - 134).clamp(156.0, 224.0);
@@ -40,8 +44,8 @@ class ScheduleHeader extends StatelessWidget {
                       _monthTitle(focusedDay),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.black,
+                      style: TextStyle(
+                        color: colors.textDark,
                         fontSize: 20,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w700,
@@ -53,8 +57,8 @@ class ScheduleHeader extends StatelessWidget {
                       _selectedDayLabel(selectedDay),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.black,
+                      style: TextStyle(
+                        color: colors.textMedium,
                         fontSize: 15,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w400,
@@ -126,6 +130,7 @@ class _DateTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final weekday = DateFormat.E('pt_BR').format(date).replaceAll('.', '');
     final capitalizedWeekday =
         '${weekday[0].toUpperCase()}${weekday.substring(1)}.';
@@ -134,23 +139,18 @@ class _DateTile extends StatelessWidget {
       width: 118,
       height: 112,
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF1FB),
+        color: colors.primarySurface,
         borderRadius: BorderRadius.circular(15),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x66587DBD),
-            blurRadius: 4,
-            offset: Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: colors.primary.withValues(alpha: 0.12)),
+        boxShadow: colors.subtleShadows,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             capitalizedWeekday,
-            style: const TextStyle(
-              color: Colors.black,
+            style: TextStyle(
+              color: colors.textMedium,
               fontSize: 20,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w400,
@@ -160,8 +160,8 @@ class _DateTile extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             '${date.day}',
-            style: const TextStyle(
-              color: Colors.black,
+            style: TextStyle(
+              color: colors.textDark,
               fontSize: 60,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w400,
@@ -187,12 +187,14 @@ class _MonthButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Tooltip(
       message: tooltip,
       child: Material(
-        color: const Color(0xFFEDE8FB),
+        color: colors.primarySurface,
         shape: const CircleBorder(),
-        shadowColor: const Color(0x66587DBD),
+        shadowColor: colors.primary.withValues(alpha: 0.18),
         elevation: 2,
         child: InkWell(
           customBorder: const CircleBorder(),
@@ -200,7 +202,7 @@ class _MonthButton extends StatelessWidget {
           child: SizedBox(
             width: 46,
             height: 46,
-            child: Icon(icon, color: const Color(0xFF6F55D9), size: 35),
+            child: Icon(icon, color: colors.primary, size: 35),
           ),
         ),
       ),
@@ -216,13 +218,15 @@ class _CourseScheduleShortcut extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Tooltip(
       message: 'Abrir grade de horário',
       child: Material(
-        color: const Color(0xFFF2F0FF),
+        color: colors.primarySurface,
         borderRadius: BorderRadius.circular(14),
         elevation: 2,
-        shadowColor: const Color(0x33587DBD),
+        shadowColor: colors.primary.withValues(alpha: 0.14),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
           onTap: onTap,

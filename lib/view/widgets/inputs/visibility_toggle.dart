@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../config/theme/app_colors.dart';
+
+import '../../../config/theme/app_theme_colors.dart';
 
 class VisibilityToggle extends StatelessWidget {
   final bool isObscureText;
@@ -13,12 +14,14 @@ class VisibilityToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return IconButton(
       icon: Icon(
         isObscureText
             ? Icons.visibility_off_outlined
             : Icons.visibility_outlined,
-        color: AppColors.primary,
+        color: colors.textOnPrimary.withValues(alpha: 0.7),
       ),
       onPressed: onTap,
     );

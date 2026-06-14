@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../config/theme/app_colors.dart';
+
+import '../../../config/theme/app_design_tokens.dart';
+import '../../../config/theme/app_theme_colors.dart';
 
 class ProfileCard extends StatelessWidget {
   final String title;
@@ -15,22 +17,18 @@ class ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         child: Ink(
           decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadowPrimary,
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            gradient: colors.brandGradient,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            boxShadow: colors.cardShadows,
           ),
           padding: const EdgeInsets.fromLTRB(28, 25, 28, 15),
           child: ConstrainedBox(
@@ -44,8 +42,8 @@ class ProfileCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
-                          color: Color(0xFFF5F5F5),
+                        style: TextStyle(
+                          color: colors.textOnPrimary,
                           fontSize: 28,
                           fontFamily: 'Roboto',
                           fontWeight: FontWeight.w500,
@@ -58,8 +56,8 @@ class ProfileCard extends StatelessWidget {
                         subtitle,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0x7FE7E7E7),
+                        style: TextStyle(
+                          color: colors.textOnPrimary.withValues(alpha: 0.78),
                           fontSize: 16,
                           fontFamily: 'Roboto',
                           fontWeight: FontWeight.w500,
@@ -71,9 +69,9 @@ class ProfileCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Icon(
+                Icon(
                   Icons.chevron_right,
-                  color: Color(0xFFF5F5F5),
+                  color: colors.textOnPrimary,
                   size: 36,
                 ),
               ],

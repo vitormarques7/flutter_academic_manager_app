@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_design_tokens.dart';
+import '../../../config/theme/app_theme_colors.dart';
 import '../common/app_surface.dart';
 import 'schedule_models.dart';
 
@@ -20,6 +20,7 @@ class SelectedDayScheduleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final hasClasses = classes.isNotEmpty;
     final hasEvents = events.isNotEmpty;
 
@@ -31,8 +32,8 @@ class SelectedDayScheduleCard extends StatelessWidget {
         children: [
           Text(
             _selectedDayTitle(selectedDay),
-            style: const TextStyle(
-              color: Colors.black,
+            style: TextStyle(
+              color: colors.textDark,
               fontSize: 15,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w400,
@@ -60,7 +61,7 @@ class SelectedDayScheduleCard extends StatelessWidget {
             ],
             if (hasClasses && hasEvents) ...[
               const SizedBox(height: 18),
-              const Divider(height: 1, color: Color(0xFFE2E4F0)),
+              Divider(height: 1, color: colors.divider),
               const SizedBox(height: 18),
             ],
             if (hasEvents) ...[
@@ -102,10 +103,12 @@ class _CardSectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Text(
       label,
-      style: const TextStyle(
-        color: Color(0xFF464552),
+      style: TextStyle(
+        color: colors.textMedium,
         fontSize: 12,
         fontFamily: 'Roboto',
         fontWeight: FontWeight.w800,
@@ -122,6 +125,8 @@ class _ScheduleClassRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -171,8 +176,8 @@ class _ScheduleClassRow extends StatelessWidget {
                       classInfo.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.black,
+                      style: TextStyle(
+                        color: colors.textDark,
                         fontSize: 15,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w400,
@@ -184,8 +189,8 @@ class _ScheduleClassRow extends StatelessWidget {
                       classInfo.timeRange,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF656565),
+                      style: TextStyle(
+                        color: colors.textMuted,
                         fontSize: 12,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w400,
@@ -210,6 +215,7 @@ class _ScheduleEventRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final subtitle = eventInfo.subject.isEmpty
         ? eventInfo.typeLabel
         : '${eventInfo.typeLabel} • ${eventInfo.subject}';
@@ -263,8 +269,8 @@ class _ScheduleEventRow extends StatelessWidget {
                       eventInfo.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.black,
+                      style: TextStyle(
+                        color: colors.textDark,
                         fontSize: 15,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w700,
@@ -276,8 +282,8 @@ class _ScheduleEventRow extends StatelessWidget {
                       subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF656565),
+                      style: TextStyle(
+                        color: colors.textMuted,
                         fontSize: 12,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w500,
@@ -290,8 +296,8 @@ class _ScheduleEventRow extends StatelessWidget {
                         eventInfo.description,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xFF656565),
+                        style: TextStyle(
+                          color: colors.textMuted,
                           fontSize: 12,
                           fontFamily: 'Roboto',
                           fontWeight: FontWeight.w400,
@@ -315,17 +321,19 @@ class _EmptyScheduleMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: colors.surfaceTint,
         borderRadius: BorderRadius.circular(9),
       ),
-      child: const Text(
+      child: Text(
         'Nenhum horário ou evento para este dia',
         style: TextStyle(
-          color: Color(0xFF656565),
+          color: colors.textMuted,
           fontSize: 13,
           fontFamily: 'Roboto',
           fontWeight: FontWeight.w400,

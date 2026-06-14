@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../config/scroll/app_scroll_behavior.dart';
-import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_theme_colors.dart';
 import '../common/empty_state_card.dart';
 import 'current_period_schedule.dart';
 import 'schedule_models.dart';
@@ -68,19 +68,16 @@ class _CourseScheduleHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 15, 16, 17),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF1FB),
+        color: colors.primarySurface,
         borderRadius: BorderRadius.circular(15),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x66587DBD),
-            blurRadius: 4,
-            offset: Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: colors.primary.withValues(alpha: 0.12)),
+        boxShadow: colors.subtleShadows,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,22 +97,22 @@ class _CourseScheduleHeader extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.65),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.chevron_left,
-                      color: AppColors.primary,
+                      color: colors.primary,
                       size: 28,
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Grade de horários',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Colors.black,
+                    color: colors.textDark,
                     fontSize: 26,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w800,
@@ -130,8 +127,8 @@ class _CourseScheduleHeader extends StatelessWidget {
             subtitle,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Color(0xFF656565),
+            style: TextStyle(
+              color: colors.textMuted,
               fontSize: 16,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w400,
@@ -190,22 +187,19 @@ class _ScheduleStatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: colors.surface,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22587DBD),
-            blurRadius: 4,
-            offset: Offset(0, 3),
-          ),
-        ],
+        border: Border.all(color: colors.outline),
+        boxShadow: colors.subtleShadows,
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.primary, size: 20),
+          Icon(icon, color: colors.primary, size: 20),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -215,8 +209,8 @@ class _ScheduleStatChip extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF656565),
+                  style: TextStyle(
+                    color: colors.textMuted,
                     fontSize: 11,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w500,
@@ -227,8 +221,8 @@ class _ScheduleStatChip extends StatelessWidget {
                   value,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.black,
+                  style: TextStyle(
+                    color: colors.textDark,
                     fontSize: 16,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w700,

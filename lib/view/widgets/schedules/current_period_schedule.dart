@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_theme_colors.dart';
 import 'schedule_models.dart';
 
 class CurrentPeriodSchedule extends StatelessWidget {
@@ -15,20 +15,16 @@ class CurrentPeriodSchedule extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFDFDFF),
+        color: colors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0x33514EB6)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33587DBD),
-            blurRadius: 6,
-            offset: Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: colors.primary.withValues(alpha: 0.18)),
+        boxShadow: colors.cardShadows,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -38,11 +34,11 @@ class CurrentPeriodSchedule extends StatelessWidget {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
                       'Suas Aulas',
                       style: TextStyle(
-                        color: AppColors.textDark,
+                        color: colors.textDark,
                         fontSize: 18,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w800,
@@ -80,10 +76,12 @@ class _CurrentPeriodTableHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       height: 34,
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: colors.primary,
         borderRadius: BorderRadius.circular(10),
       ),
       child: const Row(
@@ -127,11 +125,13 @@ class _ScheduleDaySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: colors.surfaceTint,
         borderRadius: BorderRadius.circular(13),
-        border: Border.all(color: const Color(0x24514EB6)),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.16)),
       ),
       clipBehavior: Clip.antiAlias,
       child: IntrinsicHeight(
@@ -149,7 +149,10 @@ class _ScheduleDaySection extends StatelessWidget {
                     children: [
                       _PeriodClassRow(classInfo: classInfo),
                       if (!isLast)
-                        const Divider(height: 1, color: Color(0x1F514EB6)),
+                        Divider(
+                          height: 1,
+                          color: colors.primary.withValues(alpha: 0.14),
+                        ),
                     ],
                   );
                 }),
@@ -169,9 +172,11 @@ class _DayLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       width: 80,
-      color: const Color(0xFFE9E8FF),
+      color: colors.primarySurface,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -181,8 +186,8 @@ class _DayLabel extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.primary,
+            style: TextStyle(
+              color: colors.primary,
               fontSize: 11,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w900,
@@ -199,8 +204,8 @@ class _DayLabel extends StatelessWidget {
             child: Text(
               '${day.classes.length} ${day.classes.length == 1 ? 'aula' : 'aulas'}',
               maxLines: 1,
-              style: const TextStyle(
-                color: AppColors.textMuted,
+              style: TextStyle(
+                color: colors.textMuted,
                 fontSize: 10,
                 fontFamily: 'Roboto',
                 fontWeight: FontWeight.w700,
@@ -220,6 +225,8 @@ class _PeriodClassRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Row(
@@ -261,8 +268,8 @@ class _PeriodClassRow extends StatelessWidget {
                                 classInfo.title,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: AppColors.textDark,
+                                style: TextStyle(
+                                  color: colors.textDark,
                                   fontSize: 13,
                                   fontFamily: 'Roboto',
                                   fontWeight: FontWeight.w800,
@@ -282,8 +289,8 @@ class _PeriodClassRow extends StatelessWidget {
                           classInfo.detail,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.textMuted,
+                          style: TextStyle(
+                            color: colors.textMuted,
                             fontSize: 11,
                             fontFamily: 'Roboto',
                             fontWeight: FontWeight.w500,
@@ -325,15 +332,16 @@ class _TimeBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final parts = timeRange.split(' - ');
 
     return Container(
       width: 80,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0x24514EB6)),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.16)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -341,8 +349,8 @@ class _TimeBadge extends StatelessWidget {
           Text(
             parts.first,
             maxLines: 1,
-            style: const TextStyle(
-              color: AppColors.textDark,
+            style: TextStyle(
+              color: colors.textDark,
               fontSize: 13,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w800,
@@ -350,13 +358,17 @@ class _TimeBadge extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 3),
-          Container(width: 18, height: 1, color: const Color(0x33514EB6)),
+          Container(
+            width: 18,
+            height: 1,
+            color: colors.primary.withValues(alpha: 0.20),
+          ),
           const SizedBox(height: 3),
           Text(
             parts.length > 1 ? parts.last : '',
             maxLines: 1,
-            style: const TextStyle(
-              color: AppColors.textMuted,
+            style: TextStyle(
+              color: colors.textMuted,
               fontSize: 12,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w600,
@@ -377,11 +389,13 @@ class _ShortTitleChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       constraints: const BoxConstraints(maxWidth: 58),
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.7),
+        color: colors.surface.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: color.withValues(alpha: 0.22)),
       ),
@@ -408,13 +422,15 @@ class _EditScheduleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Tooltip(
       message: 'Editar grade',
       child: Material(
-        color: AppColors.primary,
+        color: colors.primary,
         shape: const CircleBorder(),
         elevation: 4,
-        shadowColor: const Color(0x66587DBD),
+        shadowColor: colors.primary.withValues(alpha: 0.24),
         child: InkWell(
           onTap: onTap,
           customBorder: const CircleBorder(),

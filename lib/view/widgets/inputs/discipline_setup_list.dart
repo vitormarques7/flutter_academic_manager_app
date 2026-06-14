@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_theme_colors.dart';
 import '../../../services/setup/academic_setup_service.dart';
 import '../dialogs/subject_dialog.dart';
 
@@ -130,19 +131,21 @@ class _EmptyDisciplineSetupState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF0FB),
+        color: colors.surfaceTint,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x33514EB6)),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.18)),
       ),
-      child: const Text(
+      child: Text(
         'Nenhuma disciplina adicionada ainda.',
         style: TextStyle(
-          color: AppColors.textMuted,
+          color: colors.textMuted,
           fontSize: 13,
           fontFamily: 'Roboto',
           fontWeight: FontWeight.w600,
@@ -163,15 +166,16 @@ class _SetupDisciplineTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final scheduleSummary = _scheduleSummary();
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF0FB),
+        color: colors.surfaceTint,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x33514EB6)),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.18)),
       ),
       child: Row(
         children: [
@@ -179,12 +183,12 @@ class _SetupDisciplineTile extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.12),
+              color: colors.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.menu_book_outlined,
-              color: AppColors.primary,
+              color: colors.primary,
               size: 22,
             ),
           ),
@@ -197,8 +201,8 @@ class _SetupDisciplineTile extends StatelessWidget {
                   discipline.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textDark,
+                  style: TextStyle(
+                    color: colors.textDark,
                     fontSize: 15,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w900,
@@ -209,8 +213,8 @@ class _SetupDisciplineTile extends StatelessWidget {
                   scheduleSummary,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
+                  style: TextStyle(
+                    color: colors.textMuted,
                     fontSize: 12,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w600,
@@ -222,7 +226,7 @@ class _SetupDisciplineTile extends StatelessWidget {
           IconButton(
             tooltip: 'Remover disciplina',
             onPressed: onDelete,
-            icon: const Icon(Icons.delete_outline, color: AppColors.textMuted),
+            icon: Icon(Icons.delete_outline, color: colors.textMuted),
           ),
         ],
       ),

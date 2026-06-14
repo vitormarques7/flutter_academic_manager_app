@@ -1,6 +1,8 @@
 // Chip de filtro com label e ícone de dropdown, usado na tela de tarefas.
 import 'package:flutter/material.dart';
 
+import '../../../config/theme/app_theme_colors.dart';
+
 class TaskFilterChip extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
@@ -9,29 +11,26 @@ class TaskFilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 49,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFEFF0FB),
+          color: colors.surfaceTint,
           borderRadius: BorderRadius.circular(15),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x66587DBD),
-              blurRadius: 4,
-              offset: Offset(0, 4),
-            ),
-          ],
+          border: Border.all(color: colors.outline),
+          boxShadow: colors.subtleShadows,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               label,
-              style: const TextStyle(
-                color: Color(0xFF191820),
+              style: TextStyle(
+                color: colors.textDark,
                 fontSize: 15,
                 fontFamily: 'Roboto',
                 fontWeight: FontWeight.w600,
@@ -39,11 +38,7 @@ class TaskFilterChip extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            const Icon(
-              Icons.keyboard_arrow_down,
-              color: Color(0xFF191820),
-              size: 20,
-            ),
+            Icon(Icons.keyboard_arrow_down, color: colors.textDark, size: 20),
           ],
         ),
       ),
