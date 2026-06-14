@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_design_tokens.dart';
+import '../../config/theme/app_theme_colors.dart';
 import '../../models/discipline.dart';
 import '../../models/study_cycle.dart';
 import '../../repositories/discipline_repository.dart';
@@ -246,22 +247,24 @@ class _PersonalDataHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Row(
       children: [
         Tooltip(
           message: 'Voltar',
           child: Material(
-            color: AppColors.primarySoft,
+            color: colors.primarySurface,
             shape: const CircleBorder(),
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: isSaving ? null : () => Navigator.of(context).maybePop(),
-              child: const SizedBox(
+              child: SizedBox(
                 width: 42,
                 height: 42,
                 child: Icon(
                   Icons.chevron_left,
-                  color: AppColors.primary,
+                  color: colors.primary,
                   size: 30,
                 ),
               ),
@@ -269,11 +272,11 @@ class _PersonalDataHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 14),
-        const Expanded(
+        Expanded(
           child: Text(
             'Dados pessoais',
             style: TextStyle(
-              color: AppColors.textDark,
+              color: colors.textDark,
               fontSize: 28,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w900,
@@ -294,6 +297,8 @@ class _AccountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return AppSurface.card(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -302,14 +307,14 @@ class _AccountCard extends StatelessWidget {
           Container(
             width: 56,
             height: 56,
-            decoration: const ShapeDecoration(
-              gradient: AppGradients.brand,
+            decoration: ShapeDecoration(
+              gradient: colors.brandGradient,
               shape: OvalBorder(),
-              shadows: AppShadows.subtle,
+              shadows: colors.subtleShadows,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.person_outline_rounded,
-              color: AppColors.background,
+              color: colors.textOnPrimary,
               size: 42,
             ),
           ),
@@ -322,8 +327,8 @@ class _AccountCard extends StatelessWidget {
                   data.displayName,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textDark,
+                  style: TextStyle(
+                    color: colors.textDark,
                     fontSize: 20,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w900,
@@ -335,8 +340,8 @@ class _AccountCard extends StatelessWidget {
                   data.email,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textMedium,
+                  style: TextStyle(
+                    color: colors.textMedium,
                     fontSize: 13,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w700,
@@ -351,8 +356,8 @@ class _AccountCard extends StatelessWidget {
                     MetadataChip(
                       icon: Icons.lock_outline,
                       label: 'E-mail somente leitura',
-                      foregroundColor: AppColors.textMedium,
-                      backgroundColor: AppColors.surfaceAlt,
+                      foregroundColor: colors.textMedium,
+                      backgroundColor: colors.surfaceAlt,
                     ),
                   ],
                 ),
@@ -362,7 +367,7 @@ class _AccountCard extends StatelessWidget {
           IconButton(
             tooltip: 'Editar nome',
             onPressed: onEditName,
-            icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
+            icon: Icon(Icons.edit_outlined, color: colors.primary),
           ),
         ],
       ),
@@ -378,6 +383,7 @@ class _AcademicCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final activeCycle = data.activeStudyCycle;
 
     return AppSurface.card(
@@ -387,11 +393,11 @@ class _AcademicCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Ciclo atual',
                   style: TextStyle(
-                    color: AppColors.textDark,
+                    color: colors.textDark,
                     fontSize: 18,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w900,
@@ -419,10 +425,10 @@ class _AcademicCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           if (activeCycle == null)
-            const Text(
+            Text(
               'Nenhum ciclo acadêmico configurado.',
               style: TextStyle(
-                color: AppColors.textMedium,
+                color: colors.textMedium,
                 fontSize: 14,
                 fontFamily: 'Roboto',
                 fontWeight: FontWeight.w700,
@@ -431,8 +437,8 @@ class _AcademicCard extends StatelessWidget {
           else ...[
             Text(
               _cycleTitle(activeCycle),
-              style: const TextStyle(
-                color: AppColors.textDark,
+              style: TextStyle(
+                color: colors.textDark,
                 fontSize: 16,
                 fontFamily: 'Roboto',
                 fontWeight: FontWeight.w900,
@@ -474,15 +480,17 @@ class _CyclesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return AppSurface.card(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Ciclos cadastrados',
             style: TextStyle(
-              color: AppColors.textDark,
+              color: colors.textDark,
               fontSize: 18,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w900,
@@ -490,10 +498,10 @@ class _CyclesCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           if (cycles.isEmpty)
-            const Text(
+            Text(
               'Nenhum ciclo cadastrado.',
               style: TextStyle(
-                color: AppColors.textMedium,
+                color: colors.textMedium,
                 fontSize: 14,
                 fontFamily: 'Roboto',
                 fontWeight: FontWeight.w700,
@@ -531,6 +539,8 @@ class _CycleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return AppSurface.soft(
       padding: const EdgeInsets.all(12),
       child: Row(
@@ -553,8 +563,8 @@ class _CycleRow extends StatelessWidget {
                   _cycleTitle(cycle),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textDark,
+                  style: TextStyle(
+                    color: colors.textDark,
                     fontSize: 14,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w900,
@@ -565,8 +575,8 @@ class _CycleRow extends StatelessWidget {
                   _cycleLabel(cycle),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textMedium,
+                  style: TextStyle(
+                    color: colors.textMedium,
                     fontSize: 12,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w700,
@@ -634,15 +644,17 @@ class _DisciplinesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return AppSurface.card(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Disciplinas do ciclo atual',
             style: TextStyle(
-              color: AppColors.textDark,
+              color: colors.textDark,
               fontSize: 18,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w900,
@@ -650,10 +662,10 @@ class _DisciplinesCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           if (disciplines.isEmpty)
-            const Text(
+            Text(
               'Nenhuma disciplina vinculada ao ciclo atual.',
               style: TextStyle(
-                color: AppColors.textMedium,
+                color: colors.textMedium,
                 fontSize: 14,
                 fontFamily: 'Roboto',
                 fontWeight: FontWeight.w700,
@@ -832,6 +844,7 @@ class _StudyCycleManagementSheetState
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     final maxHeight = MediaQuery.sizeOf(context).height * 0.88;
 
@@ -851,11 +864,11 @@ class _StudyCycleManagementSheetState
               children: [
                 Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'Gerenciar ciclo atual',
                         style: TextStyle(
-                          color: AppColors.textDark,
+                          color: colors.textDark,
                           fontSize: 22,
                           fontFamily: 'Roboto',
                           fontWeight: FontWeight.w900,
@@ -865,10 +878,7 @@ class _StudyCycleManagementSheetState
                     IconButton(
                       tooltip: 'Fechar',
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(
-                        Icons.close_rounded,
-                        color: AppColors.textMuted,
-                      ),
+                      icon: Icon(Icons.close_rounded, color: colors.textMuted),
                     ),
                   ],
                 ),
@@ -908,6 +918,7 @@ class _StudyCycleManagementSheetState
                 controller: _courseController,
                 textInputAction: TextInputAction.next,
                 decoration: _sheetInputDecoration(
+                  context,
                   label: 'Curso',
                   icon: Icons.school_outlined,
                 ),
@@ -922,6 +933,7 @@ class _StudyCycleManagementSheetState
               DropdownButtonFormField<int>(
                 initialValue: _period,
                 decoration: _sheetInputDecoration(
+                  context,
                   label: 'Período',
                   icon: Icons.layers_outlined,
                 ),
@@ -948,6 +960,7 @@ class _StudyCycleManagementSheetState
               DropdownButtonFormField<int>(
                 initialValue: _schoolYear,
                 decoration: _sheetInputDecoration(
+                  context,
                   label: 'Ano letivo',
                   icon: Icons.auto_stories_outlined,
                 ),
@@ -969,6 +982,7 @@ class _StudyCycleManagementSheetState
                 controller: _goalController,
                 textInputAction: TextInputAction.done,
                 decoration: _sheetInputDecoration(
+                  context,
                   label: 'Meta',
                   icon: Icons.flag_outlined,
                 ),
@@ -1066,15 +1080,16 @@ class _CycleManagementModeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final style = selected
         ? FilledButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.textOnPrimary,
+            backgroundColor: colors.primary,
+            foregroundColor: colors.textOnPrimary,
             padding: const EdgeInsets.symmetric(vertical: 12),
           )
         : OutlinedButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            side: const BorderSide(color: AppColors.outlineStrong),
+            foregroundColor: colors.primary,
+            side: BorderSide(color: colors.outlineStrong),
             padding: const EdgeInsets.symmetric(vertical: 12),
           );
 
@@ -1152,6 +1167,8 @@ class _CycleActivationRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return AppSurface.soft(
       padding: const EdgeInsets.all(12),
       child: Row(
@@ -1160,10 +1177,10 @@ class _CycleActivationRow extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.12),
+              color: colors.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(13),
             ),
-            child: Icon(_cycleIcon(cycle), color: AppColors.primary, size: 22),
+            child: Icon(_cycleIcon(cycle), color: colors.primary, size: 22),
           ),
           const SizedBox(width: 11),
           Expanded(
@@ -1174,8 +1191,8 @@ class _CycleActivationRow extends StatelessWidget {
                   _cycleTitle(cycle),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textDark,
+                  style: TextStyle(
+                    color: colors.textDark,
                     fontSize: 14,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w900,
@@ -1186,8 +1203,8 @@ class _CycleActivationRow extends StatelessWidget {
                   _cycleLabel(cycle),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textMedium,
+                  style: TextStyle(
+                    color: colors.textMedium,
                     fontSize: 12,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w700,
@@ -1224,26 +1241,29 @@ class _CycleActivationRow extends StatelessWidget {
   }
 }
 
-InputDecoration _sheetInputDecoration({
+InputDecoration _sheetInputDecoration(
+  BuildContext context, {
   required String label,
   required IconData icon,
 }) {
+  final colors = context.appColors;
+
   return InputDecoration(
     labelText: label,
-    prefixIcon: Icon(icon, color: AppColors.primary),
+    prefixIcon: Icon(icon, color: colors.primary),
     filled: true,
-    fillColor: AppColors.surface,
+    fillColor: colors.surface,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.md),
-      borderSide: const BorderSide(color: AppColors.outlineStrong),
+      borderSide: BorderSide(color: colors.outlineStrong),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.md),
-      borderSide: const BorderSide(color: AppColors.outline),
+      borderSide: BorderSide(color: colors.outline),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.md),
-      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      borderSide: BorderSide(color: colors.primary, width: 1.5),
     ),
   );
 }

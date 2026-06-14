@@ -6,6 +6,7 @@ import '../../config/routes/app_routes.dart';
 import '../../config/scroll/app_scroll_behavior.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_design_tokens.dart';
+import '../../config/theme/app_theme_colors.dart';
 import '../../models/academic_task.dart';
 import '../../models/assessment.dart';
 import '../../models/schedule.dart';
@@ -301,10 +302,12 @@ class _StudyCycleMenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Tooltip(
       message: 'Ciclos de estudo',
       child: Material(
-        color: AppColors.surface,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
         child: InkWell(
           onTap: onTap,
@@ -313,16 +316,12 @@ class _StudyCycleMenuButton extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: AppColors.primarySoft,
+              color: colors.primarySurface,
               borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: AppColors.outline),
-              boxShadow: AppShadows.subtle,
+              border: Border.all(color: colors.outline),
+              boxShadow: colors.subtleShadows,
             ),
-            child: const Icon(
-              Icons.menu_rounded,
-              color: AppColors.primary,
-              size: 28,
-            ),
+            child: Icon(Icons.menu_rounded, color: colors.primary, size: 28),
           ),
         ),
       ),
@@ -337,6 +336,8 @@ class _StudyFocusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return AppSurface.card(
       padding: const EdgeInsets.all(18),
       child: Column(
@@ -349,9 +350,9 @@ class _StudyFocusCard extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
+                  color: colors.primary,
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  boxShadow: AppShadows.subtle,
+                  boxShadow: colors.subtleShadows,
                 ),
                 child: const Icon(
                   Icons.event_note_rounded,
@@ -368,8 +369,8 @@ class _StudyFocusCard extends StatelessWidget {
                       data.focusTitle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textDark,
+                      style: TextStyle(
+                        color: colors.textDark,
                         fontSize: 19,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w900,
@@ -381,8 +382,8 @@ class _StudyFocusCard extends StatelessWidget {
                       data.focusSubtitle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textMedium,
+                      style: TextStyle(
+                        color: colors.textMedium,
                         fontSize: 13,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w700,
@@ -400,10 +401,8 @@ class _StudyFocusCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: data.taskProgress,
               minHeight: 8,
-              backgroundColor: AppColors.surfaceAlt,
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                AppColors.primary,
-              ),
+              backgroundColor: colors.surfaceAlt,
+              valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
             ),
           ),
           const SizedBox(height: 14),
@@ -414,20 +413,20 @@ class _StudyFocusCard extends StatelessWidget {
               MetadataChip(
                 icon: Icons.school_outlined,
                 label: data.nextClassLabel,
-                foregroundColor: AppColors.primary,
-                backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+                foregroundColor: colors.navActive,
+                backgroundColor: colors.primarySurface,
               ),
               MetadataChip(
                 icon: Icons.event_available_outlined,
                 label: data.nextEventLabel,
-                foregroundColor: AppColors.event,
-                backgroundColor: AppColors.eventSurface,
+                foregroundColor: colors.event,
+                backgroundColor: colors.eventSurface,
               ),
               MetadataChip(
                 icon: Icons.check_circle_outline,
                 label: data.progressLabel,
-                foregroundColor: AppColors.success,
-                backgroundColor: AppColors.successSurface,
+                foregroundColor: colors.success,
+                backgroundColor: colors.successSurface,
               ),
             ],
           ),
@@ -520,6 +519,8 @@ class _TaskRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -539,8 +540,8 @@ class _TaskRow extends StatelessWidget {
                       task.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textDark,
+                      style: TextStyle(
+                        color: colors.textDark,
                         fontSize: 15,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w900,
@@ -626,6 +627,8 @@ class _EventRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -649,8 +652,8 @@ class _EventRow extends StatelessWidget {
                       event.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textDark,
+                      style: TextStyle(
+                        color: colors.textDark,
                         fontSize: 15,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w900,
@@ -686,7 +689,7 @@ class _EventRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.chevron_right, color: AppColors.textSubtle),
+              Icon(Icons.chevron_right, color: colors.textSubtle),
             ],
           ),
         ),
@@ -742,6 +745,7 @@ class _AlertRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final color = switch (alert.level) {
       _AlertLevel.warning => AppColors.warning,
       _AlertLevel.danger => AppColors.danger,
@@ -772,8 +776,8 @@ class _AlertRow extends StatelessWidget {
                   alert.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textDark,
+                  style: TextStyle(
+                    color: colors.textDark,
                     fontSize: 15,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w900,
@@ -785,8 +789,8 @@ class _AlertRow extends StatelessWidget {
                   alert.description,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textMedium,
+                  style: TextStyle(
+                    color: colors.textMedium,
                     fontSize: 12,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w700,
@@ -809,6 +813,8 @@ class _SetupNeededPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return AppSurface.card(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -816,10 +822,10 @@ class _SetupNeededPanel extends StatelessWidget {
         children: [
           const _IconBadge(icon: Icons.school_outlined),
           const SizedBox(height: 14),
-          const Text(
+          Text(
             'Configure seu ciclo de estudos',
             style: TextStyle(
-              color: AppColors.textDark,
+              color: colors.textDark,
               fontSize: 20,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w900,
@@ -827,10 +833,10 @@ class _SetupNeededPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Depois disso, a Home passa a mostrar suas aulas, tarefas, notas e eventos reais.',
             style: TextStyle(
-              color: AppColors.textMedium,
+              color: colors.textMedium,
               fontSize: 13,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w700,
@@ -957,17 +963,18 @@ class _DateBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isUrgent ? AppColors.danger : AppColors.textMedium;
+    final colors = context.appColors;
+    final color = isUrgent ? colors.danger : colors.textMedium;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: isUrgent ? AppColors.dangerSurface : AppColors.surface,
+        color: isUrgent ? colors.dangerSurface : colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.sm),
         border: Border.all(
           color: isUrgent
-              ? AppColors.danger.withValues(alpha: 0.20)
-              : AppColors.outline,
+              ? colors.danger.withValues(alpha: 0.20)
+              : colors.outline,
         ),
       ),
       child: Text(
@@ -989,10 +996,12 @@ class _HomeDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(
+    final colors = context.appColors;
+
+    return Divider(
       height: 1,
       thickness: 1,
-      color: AppColors.outline,
+      color: colors.outline,
       indent: 14,
       endIndent: 14,
     );

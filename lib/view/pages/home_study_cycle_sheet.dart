@@ -17,6 +17,8 @@ class _StudyCycleSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return SafeArea(
       top: false,
       child: AppSurface.card(
@@ -85,8 +87,8 @@ class _StudyCycleSheet extends StatelessWidget {
                         Expanded(
                           child: Text(
                             sheetTitle,
-                            style: const TextStyle(
-                              color: AppColors.textDark,
+                            style: TextStyle(
+                              color: colors.textDark,
                               fontSize: 22,
                               fontFamily: 'Roboto',
                               fontWeight: FontWeight.w800,
@@ -96,9 +98,9 @@ class _StudyCycleSheet extends StatelessWidget {
                         IconButton(
                           tooltip: 'Fechar',
                           onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.close,
-                            color: AppColors.textMuted,
+                            color: colors.textMuted,
                           ),
                         ),
                       ],
@@ -111,22 +113,29 @@ class _StudyCycleSheet extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             Material(
-              color: AppColors.primary,
+              color: colors.primary,
               borderRadius: BorderRadius.circular(AppRadius.md),
               child: InkWell(
                 borderRadius: BorderRadius.circular(AppRadius.md),
                 onTap: onCreateCycle,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 14,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.add, color: Colors.white, size: 22),
-                      SizedBox(width: 8),
+                      Icon(
+                        Icons.add,
+                        color: colors.textOnPrimary,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 8),
                       Text(
                         'Criar novo período',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: colors.textOnPrimary,
                           fontSize: 15,
                           fontFamily: 'Roboto',
                           fontWeight: FontWeight.w800,
@@ -263,6 +272,8 @@ class _CurrentCycleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return AppSurface.soft(
       padding: const EdgeInsets.all(14),
       child: Row(
@@ -271,10 +282,13 @@ class _CurrentCycleCard extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: colors.primary,
               borderRadius: BorderRadius.circular(13),
             ),
-            child: const Icon(Icons.school_outlined, color: Colors.white),
+            child: Icon(
+              Icons.school_outlined,
+              color: colors.textOnPrimary,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -288,8 +302,8 @@ class _CurrentCycleCard extends StatelessWidget {
                         cycle.label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.textDark,
+                        style: TextStyle(
+                          color: colors.textDark,
                           fontSize: 16,
                           fontFamily: 'Roboto',
                           fontWeight: FontWeight.w900,
@@ -304,8 +318,8 @@ class _CurrentCycleCard extends StatelessWidget {
                   cycle.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textDark,
+                  style: TextStyle(
+                    color: colors.textMedium,
                     fontSize: 13,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w700,
@@ -316,8 +330,8 @@ class _CurrentCycleCard extends StatelessWidget {
                   cycle.detail,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
+                  style: TextStyle(
+                    color: colors.textMuted,
                     fontSize: 12,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w600,
@@ -340,6 +354,8 @@ class _PreviousCyclesTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     if (cycles.isEmpty) {
       return const _StudyCycleSheetStatus(
         icon: Icons.history_outlined,
@@ -350,21 +366,21 @@ class _PreviousCyclesTile extends StatelessWidget {
 
     return AppSurface(
       padding: EdgeInsets.zero,
-      color: AppColors.surfaceAlt,
-      border: Border.all(color: AppColors.outline),
+      color: colors.surfaceAlt,
+      border: Border.all(color: colors.outline),
       shadows: const [],
       borderRadius: AppRadius.md,
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 14),
         childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
-        iconColor: AppColors.primary,
-        collapsedIconColor: AppColors.primary,
-        leading: const Icon(Icons.history_outlined, color: AppColors.primary),
-        title: const Text(
+        iconColor: colors.primary,
+        collapsedIconColor: colors.primary,
+        leading: Icon(Icons.history_outlined, color: colors.primary),
+        title: Text(
           'Períodos anteriores',
           style: TextStyle(
-            color: AppColors.textDark,
+            color: colors.textDark,
             fontSize: 15,
             fontFamily: 'Roboto',
             fontWeight: FontWeight.w800,
@@ -394,6 +410,8 @@ class _PreviousCycleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -406,8 +424,8 @@ class _PreviousCycleRow extends StatelessWidget {
               Container(
                 width: 8,
                 height: 8,
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
+                decoration: BoxDecoration(
+                  color: colors.primary,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -418,8 +436,8 @@ class _PreviousCycleRow extends StatelessWidget {
                   children: [
                     Text(
                       cycle.title,
-                      style: const TextStyle(
-                        color: AppColors.textDark,
+                      style: TextStyle(
+                        color: colors.textDark,
                         fontSize: 14,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w800,
@@ -430,8 +448,8 @@ class _PreviousCycleRow extends StatelessWidget {
                       '${cycle.label} • ${cycle.detail}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textMuted,
+                      style: TextStyle(
+                        color: colors.textMuted,
                         fontSize: 12,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w600,
@@ -446,7 +464,7 @@ class _PreviousCycleRow extends StatelessWidget {
                 icon: const Icon(Icons.check_circle_outline_rounded, size: 17),
                 label: const Text('Ativar'),
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
+                  foregroundColor: colors.primary,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
                     vertical: 8,
@@ -479,22 +497,24 @@ class _StudyCycleSheetStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return AppSurface(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 14, vertical: dense ? 13 : 20),
-      color: dense ? AppColors.surfaceAlt : AppColors.surface,
-      border: Border.all(color: AppColors.outline),
+      color: dense ? colors.surfaceTint : colors.surfaceAlt,
+      border: Border.all(color: colors.outline),
       shadows: const [],
       borderRadius: AppRadius.md,
       child: Row(
         children: [
-          Icon(icon, color: AppColors.primary, size: dense ? 22 : 26),
+          Icon(icon, color: colors.primary, size: dense ? 22 : 26),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
               style: TextStyle(
-                color: AppColors.textDark,
+                color: colors.textDark,
                 fontSize: dense ? 14 : 15,
                 fontFamily: 'Roboto',
                 fontWeight: FontWeight.w800,
@@ -512,16 +532,18 @@ class _CurrentBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.12),
+        color: colors.primarySurface,
         borderRadius: BorderRadius.circular(999),
       ),
-      child: const Text(
+      child: Text(
         'Atual',
         style: TextStyle(
-          color: AppColors.primary,
+          color: colors.primary,
           fontSize: 11,
           fontFamily: 'Roboto',
           fontWeight: FontWeight.w800,

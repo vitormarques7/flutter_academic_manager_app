@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:academic_manager_app/services/auth/auth_service.dart';
-import 'package:academic_manager_app/config/theme/app_colors.dart';
 import 'package:academic_manager_app/config/theme/app_text_styles.dart';
 import 'package:academic_manager_app/config/theme/app_theme_colors.dart';
 import '../widgets/auth/animated_auth_panel.dart';
@@ -198,8 +197,8 @@ class _RegisterPageState extends State<RegisterPage> {
                               label: 'Cadastrar',
                               isLoading: _isLoading,
                               onPressed: _onRegister,
-                              backgroundColor: AppColors.background,
-                              textColor: AppColors.textDark,
+                              backgroundColor: colors.background,
+                              textColor: colors.textDark,
                             ),
 
                             const SizedBox(height: 42),
@@ -207,10 +206,12 @@ class _RegisterPageState extends State<RegisterPage> {
                             Center(
                               child: Column(
                                 children: [
-                                  const Text(
+                                  Text(
                                     'Já possui uma conta?',
                                     style: TextStyle(
-                                      color: Color(0x7FE7E7E7),
+                                      color: colors.textOnPrimary.withValues(
+                                        alpha: 0.72,
+                                      ),
                                       fontSize: 14,
                                       fontFamily: 'Roboto',
                                       fontWeight: FontWeight.w700,
@@ -219,12 +220,12 @@ class _RegisterPageState extends State<RegisterPage> {
                                   ),
                                   GestureDetector(
                                     onTap: () => AppRoutes.toLogin(context),
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(10),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(10),
                                       child: Text(
                                         'Login',
                                         style: TextStyle(
-                                          color: Color(0xFFF5F5F5),
+                                          color: colors.textOnPrimary,
                                           fontSize: 15,
                                           fontFamily: 'Roboto',
                                           fontWeight: FontWeight.w700,

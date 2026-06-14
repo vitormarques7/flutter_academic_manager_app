@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../../config/theme/app_theme_colors.dart';
 import '../../models/study_cycle.dart';
 import '../../repositories/study_cycle_repository.dart';
 import '../../repositories/user_profile_repository.dart';
@@ -438,23 +439,25 @@ class _SetupHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Tooltip(
           message: 'Voltar',
           child: Material(
-            color: const Color(0xFFEDE8FB),
+            color: colors.primarySurface,
             shape: const CircleBorder(),
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: () => Navigator.of(context).maybePop(),
-              child: const SizedBox(
+              child: SizedBox(
                 width: 42,
                 height: 42,
                 child: Icon(
                   Icons.chevron_left,
-                  color: AppColors.primary,
+                  color: colors.primary,
                   size: 30,
                 ),
               ),
@@ -469,6 +472,7 @@ class _SetupHeader extends StatelessWidget {
               Text(
                 type.title,
                 style: AppTextStyles.headline3.copyWith(
+                  color: colors.textDark,
                   fontSize: 26,
                   height: 1.1,
                 ),
@@ -477,7 +481,7 @@ class _SetupHeader extends StatelessWidget {
               Text(
                 type.subtitle,
                 style: AppTextStyles.bodyRegular.copyWith(
-                  color: AppColors.textMuted,
+                  color: colors.textMuted,
                   fontSize: 14,
                   height: 1.3,
                 ),
@@ -501,6 +505,8 @@ class _CycleTypeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -508,7 +514,7 @@ class _CycleTypeSelector extends StatelessWidget {
         final isSelected = type == selectedType;
 
         return Material(
-          color: isSelected ? AppColors.primary : const Color(0xFFF5F5F5),
+          color: isSelected ? colors.primary : colors.surface,
           borderRadius: BorderRadius.circular(999),
           child: InkWell(
             borderRadius: BorderRadius.circular(999),
@@ -523,7 +529,9 @@ class _CycleTypeSelector extends StatelessWidget {
                   Text(
                     type.chipLabel,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : AppColors.textDark,
+                      color: isSelected
+                          ? colors.textOnPrimary
+                          : colors.textDark,
                       fontSize: 12,
                       fontFamily: 'Roboto',
                       fontWeight: FontWeight.w800,
@@ -548,20 +556,24 @@ class _CycleTypeIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (type == _StudyCycleType.highSchool) {
+      final colors = context.appColors;
+
       return Image.asset(
         'lib/view/assets/highschool_icon.png',
         width: 18,
         height: 18,
         fit: BoxFit.contain,
-        color: isSelected ? Colors.white : null,
+        color: isSelected ? colors.textOnPrimary : null,
         colorBlendMode: isSelected ? BlendMode.srcIn : null,
       );
     }
 
+    final colors = context.appColors;
+
     return Icon(
       type.icon,
       size: 17,
-      color: isSelected ? Colors.white : AppColors.primary,
+      color: isSelected ? colors.textOnPrimary : colors.primary,
     );
   }
 }
@@ -602,6 +614,8 @@ class _CycleFields extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: switch (type) {
@@ -627,12 +641,12 @@ class _CycleFields extends StatelessWidget {
             hint: Text(
               'Selecione o período',
               style: AppTextStyles.bodyRegular.copyWith(
-                color: AppColors.textMuted,
+                color: colors.textMuted,
               ),
             ),
-            icon: const Icon(
+            icon: Icon(
               Icons.keyboard_arrow_down,
-              color: AppColors.primary,
+              color: colors.primary,
               size: 28,
             ),
             decoration: const InputDecoration(
@@ -704,14 +718,16 @@ class _CoursePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     if (isLoadingCourses) {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
         decoration: BoxDecoration(
-          color: AppColors.defaultFieldBackground,
+          color: colors.defaultFieldBackground,
           borderRadius: BorderRadius.circular(35),
-          border: Border.all(color: AppColors.defaultFieldBorder, width: 1.5),
+          border: Border.all(color: colors.defaultFieldBorder, width: 1.5),
         ),
         child: Row(
           children: [
@@ -727,7 +743,7 @@ class _CoursePicker extends StatelessWidget {
             Text(
               'Carregando cursos...',
               style: AppTextStyles.bodyRegular.copyWith(
-                color: AppColors.textMuted,
+                color: colors.textMuted,
               ),
             ),
           ],
@@ -769,13 +785,11 @@ class _CoursePicker extends StatelessWidget {
           menuMaxHeight: 280,
           hint: Text(
             'Selecione o curso',
-            style: AppTextStyles.bodyRegular.copyWith(
-              color: AppColors.textMuted,
-            ),
+            style: AppTextStyles.bodyRegular.copyWith(color: colors.textMuted),
           ),
-          icon: const Icon(
+          icon: Icon(
             Icons.keyboard_arrow_down,
-            color: AppColors.primary,
+            color: colors.primary,
             size: 28,
           ),
           decoration: const InputDecoration(

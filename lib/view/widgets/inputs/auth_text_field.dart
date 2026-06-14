@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_design_tokens.dart';
+import '../../../config/theme/app_theme_colors.dart';
 
 class AuthTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -23,14 +23,16 @@ class AuthTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
-      cursorColor: Colors.white,
-      style: const TextStyle(
-        color: Color(0xFFE7E7E7),
+      cursorColor: colors.textOnPrimary,
+      style: TextStyle(
+        color: colors.textOnPrimary.withValues(alpha: 0.96),
         fontSize: 16,
         fontFamily: 'Roboto',
         fontWeight: FontWeight.w600,
@@ -38,8 +40,8 @@ class AuthTextField extends StatelessWidget {
       ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(
-          color: Color(0x7FE7E7E7),
+        hintStyle: TextStyle(
+          color: colors.textOnPrimary.withValues(alpha: 0.62),
           fontSize: 16,
           fontFamily: 'Roboto',
           fontWeight: FontWeight.w500,
@@ -55,21 +57,21 @@ class AuthTextField extends StatelessWidget {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: BorderSide(
-            color: AppColors.surface.withValues(alpha: 0.46),
+            color: colors.textOnPrimary.withValues(alpha: 0.42),
             width: 1,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: BorderSide(
-            color: AppColors.surface.withValues(alpha: 0.34),
+            color: colors.textOnPrimary.withValues(alpha: 0.34),
             width: 1,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: BorderSide(
-            color: Colors.white.withValues(alpha: 0.92),
+            color: colors.textOnPrimary.withValues(alpha: 0.92),
             width: 1.6,
           ),
         ),

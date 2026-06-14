@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:academic_manager_app/services/auth/auth_service.dart';
-import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
 import '../../config/theme/app_theme_colors.dart';
 import '../../config/routes/app_routes.dart';
@@ -174,7 +173,6 @@ class _LoginPageState extends State<LoginPage> {
 
                             const SizedBox(height: 12),
 
-                            // Esqueceu a senha
                             Align(
                               alignment: Alignment.centerRight,
                               child: GestureDetector(
@@ -185,8 +183,10 @@ class _LoginPageState extends State<LoginPage> {
                                   _isSendingPasswordReset
                                       ? 'Enviando...'
                                       : 'Esqueceu a senha?',
-                                  style: const TextStyle(
-                                    color: Color(0x7FE7E7E7),
+                                  style: TextStyle(
+                                    color: colors.textOnPrimary.withValues(
+                                      alpha: 0.72,
+                                    ),
                                     fontSize: 14,
                                     fontFamily: 'Roboto',
                                     fontWeight: FontWeight.w700,
@@ -202,8 +202,8 @@ class _LoginPageState extends State<LoginPage> {
                               label: 'Entrar',
                               isLoading: _isLoading,
                               onPressed: _onLogin,
-                              backgroundColor: AppColors.background,
-                              textColor: AppColors.textDark,
+                              backgroundColor: colors.background,
+                              textColor: colors.textDark,
                             ),
 
                             const SizedBox(height: 54),
@@ -211,10 +211,12 @@ class _LoginPageState extends State<LoginPage> {
                             Center(
                               child: Column(
                                 children: [
-                                  const Text(
+                                  Text(
                                     'Ainda não possui um cadastro?',
                                     style: TextStyle(
-                                      color: Color(0x7FE7E7E7),
+                                      color: colors.textOnPrimary.withValues(
+                                        alpha: 0.72,
+                                      ),
                                       fontSize: 14,
                                       fontFamily: 'Roboto',
                                       fontWeight: FontWeight.w700,
@@ -223,12 +225,12 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                   GestureDetector(
                                     onTap: () => AppRoutes.toRegister(context),
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(10),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(10),
                                       child: Text(
                                         'Cadastrar',
                                         style: TextStyle(
-                                          color: Color(0xFFF5F5F5),
+                                          color: colors.textOnPrimary,
                                           fontSize: 15,
                                           fontFamily: 'Roboto',
                                           fontWeight: FontWeight.w700,

@@ -372,11 +372,13 @@ class _BrandAccent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       width: width,
       height: 8,
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.16),
+        color: colors.primary.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
     );
@@ -400,18 +402,25 @@ class _WelcomeActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final loginBackground = isDark ? colors.primaryDark : colors.primary;
+
     return Column(
       children: [
-        PrimaryButton(label: 'Login', onPressed: onLogin),
+        PrimaryButton(
+          label: 'Login',
+          onPressed: onLogin,
+          backgroundColor: loginBackground,
+          textColor: colors.textOnPrimary,
+        ),
         const SizedBox(height: 18),
         SecondaryButton(
           label: 'Cadastrar',
-          backgroundColor: AppColors.surface,
-          backgroundGradient: const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFFAF9FF), Color(0xFFECEAFF)],
-          ),
+          backgroundColor: colors.surface,
+          borderColor: colors.primary,
+          textColor: colors.textDark,
+          backgroundGradient: colors.softSurfaceGradient,
           onPressed: onRegister,
         ),
         if (showGoogleSignIn) ...[
@@ -420,12 +429,10 @@ class _WelcomeActions extends StatelessWidget {
           const SizedBox(height: 22),
           SecondaryButton(
             label: 'Continuar com Google',
-            backgroundColor: AppColors.surface,
-            backgroundGradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFFFFFFF), Color(0xFFFBFCFF)],
-            ),
+            backgroundColor: colors.surface,
+            borderColor: colors.outlineStrong,
+            textColor: colors.textDark,
+            backgroundGradient: colors.softSurfaceGradient,
             leading: Image.asset(
               'lib/view/assets/devicon_google.webp',
               width: 30,

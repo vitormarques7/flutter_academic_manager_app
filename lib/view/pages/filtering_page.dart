@@ -1,5 +1,5 @@
-import 'package:academic_manager_app/config/theme/app_colors.dart';
 import 'package:academic_manager_app/config/theme/app_text_styles.dart';
+import 'package:academic_manager_app/config/theme/app_theme_colors.dart';
 import 'package:academic_manager_app/config/routes/app_routes.dart';
 import 'package:academic_manager_app/view/widgets/buttons/cancel_button.dart';
 import 'package:academic_manager_app/view/widgets/selectors/profile_card.dart';
@@ -10,6 +10,8 @@ class StudentFilteringPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
@@ -23,12 +25,14 @@ class StudentFilteringPage extends StatelessWidget {
                   RichText(
                     text: TextSpan(
                       text: 'Qual o seu perfil de ',
-                      style: AppTextStyles.headline2,
+                      style: AppTextStyles.headline2.copyWith(
+                        color: colors.textDark,
+                      ),
                       children: [
                         TextSpan(
                           text: 'estudante?',
                           style: AppTextStyles.headline2.copyWith(
-                            color: AppColors.primary,
+                            color: colors.primary,
                           ),
                         ),
                       ],
@@ -39,7 +43,9 @@ class StudentFilteringPage extends StatelessWidget {
 
                   Text(
                     'Personalize sua experiência selecionando o perfil que mais se encaixa com você',
-                    style: AppTextStyles.bodyRegular,
+                    style: AppTextStyles.bodyRegular.copyWith(
+                      color: colors.textLight,
+                    ),
                   ),
 
                   const SizedBox(height: 28),
