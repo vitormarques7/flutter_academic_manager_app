@@ -1,3 +1,4 @@
+import 'package:academic_manager_app/config/theme/app_theme_colors.dart';
 import 'package:flutter/material.dart';
 import '../../config/scroll/app_scroll_behavior.dart';
 import '../../config/theme/app_colors.dart';
@@ -449,20 +450,25 @@ class _EditSubjectsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return PopupMenuButton<_SubjectEditAction>(
       tooltip: 'Editar disciplinas',
       onSelected: onSelected,
-      color: Colors.white,
+      color: colors.surface,
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      itemBuilder: (context) => const [
+      itemBuilder: (context) => [
         PopupMenuItem(
           value: _SubjectEditAction.delete,
           child: Row(
             children: [
-              Icon(Icons.delete_outline, color: Colors.red, size: 20),
-              SizedBox(width: 10),
-              Text('Excluir Disciplina'),
+              Icon(Icons.delete_outline, color: colors.danger, size: 20),
+              const SizedBox(width: 10),
+              Text(
+                'Excluir Disciplina',
+                style: TextStyle(color: colors.textDark),
+              ),
             ],
           ),
         ),
@@ -470,9 +476,12 @@ class _EditSubjectsButton extends StatelessWidget {
           value: _SubjectEditAction.add,
           child: Row(
             children: [
-              Icon(Icons.add, color: Color(0xFF514EB6), size: 20),
-              SizedBox(width: 10),
-              Text('Adicionar Nova Disciplina'),
+              Icon(Icons.add, color: colors.primary, size: 20),
+              const SizedBox(width: 10),
+              Text(
+                'Adicionar Nova Disciplina',
+                style: TextStyle(color: colors.textDark),
+              ),
             ],
           ),
         ),
@@ -480,14 +489,14 @@ class _EditSubjectsButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.72),
+          color: colors.surface.withValues(alpha: 0.72),
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: const Color(0x33514EB6)),
+          border: Border.all(color: colors.primary.withValues(alpha: 0.20)),
         ),
-        child: const Text(
+        child: Text(
           'Editar',
           style: TextStyle(
-            color: Color(0xFF514EB6),
+            color: colors.primary,
             fontSize: 12,
             fontFamily: 'Roboto',
             fontWeight: FontWeight.w800,
