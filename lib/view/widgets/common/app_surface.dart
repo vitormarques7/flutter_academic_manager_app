@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_design_tokens.dart';
+import '../../../config/theme/app_theme_colors.dart';
 
 class AppSurface extends StatelessWidget {
   final Widget child;
@@ -16,6 +16,7 @@ class AppSurface extends StatelessWidget {
   final double? width;
   final double? height;
   final BoxConstraints? constraints;
+  final bool softGradient;
 
   const AppSurface({
     super.key,
@@ -31,6 +32,7 @@ class AppSurface extends StatelessWidget {
     this.width,
     this.height,
     this.constraints,
+    this.softGradient = false,
   });
 
   const AppSurface.card({
@@ -38,17 +40,16 @@ class AppSurface extends StatelessWidget {
     required this.child,
     this.padding = const EdgeInsets.all(AppSpacing.md),
     this.margin,
-    this.color = AppColors.surface,
+    this.color,
     this.gradient,
-    this.border = const Border.fromBorderSide(
-      BorderSide(color: AppColors.outline),
-    ),
-    this.shadows = AppShadows.card,
+    this.border,
+    this.shadows,
     this.borderRadius = AppRadius.lg,
     this.clipBehavior = Clip.antiAlias,
     this.width,
     this.height,
     this.constraints,
+    this.softGradient = false,
   });
 
   const AppSurface.soft({
@@ -57,20 +58,27 @@ class AppSurface extends StatelessWidget {
     this.padding = const EdgeInsets.all(AppSpacing.md),
     this.margin,
     this.color,
-    this.gradient = AppGradients.softSurface,
-    this.border = const Border.fromBorderSide(
-      BorderSide(color: AppColors.outline),
-    ),
-    this.shadows = AppShadows.subtle,
+    this.gradient,
+    this.border,
+    this.shadows,
     this.borderRadius = AppRadius.lg,
     this.clipBehavior = Clip.antiAlias,
     this.width,
     this.height,
     this.constraints,
+    this.softGradient = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final resolvedGradient =
+        gradient ?? (softGradient ? colors.softSurfaceGradient : null);
+    final resolvedBorder =
+        border ?? Border.fromBorderSide(BorderSide(color: colors.outline));
+    final resolvedShadows =
+        shadows ?? (softGradient ? colors.subtleShadows : colors.cardShadows);
+
     return Container(
       width: width ?? double.infinity,
       height: height,
@@ -79,11 +87,11 @@ class AppSurface extends StatelessWidget {
       padding: padding,
       clipBehavior: clipBehavior,
       decoration: BoxDecoration(
-        color: gradient == null ? color ?? AppColors.surface : null,
-        gradient: gradient,
+        color: resolvedGradient == null ? color ?? colors.surface : null,
+        gradient: resolvedGradient,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: border,
-        boxShadow: shadows,
+        border: resolvedBorder,
+        boxShadow: resolvedShadows,
       ),
       child: child,
     );

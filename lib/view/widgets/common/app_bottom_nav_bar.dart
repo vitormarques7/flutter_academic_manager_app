@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_design_tokens.dart';
 import '../../../config/theme/app_text_styles.dart';
+import '../../../config/theme/app_theme_colors.dart';
 
 class AppBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -38,15 +38,18 @@ class AppBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.outline)),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border(top: BorderSide(color: colors.outline)),
         boxShadow: [
           BoxShadow(
-            color: Color(0x10111827),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0x66000000)
+                : const Color(0x10111827),
             blurRadius: 18,
             offset: Offset(0, -8),
           ),
@@ -97,8 +100,9 @@ class _AnimatedNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? AppColors.navActive : AppColors.navInactive;
-    final activeBackground = AppColors.primary.withValues(alpha: 0.08);
+    final colors = context.appColors;
+    final color = isSelected ? colors.navActive : colors.navInactive;
+    final activeBackground = colors.primary.withValues(alpha: 0.12);
 
     return Semantics(
       button: true,
@@ -118,7 +122,7 @@ class _AnimatedNavItem extends StatelessWidget {
               color: isSelected ? activeBackground : Colors.transparent,
               borderRadius: BorderRadius.circular(AppRadius.md),
               border: isSelected
-                  ? Border.all(color: AppColors.primary.withValues(alpha: 0.10))
+                  ? Border.all(color: colors.primary.withValues(alpha: 0.18))
                   : null,
             ),
             child: Column(

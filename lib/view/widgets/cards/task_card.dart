@@ -1,7 +1,7 @@
 // Card de tarefa com checkbox, título, disciplina e prazo.
 import 'package:flutter/material.dart';
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_design_tokens.dart';
+import '../../../config/theme/app_theme_colors.dart';
 import '../common/app_surface.dart';
 import '../common/metadata_chip.dart';
 
@@ -38,6 +38,8 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -54,7 +56,7 @@ class TaskCard extends StatelessWidget {
                 bottom: 0,
                 width: 4,
                 child: ColoredBox(
-                  color: isChecked ? AppColors.success : AppColors.primary,
+                  color: isChecked ? colors.success : colors.primary,
                 ),
               ),
               Padding(
@@ -70,14 +72,14 @@ class TaskCard extends StatelessWidget {
                           height: 44,
                           decoration: ShapeDecoration(
                             color: isChecked
-                                ? AppColors.successSurface
-                                : AppColors.surface,
+                                ? colors.successSurface
+                                : colors.surface,
                             shape: RoundedRectangleBorder(
                               side: BorderSide(
                                 width: 1,
                                 color: isChecked
-                                    ? AppColors.success.withValues(alpha: 0.22)
-                                    : AppColors.outlineStrong.withValues(
+                                    ? colors.success.withValues(alpha: 0.22)
+                                    : colors.outlineStrong.withValues(
                                         alpha: 0.72,
                                       ),
                               ),
@@ -94,7 +96,7 @@ class TaskCard extends StatelessWidget {
                           child: Checkbox(
                             value: isChecked,
                             onChanged: onChanged,
-                            activeColor: AppColors.primary,
+                            activeColor: colors.primary,
                             side: BorderSide.none,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(4),
@@ -111,7 +113,7 @@ class TaskCard extends StatelessWidget {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  color: const Color(0xFF191820),
+                                  color: colors.textDark,
                                   fontSize: 16,
                                   fontFamily: 'Roboto',
                                   fontWeight: FontWeight.w700,
@@ -127,8 +129,8 @@ class TaskCard extends StatelessWidget {
                                 isChecked ? 'Concluída' : 'Pendente',
                                 style: TextStyle(
                                   color: isChecked
-                                      ? const Color(0xFF27724D)
-                                      : AppColors.primary,
+                                      ? colors.success
+                                      : colors.primary,
                                   fontSize: 12,
                                   fontFamily: 'Roboto',
                                   fontWeight: FontWeight.w700,
@@ -159,11 +161,11 @@ class TaskCard extends StatelessWidget {
                           icon: _priorityIcon,
                           label: visualPriority,
                           foregroundColor: isChecked
-                              ? AppColors.success
-                              : AppColors.primary,
+                              ? colors.success
+                              : colors.primary,
                           backgroundColor: isChecked
-                              ? AppColors.successSurface
-                              : AppColors.primary.withValues(alpha: 0.08),
+                              ? colors.successSurface
+                              : colors.primary.withValues(alpha: 0.10),
                           maxWidth: 220,
                         ),
                       ],

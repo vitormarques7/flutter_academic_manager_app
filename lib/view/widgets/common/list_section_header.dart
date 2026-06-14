@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_theme_colors.dart';
 import 'section_label.dart';
 
 class ListSectionHeader extends StatelessWidget {
@@ -16,14 +16,16 @@ class ListSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Row(
       children: [
         SectionLabel(label: label),
         const Spacer(),
         Text(
           '$count ${count == 1 ? 'item' : 'itens'}',
-          style: const TextStyle(
-            color: AppColors.textMuted,
+          style: TextStyle(
+            color: colors.textMuted,
             fontSize: 13,
             fontFamily: 'Roboto',
             fontWeight: FontWeight.w700,

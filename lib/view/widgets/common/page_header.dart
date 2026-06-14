@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/routes/app_routes.dart';
-import '../../../config/theme/app_design_tokens.dart';
 import '../../../config/theme/app_text_styles.dart';
+import '../../../config/theme/app_theme_colors.dart';
 
 class PageHeader extends StatelessWidget {
   final String title;
@@ -11,14 +11,16 @@ class PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Row(
       children: [
         Container(
           width: 58,
           height: 58,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
-            boxShadow: AppShadows.subtle,
+            boxShadow: colors.subtleShadows,
           ),
           child: Material(
             color: Colors.transparent,
@@ -41,6 +43,7 @@ class PageHeader extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppTextStyles.headline2.copyWith(
+              color: colors.textDark,
               fontSize: 26,
               height: 1.08,
               letterSpacing: 0,

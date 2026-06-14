@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_design_tokens.dart';
+import '../../../config/theme/app_theme_colors.dart';
 import '../common/app_surface.dart';
 import '../common/metadata_chip.dart';
 
@@ -35,6 +36,10 @@ class SubjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final effectiveAccentColor = accentColor == AppColors.primary
+        ? colors.primary
+        : accentColor;
     final percentLabel = '${(frequency * 100).round()}%';
 
     return Material(
@@ -51,14 +56,14 @@ class SubjectCard extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.12),
+                  color: effectiveAccentColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: accentColor.withValues(alpha: 0.28),
+                    color: effectiveAccentColor.withValues(alpha: 0.28),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: accentColor.withValues(alpha: 0.08),
+                      color: effectiveAccentColor.withValues(alpha: 0.08),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -66,7 +71,7 @@ class SubjectCard extends StatelessWidget {
                 ),
                 child: Icon(
                   Icons.menu_book_outlined,
-                  color: accentColor,
+                  color: effectiveAccentColor,
                   size: 24,
                 ),
               ),
@@ -79,8 +84,8 @@ class SubjectCard extends StatelessWidget {
                       name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textDark,
+                      style: TextStyle(
+                        color: colors.textDark,
                         fontSize: 17,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w800,
@@ -92,8 +97,8 @@ class SubjectCard extends StatelessWidget {
                       teacher,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textMedium,
+                      style: TextStyle(
+                        color: colors.textMedium,
                         fontSize: 13,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w600,
@@ -104,10 +109,10 @@ class SubjectCard extends StatelessWidget {
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          const Text(
+                          Text(
                             'Frequência',
                             style: TextStyle(
-                              color: AppColors.textMedium,
+                              color: colors.textMedium,
                               fontSize: 12,
                               fontFamily: 'Roboto',
                               fontWeight: FontWeight.w700,
@@ -117,8 +122,8 @@ class SubjectCard extends StatelessWidget {
                           const Spacer(),
                           Text(
                             percentLabel,
-                            style: const TextStyle(
-                              color: AppColors.textMedium,
+                            style: TextStyle(
+                              color: colors.textMedium,
                               fontSize: 12,
                               fontFamily: 'Roboto',
                               fontWeight: FontWeight.w700,
@@ -133,11 +138,11 @@ class SubjectCard extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: frequency.clamp(0.0, 1.0).toDouble(),
                           minHeight: 8,
-                          backgroundColor: AppColors.primary.withValues(
+                          backgroundColor: colors.primary.withValues(
                             alpha: 0.12,
                           ),
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            accentColor,
+                            effectiveAccentColor,
                           ),
                         ),
                       ),
@@ -147,8 +152,10 @@ class SubjectCard extends StatelessWidget {
                       MetadataChip(
                         icon: Icons.access_time,
                         label: '${workload}h',
-                        foregroundColor: accentColor,
-                        backgroundColor: accentColor.withValues(alpha: 0.08),
+                        foregroundColor: effectiveAccentColor,
+                        backgroundColor: effectiveAccentColor.withValues(
+                          alpha: 0.08,
+                        ),
                         iconSize: 15,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 9,
@@ -164,24 +171,18 @@ class SubjectCard extends StatelessWidget {
                 width: 76,
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  border: Border.all(color: AppColors.outline),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x06111827),
-                      blurRadius: 6,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
+                  border: Border.all(color: colors.outline),
+                  boxShadow: colors.subtleShadows,
                 ),
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       'Média',
                       maxLines: 1,
                       style: TextStyle(
-                        color: Color(0xFF464552),
+                        color: colors.textMedium,
                         fontSize: 12,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w700,

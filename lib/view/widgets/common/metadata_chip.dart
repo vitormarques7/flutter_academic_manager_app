@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_design_tokens.dart';
+import '../../../config/theme/app_theme_colors.dart';
 
 class MetadataChip extends StatelessWidget {
   final IconData icon;
@@ -25,8 +25,9 @@ class MetadataChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = foregroundColor ?? AppColors.textMedium;
-    final fill = backgroundColor ?? AppColors.surface;
+    final colors = context.appColors;
+    final color = foregroundColor ?? colors.textMedium;
+    final fill = backgroundColor ?? colors.surface;
 
     return Container(
       constraints: maxWidth == null
@@ -37,13 +38,7 @@ class MetadataChip extends StatelessWidget {
         color: fill,
         borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(color: color.withValues(alpha: 0.16)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06111827),
-            blurRadius: 4,
-            offset: Offset(0, 1),
-          ),
-        ],
+        boxShadow: colors.subtleShadows,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

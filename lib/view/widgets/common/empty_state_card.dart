@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_design_tokens.dart';
+import '../../../config/theme/app_theme_colors.dart';
 import 'app_surface.dart';
 
 class EmptyStateCard extends StatelessWidget {
@@ -15,6 +15,8 @@ class EmptyStateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return AppSurface.card(
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
@@ -24,20 +26,18 @@ class EmptyStateCard extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.10),
+              color: colors.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.14),
-              ),
+              border: Border.all(color: colors.primary.withValues(alpha: 0.18)),
             ),
-            child: Icon(icon, color: AppColors.primary, size: 24),
+            child: Icon(icon, color: colors.primary, size: 24),
           ),
           const SizedBox(height: 10),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.textMedium,
+            style: TextStyle(
+              color: colors.textMedium,
               fontSize: 14,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w700,
