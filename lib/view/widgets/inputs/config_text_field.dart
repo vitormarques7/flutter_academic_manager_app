@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_text_styles.dart';
+import '../../../config/theme/app_theme_colors.dart';
 
 class ConfigTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -23,16 +23,18 @@ class ConfigTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
-      style: AppTextStyles.bodyRegular.copyWith(color: AppColors.textDark),
+      style: AppTextStyles.bodyRegular.copyWith(color: colors.textDark),
       validator: validator,
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
-        fillColor: AppColors.defaultFieldBackground,
+        fillColor: colors.defaultFieldBackground,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 24,
           vertical: 18,
@@ -40,17 +42,11 @@ class ConfigTextField extends StatelessWidget {
         suffixIcon: suffixIcon,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(35),
-          borderSide: const BorderSide(
-            color: AppColors.defaultFieldBorder,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: colors.defaultFieldBorder, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(35),
-          borderSide: const BorderSide(
-            color: AppColors.defaultFieldBorder,
-            width: 2.5,
-          ),
+          borderSide: BorderSide(color: colors.defaultFieldBorder, width: 2.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(35),

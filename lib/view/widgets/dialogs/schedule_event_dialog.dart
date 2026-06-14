@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_theme_colors.dart';
 import '../../../models/discipline.dart';
 import '../../../models/subject_event.dart';
 import '../inputs/date_picker_field.dart';
@@ -104,6 +105,8 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       backgroundColor: Colors.transparent,
@@ -112,14 +115,14 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
         child: Container(
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E4F0)),
-            boxShadow: const [
+            border: Border.all(color: colors.outline),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x80514EB6),
+                color: colors.primary.withValues(alpha: 0.28),
                 blurRadius: 18,
-                offset: Offset(0, 6),
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -134,11 +137,11 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
                     padding: const EdgeInsets.fromLTRB(24, 22, 18, 18),
                     child: Row(
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'Novo evento',
                             style: TextStyle(
-                              color: AppColors.primary,
+                              color: colors.primary,
                               fontSize: 24,
                               fontFamily: 'Roboto',
                               fontWeight: FontWeight.w800,
@@ -148,16 +151,16 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
                         IconButton(
                           tooltip: 'Fechar',
                           onPressed: () => Navigator.of(context).maybePop(),
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.close,
-                            color: Color(0xFF464552),
+                            color: colors.textMedium,
                             size: 30,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const Divider(height: 1, color: Color(0xFFE2E4F0)),
+                  Divider(height: 1, color: colors.divider),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 22, 24, 24),
                     child: Column(

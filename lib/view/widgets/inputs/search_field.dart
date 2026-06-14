@@ -1,8 +1,8 @@
 // Campo de busca com ícone de lupa e placeholder roxo translúcido.
 import 'package:flutter/material.dart';
 
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_design_tokens.dart';
+import '../../../config/theme/app_theme_colors.dart';
 
 class SearchField extends StatelessWidget {
   final TextEditingController controller;
@@ -18,38 +18,42 @@ class SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Material(
-      color: AppColors.surface,
+      color: colors.surface,
       borderRadius: BorderRadius.circular(AppRadius.md),
       elevation: 1,
-      shadowColor: const Color(0x10111827),
+      shadowColor: Theme.of(context).brightness == Brightness.dark
+          ? const Color(0x66000000)
+          : const Color(0x10111827),
       child: Container(
         height: 52,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: AppColors.outline),
+          border: Border.all(color: colors.outline),
         ),
         child: TextField(
           controller: controller,
           onChanged: onChanged,
-          style: const TextStyle(
-            color: AppColors.textDark,
+          style: TextStyle(
+            color: colors.textDark,
             fontSize: 15,
             fontFamily: 'Roboto',
             fontWeight: FontWeight.w600,
           ),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(
-              color: AppColors.textSubtle,
+            hintStyle: TextStyle(
+              color: colors.textSubtle,
               fontSize: 15,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w600,
               height: 1.47,
             ),
-            prefixIcon: const Padding(
-              padding: EdgeInsets.only(left: 14, right: 8),
-              child: Icon(Icons.search, color: AppColors.primary, size: 22),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.only(left: 14, right: 8),
+              child: Icon(Icons.search, color: colors.primary, size: 22),
             ),
             prefixIconConstraints: const BoxConstraints(
               minWidth: 50,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_theme_colors.dart';
 import '../inputs/date_picker_field.dart';
 
 class TaskDialogResult {
@@ -225,6 +226,8 @@ class _TaskDialogState extends State<TaskDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       backgroundColor: Colors.transparent,
@@ -233,14 +236,14 @@ class _TaskDialogState extends State<TaskDialog> {
         child: Container(
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E4F0)),
-            boxShadow: const [
+            border: Border.all(color: colors.outline),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x80514EB6),
+                color: colors.primary.withValues(alpha: 0.28),
                 blurRadius: 18,
-                offset: Offset(0, 6),
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -258,8 +261,8 @@ class _TaskDialogState extends State<TaskDialog> {
                         Expanded(
                           child: Text(
                             _isEditing ? 'Editar Tarefa' : 'Nova Tarefa',
-                            style: const TextStyle(
-                              color: AppColors.primary,
+                            style: TextStyle(
+                              color: colors.primary,
                               fontSize: 24,
                               fontFamily: 'Roboto',
                               fontWeight: FontWeight.w700,
@@ -272,9 +275,9 @@ class _TaskDialogState extends State<TaskDialog> {
                           onPressed: _isSaving || _isDeleting
                               ? null
                               : () => Navigator.of(context).maybePop(),
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.close,
-                            color: Color(0xFF464552),
+                            color: colors.textMedium,
                             size: 32,
                           ),
                           padding: EdgeInsets.zero,
@@ -286,7 +289,7 @@ class _TaskDialogState extends State<TaskDialog> {
                       ],
                     ),
                   ),
-                  const Divider(height: 1, color: Color(0xFFE2E4F0)),
+                  Divider(height: 1, color: colors.divider),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
                     child: Column(

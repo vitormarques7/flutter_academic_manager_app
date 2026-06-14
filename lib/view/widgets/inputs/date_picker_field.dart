@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_theme_colors.dart';
 
 class AppDatePickerField extends StatelessWidget {
   final TextEditingController controller;
@@ -27,6 +27,8 @@ class AppDatePickerField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return TextFormField(
       controller: controller,
       keyboardType: TextInputType.number,
@@ -38,10 +40,7 @@ class AppDatePickerField extends StatelessWidget {
         suffixIcon: IconButton(
           tooltip: helpText,
           onPressed: enabled ? () => _openDatePicker(context) : null,
-          icon: const Icon(
-            Icons.calendar_month_outlined,
-            color: AppColors.primary,
-          ),
+          icon: Icon(Icons.calendar_month_outlined, color: colors.primary),
         ),
       ),
       enabled: enabled,
@@ -71,16 +70,18 @@ class AppDatePickerField extends StatelessWidget {
       cancelText: 'Cancelar',
       confirmText: 'OK',
       builder: (context, child) {
+        final colors = context.appColors;
+
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: AppColors.primary,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: AppColors.textDark,
+              primary: colors.primary,
+              onPrimary: colors.textOnPrimary,
+              surface: colors.surface,
+              onSurface: colors.textDark,
             ),
             datePickerTheme: DatePickerThemeData(
-              backgroundColor: Colors.white,
+              backgroundColor: colors.surface,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18),
               ),
