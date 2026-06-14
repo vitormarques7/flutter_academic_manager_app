@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_theme_colors.dart';
 
 class AuthGatePage extends StatefulWidget {
   const AuthGatePage({super.key});
@@ -27,10 +28,12 @@ class _AuthGatePageState extends State<AuthGatePage> {
       stream: _authService.authStateChanges,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            backgroundColor: AppColors.background,
+          final colors = context.appColors;
+
+          return Scaffold(
+            backgroundColor: colors.background,
             body: Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+              child: CircularProgressIndicator(color: colors.primary),
             ),
           );
         }
@@ -106,9 +109,11 @@ class _AuthGateLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+    final colors = context.appColors;
+
+    return Scaffold(
+      backgroundColor: colors.background,
+      body: Center(child: CircularProgressIndicator(color: colors.primary)),
     );
   }
 }
@@ -120,25 +125,23 @@ class _AuthGateError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.cloud_off_outlined,
-                color: AppColors.primary,
-                size: 42,
-              ),
+              Icon(Icons.cloud_off_outlined, color: colors.primary, size: 42),
               const SizedBox(height: 14),
               Text(
                 'Não foi possível carregar seus dados.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.textDark,
+                  color: colors.textDark,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -148,7 +151,7 @@ class _AuthGateError extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: Theme.of(
                   context,
-                ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+                ).textTheme.bodyMedium?.copyWith(color: colors.textMuted),
               ),
               const SizedBox(height: 18),
               FilledButton(
