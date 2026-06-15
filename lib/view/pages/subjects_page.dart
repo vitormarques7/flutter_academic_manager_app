@@ -10,6 +10,7 @@ import '../../repositories/discipline_repository.dart';
 import '../../repositories/schedule_repository.dart';
 import '../../repositories/user_profile_repository.dart';
 import 'subject_details_page.dart';
+import 'academic_overview_page.dart';
 import '../widgets/common/app_surface.dart';
 import '../widgets/common/page_header.dart';
 import '../widgets/inputs/search_field.dart';
@@ -287,7 +288,10 @@ class _SubjectsPageState extends State<SubjectsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const PageHeader(title: 'Suas Disciplinas'),
+                    const PageHeader(
+                      title: 'Suas Disciplinas',
+                      trailing: _AcademicOverviewMenuButton(),
+                    ),
 
                     const SizedBox(height: 24),
 
@@ -389,8 +393,6 @@ class _SubjectsPageState extends State<SubjectsPage> {
                                                 : discipline.teacher,
                                             frequency: 0,
                                             showFrequency: false,
-                                            absences: discipline.absences,
-                                            maxAbsences: discipline.maxAbsences,
                                             average: stats.averageFor(
                                               discipline.id,
                                             ),
@@ -778,3 +780,153 @@ class _GroupedScheduleEntry {
 }
 
 enum _SubjectEditAction { delete, add }
+
+class _AcademicOverviewMenuButton extends StatelessWidget {
+  const _AcademicOverviewMenuButton();
+
+  void _openAcademicOverviewSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final colors = sheetContext.appColors;
+        return SafeArea(
+          top: false,
+          child: AppSurface.card(
+            margin: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+            borderRadius: AppRadius.xl,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Menu Acadêmico',
+                        style: TextStyle(
+                          color: colors.textDark,
+                          fontSize: 22,
+                          fontFamily: 'Roboto',
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Fechar',
+                      onPressed: () => Navigator.of(sheetContext).pop(),
+                      icon: Icon(
+                        Icons.close,
+                        color: colors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                AppSurface.soft(
+                  padding: EdgeInsets.zero,
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    onTap: () {
+                      Navigator.of(sheetContext).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const AcademicOverviewPage(initialTab: 0),
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: colors.primary,
+                              borderRadius: BorderRadius.circular(13),
+                            ),
+                            child: Icon(
+                              Icons.assessment_outlined,
+                              color: colors.textOnPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Visão Geral de Frequência e Anotações',
+                                  style: TextStyle(
+                                    color: colors.textDark,
+                                    fontSize: 15,
+                                    fontFamily: 'Roboto',
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  'Acompanhe o limite de faltas e notas das disciplinas',
+                                  style: TextStyle(
+                                    color: colors.textMuted,
+                                    fontSize: 12,
+                                    fontFamily: 'Roboto',
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.chevron_right,
+                            color: colors.textMuted,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Tooltip(
+      message: 'Menu Acadêmico',
+      child: Material(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: InkWell(
+          onTap: () => _openAcademicOverviewSheet(context),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          child: Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: colors.primarySurface,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: colors.outline),
+              boxShadow: colors.subtleShadows,
+            ),
+            child: Icon(
+              Icons.menu_rounded,
+              color: colors.primary,
+              size: 28,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

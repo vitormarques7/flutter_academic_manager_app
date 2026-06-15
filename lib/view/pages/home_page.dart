@@ -244,41 +244,43 @@ class _HomeDashboard extends StatelessWidget {
                           disciplines: disciplineSnapshot.data ?? const [],
                         );
 
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _StudyFocusCard(data: dashboard),
-                        const SizedBox(height: 18),
-                        _OverviewMetrics(data: dashboard),
-                        if (hasError) ...[
-                          const SizedBox(height: 14),
-                          const _HomeWarningPanel(),
-                        ],
-                        const SizedBox(height: 24),
-                        ListSectionHeader(
-                          label: 'PRÓXIMAS TAREFAS',
-                          count: dashboard.upcomingTasks.length,
-                        ),
-                        const SizedBox(height: 12),
-                        _UpcomingTasksCard(tasks: dashboard.upcomingTasks),
-                        const SizedBox(height: 24),
-                        ListSectionHeader(
-                          label: 'PRÓXIMOS EVENTOS',
-                          count: dashboard.upcomingEvents.length,
-                        ),
-                        const SizedBox(height: 12),
-                        _UpcomingEventsCard(
-                          events: dashboard.upcomingEvents,
-                          onDelete: _deleteEvent,
-                        ),
-                        const SizedBox(height: 24),
-                        ListSectionHeader(
-                          label: 'RADAR',
-                          count: dashboard.alerts.length,
-                        ),
-                        const SizedBox(height: 12),
-                        _AlertsCard(alerts: dashboard.alerts),
-                      ],
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _StudyFocusCard(data: dashboard),
+                            const SizedBox(height: 18),
+                            _OverviewMetrics(data: dashboard),
+                            if (hasError) ...[
+                              const SizedBox(height: 14),
+                              const _HomeWarningPanel(),
+                            ],
+                            const SizedBox(height: 24),
+                            ListSectionHeader(
+                              label: 'PRÓXIMAS TAREFAS',
+                              count: dashboard.upcomingTasks.length,
+                            ),
+                            const SizedBox(height: 12),
+                            _UpcomingTasksCard(tasks: dashboard.upcomingTasks),
+                            const SizedBox(height: 24),
+                            ListSectionHeader(
+                              label: 'PRÓXIMOS EVENTOS',
+                              count: dashboard.upcomingEvents.length,
+                            ),
+                            const SizedBox(height: 12),
+                            _UpcomingEventsCard(
+                              events: dashboard.upcomingEvents,
+                              onDelete: _deleteEvent,
+                            ),
+                            const SizedBox(height: 24),
+                            ListSectionHeader(
+                              label: 'RADAR',
+                              count: dashboard.alerts.length,
+                            ),
+                            const SizedBox(height: 12),
+                            _AlertsCard(alerts: dashboard.alerts),
+                          ],
+                        );
+                      },
                     );
                   },
                 );
@@ -288,8 +290,6 @@ class _HomeDashboard extends StatelessWidget {
         );
       },
     );
-  },
-);
   }
 
   bool _isWaiting(AsyncSnapshot<Object?> snapshot) {
@@ -1238,12 +1238,15 @@ class _HomeDashboardData {
     // Perigo de reprovação por faltas >= 80% do limite
     for (final discipline in disciplines) {
       final absences = discipline.absences;
-      final maxAbsences = discipline.maxAbsences > 0 ? discipline.maxAbsences : 12;
+      final maxAbsences = discipline.maxAbsences > 0
+          ? discipline.maxAbsences
+          : 12;
       if (absences >= maxAbsences * 0.8) {
         alerts.add(
           _HomeAlert(
             title: 'Perigo de reprovação',
-            description: 'Você tem $absences/$maxAbsences faltas em ${discipline.name}.',
+            description:
+                'Você tem $absences/$maxAbsences faltas em ${discipline.name}.',
             level: _AlertLevel.danger,
             icon: Icons.warning_amber_rounded,
           ),
