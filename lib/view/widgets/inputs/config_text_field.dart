@@ -50,11 +50,11 @@ class ConfigTextField extends StatelessWidget {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(35),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
+          borderSide: BorderSide(color: colors.danger, width: 2),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(35),
-          borderSide: const BorderSide(color: Colors.red, width: 2.5),
+          borderSide: BorderSide(color: colors.danger, width: 2.5),
         ),
       ),
     );

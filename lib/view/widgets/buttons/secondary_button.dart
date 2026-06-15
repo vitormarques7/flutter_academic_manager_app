@@ -39,28 +39,25 @@ class SecondaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final effectiveBackgroundColor = backgroundColor == AppColors.background
-        ? colors.background
-        : backgroundColor;
-    final effectiveBorderColor = borderColor == AppColors.primary
-        ? colors.primary
-        : borderColor;
-    final effectiveTextColor = textColor == AppColors.textDark
-        ? colors.textDark
-        : textColor;
+    final effectiveBackgroundColor =
+        backgroundColor == AppColors.background
+            ? colors.background
+            : backgroundColor;
+    final effectiveBorderColor =
+        borderColor == AppColors.primary ? colors.primary : borderColor;
+    final effectiveTextColor =
+        textColor == AppColors.textDark ? colors.textDark : textColor;
     final bool effectiveDisabled = isDisabled || isLoading;
-    final VoidCallback? effectiveOnPressed = effectiveDisabled
-        ? null
-        : onPressed;
+    final VoidCallback? effectiveOnPressed = effectiveDisabled ? null : onPressed;
 
     return Material(
-      color: effectiveDisabled
-          ? effectiveBackgroundColor.withValues(alpha: 0.5)
-          : effectiveBackgroundColor,
+      color:
+          effectiveDisabled
+              ? effectiveBackgroundColor.withValues(alpha: 0.5)
+              : effectiveBackgroundColor,
       borderRadius: BorderRadius.circular(borderRadius),
       clipBehavior: Clip.antiAlias,
       elevation: effectiveDisabled ? 0 : 1,
-      shadowColor: effectiveBorderColor.withValues(alpha: 0.10),
       child: InkWell(
         onTap: effectiveOnPressed,
         borderRadius: BorderRadius.circular(borderRadius),
@@ -75,15 +72,6 @@ class SecondaryButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(borderRadius),
             ),
             gradient: effectiveDisabled ? null : backgroundGradient,
-            shadows: effectiveDisabled
-                ? null
-                : [
-                    BoxShadow(
-                      color: effectiveBorderColor.withValues(alpha: 0.12),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -91,25 +79,25 @@ class SecondaryButton extends StatelessWidget {
               if (leading != null) ...[leading!, const SizedBox(width: 10)],
               isLoading
                   ? SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          effectiveTextColor,
-                        ),
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        effectiveTextColor,
                       ),
-                    )
-                  : Text(
-                      label,
-                      style:
-                          textStyle ??
-                          AppTextStyles.button.copyWith(
-                            color: effectiveTextColor,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                          ),
                     ),
+                  )
+                  : Text(
+                    label,
+                    style:
+                        textStyle ??
+                        AppTextStyles.button.copyWith(
+                          color: effectiveTextColor,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
             ],
           ),
         ),

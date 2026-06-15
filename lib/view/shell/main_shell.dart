@@ -41,8 +41,8 @@ class _MainShellState extends State<MainShell> {
           tween: Tween<double>(begin: _previousIndex == null ? 1 : 0, end: 1),
           duration: _previousIndex == null
               ? Duration.zero
-              : const Duration(milliseconds: 210),
-          curve: Curves.easeOutCubic,
+              : Duration(milliseconds: _navigationDirection == 1 ? 210 : 180),
+          curve: _navigationDirection == 1 ? Curves.easeOutCubic : Curves.easeInCubic,
           onEnd: () {
             if (_previousIndex == null || !mounted) return;
             setState(() => _previousIndex = null);

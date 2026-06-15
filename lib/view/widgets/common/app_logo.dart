@@ -3,7 +3,7 @@ import '../../../config/theme/app_colors.dart';
 
 class AppLogo extends StatelessWidget {
   final double scale;
-  final Color color;
+  final Color? color;
   final double blockPulse;
   final double secondaryBlockPulse;
   final Offset blockOffset;
@@ -13,7 +13,7 @@ class AppLogo extends StatelessWidget {
   const AppLogo({
     super.key,
     this.scale = 1.0,
-    this.color = AppColors.primary,
+    this.color,
     this.blockPulse = 1.0,
     this.secondaryBlockPulse = 1.0,
     this.blockOffset = Offset.zero,
@@ -23,11 +23,9 @@ class AppLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Dimensões base (extraídas do Figma)
-    // Quadrado 1: left=0, top=0, 129x120
-    // Quadrado 2: left=99, top=70, 129x120
-    // Total: width = 99+129 = 228, height = 70+120 = 190
+    final effectiveColor = color ?? AppColors.primary;
 
+    // Dimensões base (extraídas do Figma)
     final double w = 228 * scale;
     final double h = 190 * scale;
 
@@ -46,7 +44,7 @@ class AppLogo extends StatelessWidget {
                 scale: blockPulse,
                 child: _LogoBlockGroup(
                   scale: scale,
-                  color: color,
+                  color: effectiveColor,
                   dotPositions: const [
                     Offset(18, 88),
                     Offset(31, 90),
@@ -67,7 +65,7 @@ class AppLogo extends StatelessWidget {
                 scale: secondaryBlockPulse,
                 child: _LogoBlockGroup(
                   scale: scale,
-                  color: color,
+                  color: effectiveColor,
                   dotPositions: const [
                     Offset(73, 33),
                     Offset(87, 38),
@@ -181,10 +179,10 @@ class _Dot extends StatelessWidget {
       height: size,
       decoration: ShapeDecoration(
         color: AppColors.background,
-        shape: OvalBorder(),
+        shape: const OvalBorder(),
         shadows: [
           BoxShadow(
-            color: AppColors.shadowDark,
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 4),
           ),

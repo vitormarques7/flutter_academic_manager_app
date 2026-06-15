@@ -143,8 +143,8 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
   );
 
   static const AppThemeColors dark = AppThemeColors(
-    primary: Color(0xFF9B99FF),
-    primaryDark: Color(0xFF625EE0),
+    primary: Color(0xFF7774E8),
+    primaryDark: AppColors.primary,
     primarySoft: Color(0xFF272553),
     primarySurface: Color(0xFF232145),
     background: Color(0xFF10121A),
@@ -169,12 +169,12 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     eventSurface: Color(0xFF3C1930),
     navActive: Color(0xFFB7B5FF),
     navInactive: Color(0xFF8F96AB),
-    defaultFieldBorder: Color(0xFF9B99FF),
+    defaultFieldBorder: Color(0xFF7774E8),
     defaultFieldBackground: Color(0xFF1A1E2A),
     divider: Color(0xFF2B3040),
-    chipSelected: Color(0xFF9B99FF),
+    chipSelected: Color(0xFF7774E8),
     chipUnselected: Color(0xFF1A1E2A),
-    chipBorder: Color(0xFF7774E8),
+    chipBorder: Color(0xFF625EE0),
     softSurfaceGradient: LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
@@ -203,7 +203,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
         blurRadius: 24,
         offset: Offset(0, 12),
       ),
-      BoxShadow(color: Color(0x339B99FF), blurRadius: 18, offset: Offset(0, 4)),
+      BoxShadow(color: Color(0x337774E8), blurRadius: 18, offset: Offset(0, 4)),
     ],
   );
 

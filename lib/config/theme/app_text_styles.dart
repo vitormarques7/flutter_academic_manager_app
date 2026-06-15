@@ -10,14 +10,14 @@ class AppTextStyles {
   static const TextStyle headline1 = TextStyle(
     fontFamily: _font,
     fontSize: 36,
-    fontWeight: FontWeight.w800,
+    fontWeight: FontWeight.w900,
     letterSpacing: _letterSpacing,
   );
 
   static const TextStyle headline2 = TextStyle(
     fontFamily: _font,
     fontSize: 28,
-    fontWeight: FontWeight.w800,
+    fontWeight: FontWeight.w900,
     letterSpacing: _letterSpacing,
   );
 

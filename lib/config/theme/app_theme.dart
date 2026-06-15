@@ -31,6 +31,48 @@ class AppTheme {
       scaffoldBackgroundColor: colors.background,
       colorScheme: colorScheme,
       extensions: [colors],
+      appBarTheme: AppBarTheme(
+        backgroundColor: colors.surface,
+        foregroundColor: colors.textDark,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: IconThemeData(color: colors.textDark),
+        titleTextStyle: AppTextStyles.headline3.copyWith(
+          color: colors.textDark,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: colors.surface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          side: BorderSide(color: colors.outline, width: 1),
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: colors.surface,
+        indicatorColor: colors.primarySoft,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppTextStyles.navLabel.copyWith(color: colors.primary);
+          }
+          return AppTextStyles.navLabel.copyWith(color: colors.textMuted);
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return IconThemeData(color: colors.primary);
+          }
+          return IconThemeData(color: colors.textMuted);
+        }),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: colors.primary,
+        foregroundColor: colors.textOnPrimary,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+      ),
       textTheme: TextTheme(
         displayLarge: AppTextStyles.headline1.copyWith(color: colors.textDark),
         displayMedium: AppTextStyles.headline2.copyWith(color: colors.textDark),

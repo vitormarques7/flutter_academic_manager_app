@@ -35,24 +35,22 @@ class PrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final effectiveBackgroundColor = backgroundColor == AppColors.primary
-        ? colors.primary
-        : backgroundColor;
-    final effectiveTextColor = textColor == AppColors.textOnPrimary
-        ? colors.textOnPrimary
-        : textColor;
+    final effectiveBackgroundColor =
+        backgroundColor == AppColors.primary ? colors.primary : backgroundColor;
+    final effectiveTextColor =
+        textColor == AppColors.textOnPrimary
+            ? colors.textOnPrimary
+            : textColor;
     final bool effectiveDisabled = isDisabled || isLoading;
-    final VoidCallback? effectiveOnPressed = effectiveDisabled
-        ? null
-        : onPressed;
+    final VoidCallback? effectiveOnPressed = effectiveDisabled ? null : onPressed;
 
     return Material(
-      color: effectiveDisabled
-          ? effectiveBackgroundColor.withValues(alpha: 0.5)
-          : effectiveBackgroundColor,
+      color:
+          effectiveDisabled
+              ? effectiveBackgroundColor.withValues(alpha: 0.5)
+              : effectiveBackgroundColor,
       borderRadius: BorderRadius.circular(borderRadius),
       clipBehavior: Clip.antiAlias,
-      shadowColor: effectiveBackgroundColor.withValues(alpha: 0.24),
       elevation: effectiveDisabled ? 0 : 2,
       child: InkWell(
         onTap: effectiveOnPressed,
@@ -70,15 +68,6 @@ class PrimaryButton extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(borderRadius),
             ),
-            shadows: effectiveDisabled
-                ? null
-                : [
-                    BoxShadow(
-                      color: effectiveBackgroundColor.withValues(alpha: 0.24),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -86,25 +75,25 @@ class PrimaryButton extends StatelessWidget {
               if (leading != null) ...[leading!, const SizedBox(width: 10)],
               isLoading
                   ? SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          effectiveTextColor,
-                        ),
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        effectiveTextColor,
                       ),
-                    )
-                  : Text(
-                      label,
-                      style:
-                          textStyle ??
-                          AppTextStyles.button.copyWith(
-                            color: effectiveTextColor,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                          ),
                     ),
+                  )
+                  : Text(
+                    label,
+                    style:
+                        textStyle ??
+                        AppTextStyles.button.copyWith(
+                          color: effectiveTextColor,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
             ],
           ),
         ),
