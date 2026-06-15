@@ -164,7 +164,7 @@ class _DateTile extends StatelessWidget {
               color: colors.textDark,
               fontSize: 60,
               fontFamily: 'Roboto',
-              fontWeight: FontWeight.w400,
+              fontWeight: FontWeight.w300,
               height: 0.9,
             ),
           ),
@@ -238,9 +238,9 @@ class _CourseScheduleShortcut extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.event_note_outlined,
-                    color: Color(0xFF8A38F5),
+                    color: colors.primary,
                     size: 22,
                   ),
                   const SizedBox(width: 7),
@@ -249,8 +249,8 @@ class _CourseScheduleShortcut extends StatelessWidget {
                       'Grade de Horário',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF8A38F5),
+                      style: TextStyle(
+                        color: colors.primary,
                         fontSize: 12,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w700,

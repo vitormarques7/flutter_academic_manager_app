@@ -20,7 +20,7 @@ class ScheduleClassInfo {
   });
 }
 
-enum ScheduleCalendarMarkerKind { classSchedule, subjectEvent }
+enum ScheduleCalendarMarkerKind { classSchedule, subjectEvent, academicTask }
 
 class ScheduleCalendarMarker {
   final Color color;
@@ -77,5 +77,29 @@ class PeriodScheduleClass {
     required this.color,
     required this.accentColor,
     this.note,
+  });
+}
+
+class ScheduleTaskInfo {
+  final String title;
+  final String subject;
+  final String typeLabel;
+  final bool isChecked;
+  final IconData icon;
+  final Color accentColor;
+  final Color iconColor;
+  final Color iconBackground;
+  final VoidCallback? onTap;
+
+  const ScheduleTaskInfo({
+    required this.title,
+    required this.subject,
+    required this.typeLabel,
+    required this.isChecked,
+    required this.icon,
+    required this.accentColor,
+    required this.iconColor,
+    required this.iconBackground,
+    this.onTap,
   });
 }

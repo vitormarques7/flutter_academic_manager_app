@@ -94,7 +94,7 @@ class _CourseScheduleHeader extends StatelessWidget {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.65),
+                      color: colors.surface.withValues(alpha: 0.7),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(

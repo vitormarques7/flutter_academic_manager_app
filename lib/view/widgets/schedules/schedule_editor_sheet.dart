@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_theme_colors.dart';
 import '../../../config/theme/app_design_tokens.dart';
 import '../../../models/discipline.dart';
 import '../../../models/schedule.dart';
@@ -87,6 +87,7 @@ class _ScheduleEditorSheetState extends State<ScheduleEditorSheet> {
   }
 
   Future<void> _deleteSchedule(Schedule schedule) async {
+    final colors = context.appColors;
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -101,7 +102,7 @@ class _ScheduleEditorSheetState extends State<ScheduleEditorSheet> {
               child: const Text('Cancelar'),
             ),
             FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              style: FilledButton.styleFrom(backgroundColor: colors.danger),
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: const Text('Excluir'),
             ),
@@ -131,10 +132,11 @@ class _ScheduleEditorSheetState extends State<ScheduleEditorSheet> {
   }
 
   void _showError(String message) {
+    final colors = context.appColors;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red.shade700,
+        backgroundColor: colors.danger,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -142,6 +144,7 @@ class _ScheduleEditorSheetState extends State<ScheduleEditorSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final schedules = _sortedSchedules;
 
     return SafeArea(
@@ -160,11 +163,11 @@ class _ScheduleEditorSheetState extends State<ScheduleEditorSheet> {
             children: [
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Editar grade',
                       style: TextStyle(
-                        color: AppColors.textDark,
+                        color: colors.textDark,
                         fontSize: 22,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w800,
@@ -173,10 +176,9 @@ class _ScheduleEditorSheetState extends State<ScheduleEditorSheet> {
                   ),
                   IconButton(
                     tooltip: 'Fechar',
-                    onPressed: _isSaving
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, color: AppColors.textMuted),
+                    onPressed:
+                        _isSaving ? null : () => Navigator.of(context).pop(),
+                    icon: Icon(Icons.close, color: colors.textMuted),
                   ),
                 ],
               ),
@@ -188,30 +190,35 @@ class _ScheduleEditorSheetState extends State<ScheduleEditorSheet> {
                 )
               else ...[
                 Flexible(
-                  child: schedules.isEmpty
-                      ? const _EditorStatus(
-                          icon: Icons.calendar_month_outlined,
-                          message: 'Nenhum horário cadastrado ainda.',
-                        )
-                      : ListView.separated(
-                          shrinkWrap: true,
-                          itemCount: schedules.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            final schedule = schedules[index];
-                            return _ScheduleEditorRow(
-                              schedule: schedule,
-                              discipline: _disciplineForSchedule(schedule),
-                              onEdit: _isSaving
-                                  ? null
-                                  : () =>
-                                        _openScheduleDialog(schedule: schedule),
-                              onDelete: _isSaving
-                                  ? null
-                                  : () => _deleteSchedule(schedule),
-                            );
-                          },
-                        ),
+                  child:
+                      schedules.isEmpty
+                          ? const _EditorStatus(
+                            icon: Icons.calendar_month_outlined,
+                            message: 'Nenhum horário cadastrado ainda.',
+                          )
+                          : ListView.separated(
+                            shrinkWrap: true,
+                            itemCount: schedules.length,
+                            separatorBuilder:
+                                (_, _) => const SizedBox(height: 8),
+                            itemBuilder: (context, index) {
+                              final schedule = schedules[index];
+                              return _ScheduleEditorRow(
+                                schedule: schedule,
+                                discipline: _disciplineForSchedule(schedule),
+                                onEdit:
+                                    _isSaving
+                                        ? null
+                                        : () => _openScheduleDialog(
+                                          schedule: schedule,
+                                        ),
+                                onDelete:
+                                    _isSaving
+                                        ? null
+                                        : () => _deleteSchedule(schedule),
+                              );
+                            },
+                          ),
                 ),
                 const SizedBox(height: 14),
                 SizedBox(
@@ -219,24 +226,25 @@ class _ScheduleEditorSheetState extends State<ScheduleEditorSheet> {
                   child: ElevatedButton(
                     onPressed: _isSaving ? null : _openScheduleDialog,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                      backgroundColor: colors.primary,
+                      foregroundColor: colors.textOnPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(999),
                       ),
                     ),
-                    child: _isSaving
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
+                    child:
+                        _isSaving
+                            ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  colors.textOnPrimary,
+                                ),
                               ),
-                            ),
-                          )
-                        : const Text('Adicionar horário'),
+                            )
+                            : const Text('Adicionar horário'),
                   ),
                 ),
               ],
@@ -281,6 +289,7 @@ class _ScheduleEditorRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final color = Color(discipline?.colorValue ?? schedule.colorValue);
     final teacher = discipline?.teacher.trim();
 
@@ -307,8 +316,8 @@ class _ScheduleEditorRow extends StatelessWidget {
                   schedule.disciplineName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textDark,
+                  style: TextStyle(
+                    color: colors.textDark,
                     fontSize: 15,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w800,
@@ -319,8 +328,8 @@ class _ScheduleEditorRow extends StatelessWidget {
                   '${_weekdaySummary(schedule.weekdays)} • ${schedule.formattedTimeRange}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textMedium,
+                  style: TextStyle(
+                    color: colors.textMedium,
                     fontSize: 12,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w700,
@@ -332,8 +341,8 @@ class _ScheduleEditorRow extends StatelessWidget {
                     teacher,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.textMuted,
+                    style: TextStyle(
+                      color: colors.textMuted,
                       fontSize: 12,
                       fontFamily: 'Roboto',
                       fontWeight: FontWeight.w600,
@@ -346,12 +355,12 @@ class _ScheduleEditorRow extends StatelessWidget {
           IconButton(
             tooltip: 'Editar horário',
             onPressed: onEdit,
-            icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
+            icon: Icon(Icons.edit_outlined, color: colors.primary),
           ),
           IconButton(
             tooltip: 'Excluir horário',
             onPressed: onDelete,
-            icon: const Icon(Icons.delete_outline, color: Color(0xFF9A2828)),
+            icon: Icon(Icons.delete_outline, color: colors.danger),
           ),
         ],
       ),
@@ -492,6 +501,7 @@ class _ScheduleEntryDialogState extends State<_ScheduleEntryDialog> {
   }
 
   Future<void> _pickTime({required bool isStartTime}) async {
+    final colors = context.appColors;
     final selectedTime = await showTimePicker(
       context: context,
       initialTime: isStartTime ? _startTime : _endTime,
@@ -500,7 +510,7 @@ class _ScheduleEntryDialogState extends State<_ScheduleEntryDialog> {
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(
               context,
-            ).colorScheme.copyWith(primary: AppColors.primary),
+            ).colorScheme.copyWith(primary: colors.primary),
           ),
           child: child!,
         );
@@ -530,6 +540,7 @@ class _ScheduleEntryDialogState extends State<_ScheduleEntryDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       backgroundColor: Colors.transparent,
@@ -538,14 +549,14 @@ class _ScheduleEntryDialogState extends State<_ScheduleEntryDialog> {
         child: Container(
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E4F0)),
-            boxShadow: const [
+            border: Border.all(color: colors.outline),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x80514EB6),
+                color: colors.primary.withValues(alpha: 0.28),
                 blurRadius: 18,
-                offset: Offset(0, 6),
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -561,8 +572,8 @@ class _ScheduleEntryDialogState extends State<_ScheduleEntryDialog> {
                       Expanded(
                         child: Text(
                           _isEditing ? 'Editar horário' : 'Novo horário',
-                          style: const TextStyle(
-                            color: AppColors.primary,
+                          style: TextStyle(
+                            color: colors.primary,
                             fontSize: 24,
                             fontFamily: 'Roboto',
                             fontWeight: FontWeight.w800,
@@ -572,16 +583,16 @@ class _ScheduleEntryDialogState extends State<_ScheduleEntryDialog> {
                       IconButton(
                         tooltip: 'Fechar',
                         onPressed: () => Navigator.of(context).maybePop(),
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.close,
-                          color: Color(0xFF464552),
+                          color: colors.textMuted,
                           size: 30,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Divider(height: 1, color: Color(0xFFE2E4F0)),
+                Divider(height: 1, color: colors.divider),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 22, 24, 24),
                   child: Column(
@@ -592,11 +603,11 @@ class _ScheduleEntryDialogState extends State<_ScheduleEntryDialog> {
                       DropdownButtonFormField<String>(
                         initialValue: _selectedDisciplineId,
                         isExpanded: true,
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.keyboard_arrow_down_rounded,
-                          color: Color(0xFF6B7280),
+                          color: colors.textSubtle,
                         ),
-                        decoration: _inputDecoration(),
+                        decoration: _inputDecoration(context),
                         items: widget.disciplines.map((discipline) {
                           return DropdownMenuItem(
                             value: discipline.id,
@@ -632,12 +643,12 @@ class _ScheduleEntryDialogState extends State<_ScheduleEntryDialog> {
                               onTap: () => _pickTime(isStartTime: true),
                             ),
                           ),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 10),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
                             child: Text(
                               'até',
                               style: TextStyle(
-                                color: AppColors.textMedium,
+                                color: colors.textMedium,
                                 fontSize: 14,
                                 fontFamily: 'Roboto',
                                 fontWeight: FontWeight.w700,
@@ -658,14 +669,16 @@ class _ScheduleEntryDialogState extends State<_ScheduleEntryDialog> {
                           width: double.infinity,
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFF1F2),
+                            color: colors.dangerSurface,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFFCA5A5)),
+                            border: Border.all(
+                              color: colors.danger.withValues(alpha: 0.28),
+                            ),
                           ),
                           child: Text(
                             _errorMessage!,
-                            style: const TextStyle(
-                              color: Color(0xFF991B1B),
+                            style: TextStyle(
+                              color: colors.danger,
                               fontSize: 12,
                               fontFamily: 'Roboto',
                               fontWeight: FontWeight.w600,
@@ -676,7 +689,7 @@ class _ScheduleEntryDialogState extends State<_ScheduleEntryDialog> {
                     ],
                   ),
                 ),
-                const Divider(height: 1, color: Color(0xFFE2E4F0)),
+                Divider(height: 1, color: colors.divider),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 22, 24, 24),
                   child: Column(
@@ -687,8 +700,8 @@ class _ScheduleEntryDialogState extends State<_ScheduleEntryDialog> {
                         child: OutlinedButton(
                           onPressed: () => Navigator.of(context).maybePop(),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF39349D),
-                            side: const BorderSide(color: Color(0xFF39349D)),
+                            foregroundColor: colors.primary,
+                            side: BorderSide(color: colors.primary),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(999),
                             ),
@@ -703,8 +716,8 @@ class _ScheduleEntryDialogState extends State<_ScheduleEntryDialog> {
                         child: ElevatedButton(
                           onPressed: _submit,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
+                            backgroundColor: colors.primary,
+                            foregroundColor: colors.textOnPrimary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(999),
                             ),
@@ -723,23 +736,28 @@ class _ScheduleEntryDialogState extends State<_ScheduleEntryDialog> {
     );
   }
 
-  InputDecoration _inputDecoration() {
+  InputDecoration _inputDecoration(BuildContext context) {
+    final colors = context.appColors;
     return InputDecoration(
       filled: true,
-      fillColor: Colors.white,
+      fillColor: colors.defaultFieldBackground,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-      border: _fieldBorder(),
-      enabledBorder: _fieldBorder(),
-      focusedBorder: _fieldBorder(color: AppColors.primary),
-      errorBorder: _fieldBorder(color: Colors.red),
-      focusedErrorBorder: _fieldBorder(color: Colors.red),
+      border: _fieldBorder(context),
+      enabledBorder: _fieldBorder(context),
+      focusedBorder: _fieldBorder(context, color: colors.primary),
+      errorBorder: _fieldBorder(context, color: colors.danger),
+      focusedErrorBorder: _fieldBorder(context, color: colors.danger),
     );
   }
 
-  OutlineInputBorder _fieldBorder({Color color = const Color(0xFFE2E4F0)}) {
+  OutlineInputBorder _fieldBorder(
+    BuildContext context, {
+    Color? color,
+  }) {
+    final colors = context.appColors;
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(color: color),
+      borderSide: BorderSide(color: color ?? colors.outline),
     );
   }
 }
@@ -766,8 +784,9 @@ class _TimeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Material(
-      color: Colors.white,
+      color: colors.defaultFieldBackground,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -777,12 +796,12 @@ class _TimeButton extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E4F0)),
+            border: Border.all(color: colors.outline),
           ),
           child: Text(
             label,
-            style: const TextStyle(
-              color: AppColors.textDark,
+            style: TextStyle(
+              color: colors.textDark,
               fontSize: 16,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w800,
@@ -801,10 +820,11 @@ class _DialogLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Text(
       label,
-      style: const TextStyle(
-        color: Color(0xFF464552),
+      style: TextStyle(
+        color: colors.textMedium,
         fontSize: 12,
         fontFamily: 'Roboto',
         fontWeight: FontWeight.w800,
@@ -822,17 +842,18 @@ class _EditorStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return AppSurface.soft(
       padding: const EdgeInsets.fromLTRB(14, 18, 14, 18),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.primary, size: 26),
+          Icon(icon, color: colors.primary, size: 26),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(
-                color: AppColors.textDark,
+              style: TextStyle(
+                color: colors.textDark,
                 fontSize: 14,
                 fontFamily: 'Roboto',
                 fontWeight: FontWeight.w700,

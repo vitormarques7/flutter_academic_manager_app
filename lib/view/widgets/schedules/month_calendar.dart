@@ -50,6 +50,9 @@ class MonthCalendar extends StatelessWidget {
       availableCalendarFormats: const {CalendarFormat.month: 'Mês'},
       availableGestures: AvailableGestures.horizontalSwipe,
       headerVisible: false,
+      pageAnimationEnabled: true,
+      pageAnimationCurve: Curves.easeOutCubic,
+      pageAnimationDuration: const Duration(milliseconds: 300),
       daysOfWeekHeight: 38,
       rowHeight: 55,
       sixWeekMonthsEnforced: false,
@@ -157,6 +160,40 @@ class MonthCalendar extends StatelessWidget {
     final hasEvent = events.any(
       (event) => event.kind == ScheduleCalendarMarkerKind.subjectEvent,
     );
+    final hasTask = events.any(
+      (event) => event.kind == ScheduleCalendarMarkerKind.academicTask,
+    );
+
+    final colors = context.appColors;
+    final activeSegments = <Widget>[];
+
+    final activeKinds = [
+      if (hasClass) ScheduleCalendarMarkerKind.classSchedule,
+      if (hasEvent) ScheduleCalendarMarkerKind.subjectEvent,
+      if (hasTask) ScheduleCalendarMarkerKind.academicTask,
+    ];
+
+    if (activeKinds.isEmpty) return const SizedBox.shrink();
+
+    final double segmentWidth = 20.0 / activeKinds.length;
+
+    for (int i = 0; i < activeKinds.length; i++) {
+      final kind = activeKinds[i];
+      final color = switch (kind) {
+        ScheduleCalendarMarkerKind.classSchedule => colors.primary,
+        ScheduleCalendarMarkerKind.subjectEvent => colors.event,
+        ScheduleCalendarMarkerKind.academicTask => colors.success,
+      };
+
+      activeSegments.add(
+        _ActivitySegment(
+          width: segmentWidth,
+          color: color,
+          leftRadius: i == 0,
+          rightRadius: i == activeKinds.length - 1,
+        ),
+      );
+    }
 
     return Positioned(
       bottom: 8,
@@ -164,22 +201,7 @@ class MonthCalendar extends StatelessWidget {
       right: 0,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (hasClass)
-            _ActivitySegment(
-              width: hasEvent ? 10 : 20,
-              color: context.appColors.primary,
-              leftRadius: true,
-              rightRadius: !hasEvent,
-            ),
-          if (hasEvent)
-            _ActivitySegment(
-              width: hasClass ? 10 : 20,
-              color: const Color(0xFFDB2777),
-              leftRadius: !hasClass,
-              rightRadius: true,
-            ),
-        ],
+        children: activeSegments,
       ),
     );
   }

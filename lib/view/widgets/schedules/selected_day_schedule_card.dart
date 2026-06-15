@@ -10,12 +10,14 @@ class SelectedDayScheduleCard extends StatelessWidget {
   final DateTime selectedDay;
   final List<ScheduleClassInfo> classes;
   final List<ScheduleEventInfo> events;
+  final List<ScheduleTaskInfo> tasks;
 
   const SelectedDayScheduleCard({
     super.key,
     required this.selectedDay,
     required this.classes,
     this.events = const [],
+    this.tasks = const [],
   });
 
   @override
@@ -23,6 +25,61 @@ class SelectedDayScheduleCard extends StatelessWidget {
     final colors = context.appColors;
     final hasClasses = classes.isNotEmpty;
     final hasEvents = events.isNotEmpty;
+    final hasTasks = tasks.isNotEmpty;
+
+    final sections = <Widget>[
+      if (hasClasses)
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _CardSectionLabel('Aulas'),
+            const SizedBox(height: 12),
+            ...classes.asMap().entries.map((entry) {
+              final index = entry.key;
+              final classInfo = entry.value;
+              final isLast = index == classes.length - 1;
+              return Padding(
+                padding: EdgeInsets.only(bottom: isLast ? 0 : 18),
+                child: _ScheduleClassRow(classInfo: classInfo),
+              );
+            }),
+          ],
+        ),
+      if (hasEvents)
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _CardSectionLabel('Eventos'),
+            const SizedBox(height: 12),
+            ...events.asMap().entries.map((entry) {
+              final index = entry.key;
+              final eventInfo = entry.value;
+              final isLast = index == events.length - 1;
+              return Padding(
+                padding: EdgeInsets.only(bottom: isLast ? 0 : 18),
+                child: _ScheduleEventRow(eventInfo: eventInfo),
+              );
+            }),
+          ],
+        ),
+      if (hasTasks)
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _CardSectionLabel('Tarefas'),
+            const SizedBox(height: 12),
+            ...tasks.asMap().entries.map((entry) {
+              final index = entry.key;
+              final taskInfo = entry.value;
+              final isLast = index == tasks.length - 1;
+              return Padding(
+                padding: EdgeInsets.only(bottom: isLast ? 0 : 18),
+                child: _ScheduleTaskRow(taskInfo: taskInfo),
+              );
+            }),
+          ],
+        ),
+    ];
 
     return _RaisedCard(
       minHeight: 218,
@@ -41,43 +98,16 @@ class SelectedDayScheduleCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          if (!hasClasses && !hasEvents)
+          if (!hasClasses && !hasEvents && !hasTasks)
             const _EmptyScheduleMessage()
           else ...[
-            if (hasClasses) ...[
-              const _CardSectionLabel('Aulas'),
-              const SizedBox(height: 12),
-              Column(
-                children: List.generate(classes.length, (index) {
-                  final classInfo = classes[index];
-                  final isLast = index == classes.length - 1;
-
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: isLast ? 0 : 18),
-                    child: _ScheduleClassRow(classInfo: classInfo),
-                  );
-                }),
-              ),
-            ],
-            if (hasClasses && hasEvents) ...[
-              const SizedBox(height: 18),
-              Divider(height: 1, color: colors.divider),
-              const SizedBox(height: 18),
-            ],
-            if (hasEvents) ...[
-              const _CardSectionLabel('Eventos'),
-              const SizedBox(height: 12),
-              Column(
-                children: List.generate(events.length, (index) {
-                  final eventInfo = events[index];
-                  final isLast = index == events.length - 1;
-
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: isLast ? 0 : 18),
-                    child: _ScheduleEventRow(eventInfo: eventInfo),
-                  );
-                }),
-              ),
+            for (int i = 0; i < sections.length; i++) ...[
+              sections[i],
+              if (i < sections.length - 1) ...[
+                const SizedBox(height: 18),
+                Divider(height: 1, color: colors.divider),
+                const SizedBox(height: 18),
+              ],
             ],
           ],
         ],
@@ -151,7 +181,7 @@ class _ScheduleClassRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: classInfo.iconBackground,
                   borderRadius: BorderRadius.circular(9),
-                  border: Border.all(color: const Color(0x2ED1D1D1)),
+                  border: Border.all(color: colors.outline.withValues(alpha: 0.2)),
                   boxShadow: [
                     BoxShadow(
                       color: classInfo.iconColor.withValues(alpha: 0.15),
@@ -245,7 +275,7 @@ class _ScheduleEventRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: eventInfo.iconBackground,
                   borderRadius: BorderRadius.circular(9),
-                  border: Border.all(color: const Color(0x2ED1D1D1)),
+                  border: Border.all(color: colors.outline.withValues(alpha: 0.2)),
                   boxShadow: [
                     BoxShadow(
                       color: eventInfo.iconColor.withValues(alpha: 0.15),
@@ -316,6 +346,107 @@ class _ScheduleEventRow extends StatelessWidget {
   }
 }
 
+class _ScheduleTaskRow extends StatelessWidget {
+  final ScheduleTaskInfo taskInfo;
+
+  const _ScheduleTaskRow({required this.taskInfo});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final subtitle = taskInfo.subject.isEmpty
+        ? taskInfo.typeLabel
+        : '${taskInfo.typeLabel} • ${taskInfo.subject}';
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: taskInfo.onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 5,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: taskInfo.isChecked ? colors.success : taskInfo.accentColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: taskInfo.isChecked
+                      ? colors.successSurface
+                      : taskInfo.iconBackground,
+                  borderRadius: BorderRadius.circular(9),
+                  border: Border.all(color: colors.outline.withValues(alpha: 0.2)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (taskInfo.isChecked ? colors.success : taskInfo.iconColor)
+                          .withValues(alpha: 0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  taskInfo.isChecked ? Icons.check_circle_outline_rounded : taskInfo.icon,
+                  color: taskInfo.isChecked ? colors.success : taskInfo.iconColor,
+                  size: 25,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      taskInfo.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colors.textDark,
+                        fontSize: 15,
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.w700,
+                        height: 1.05,
+                        decoration: taskInfo.isChecked
+                            ? TextDecoration.lineThrough
+                            : TextDecoration.none,
+                        decorationThickness: 2,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colors.textMuted,
+                        fontSize: 12,
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.w500,
+                        height: 1.05,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _EmptyScheduleMessage extends StatelessWidget {
   const _EmptyScheduleMessage();
 
@@ -331,7 +462,7 @@ class _EmptyScheduleMessage extends StatelessWidget {
         borderRadius: BorderRadius.circular(9),
       ),
       child: Text(
-        'Nenhum horário ou evento para este dia',
+        'Nenhum horário, evento ou tarefa para este dia',
         style: TextStyle(
           color: colors.textMuted,
           fontSize: 13,

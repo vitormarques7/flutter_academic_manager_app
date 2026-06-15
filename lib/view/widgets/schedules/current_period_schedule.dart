@@ -102,13 +102,14 @@ class _HeaderLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Center(
       child: Text(
         label,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: colors.textOnPrimary,
           fontSize: 12,
           fontFamily: 'Roboto',
           fontWeight: FontWeight.w800,
@@ -190,7 +191,7 @@ class _DayLabel extends StatelessWidget {
               color: colors.primary,
               fontSize: 11,
               fontFamily: 'Roboto',
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w800,
               height: 1.05,
             ),
           ),
@@ -198,7 +199,7 @@ class _DayLabel extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.72),
+              color: colors.surface.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
@@ -434,10 +435,14 @@ class _EditScheduleButton extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           customBorder: const CircleBorder(),
-          child: const SizedBox(
+          child: SizedBox(
             width: 48,
             height: 48,
-            child: Icon(Icons.edit_outlined, color: Colors.white, size: 25),
+            child: Icon(
+              Icons.edit_outlined,
+              color: colors.textOnPrimary,
+              size: 25,
+            ),
           ),
         ),
       ),
