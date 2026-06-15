@@ -1,5 +1,74 @@
 part of 'subject_details_page.dart';
 
+LinearGradient _disciplineSurfaceGradient({
+  required BuildContext context,
+  required AppThemeColors colors,
+  required Color accentColor,
+}) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+
+  if (isDark) {
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        accentColor.withValues(alpha: 0.10),
+        accentColor.withValues(alpha: 0.035),
+        colors.surface,
+      ],
+      stops: const [0.0, 0.48, 1.0],
+    );
+  }
+
+  final glow = Color.alphaBlend(
+    accentColor.withValues(alpha: 0.050),
+    colors.surface,
+  );
+  final whisper = Color.alphaBlend(
+    accentColor.withValues(alpha: 0.020),
+    colors.surface,
+  );
+  final fade = Color.alphaBlend(
+    accentColor.withValues(alpha: 0.006),
+    colors.surface,
+  );
+
+  return LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [glow, whisper, fade, colors.surface],
+    stops: const [0.0, 0.24, 0.58, 1.0],
+  );
+}
+
+class _DisciplineAccentMark extends StatelessWidget {
+  final Color accentColor;
+
+  const _DisciplineAccentMark({required this.accentColor});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: 54,
+      height: 4,
+      decoration: BoxDecoration(
+        color: isDark ? accentColor : null,
+        gradient: isDark
+            ? null
+            : LinearGradient(
+                colors: [
+                  accentColor.withValues(alpha: 0.82),
+                  accentColor.withValues(alpha: 0.46),
+                ],
+              ),
+        borderRadius: BorderRadius.circular(999),
+      ),
+    );
+  }
+}
+
 class _DetailsHeader extends StatelessWidget {
   const _DetailsHeader();
 
@@ -67,103 +136,116 @@ class _SubjectSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    return AppSurface.soft(
+    return AppSurface.card(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      shadows: colors.cardShadows,
-      child: Row(
+      gradient: _disciplineSurfaceGradient(
+        context: context,
+        colors: colors,
+        accentColor: accentColor,
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          _DisciplineAccentMark(accentColor: accentColor),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _IconTile(
-                      icon: Icons.menu_book_outlined,
-                      color: accentColor,
-                      size: 52,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: colors.textDark,
-                              fontSize: 22,
-                              fontFamily: 'Roboto',
-                              fontWeight: FontWeight.w800,
-                              height: 1.12,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _IconTile(
+                          icon: Icons.menu_book_outlined,
+                          color: accentColor,
+                          size: 52,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                Icons.person_outline,
-                                color: colors.textMuted,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 5),
-                              Expanded(
-                                child: Text(
-                                  teacher,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: colors.textMuted,
-                                    fontSize: 14,
-                                    fontFamily: 'Roboto',
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                              Text(
+                                name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: colors.textDark,
+                                  fontSize: 22,
+                                  fontFamily: 'Roboto',
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.12,
                                 ),
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.person_outline,
+                                    color: colors.textMuted,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Expanded(
+                                    child: Text(
+                                      teacher,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: colors.textMuted,
+                                        fontSize: 14,
+                                        fontFamily: 'Roboto',
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        MetadataChip(
+                          icon: Icons.access_time,
+                          label: '${workload}h',
+                          foregroundColor: accentColor,
+                          backgroundColor: accentColor.withValues(alpha: 0.08),
+                          iconSize: 15,
+                          maxWidth: 150,
+                        ),
+                        MetadataChip(
+                          icon: Icons.fact_check_outlined,
+                          label:
+                              '$gradeCount ${gradeCount == 1 ? 'nota' : 'notas'}',
+                          iconSize: 15,
+                          maxWidth: 180,
+                        ),
+                        MetadataChip(
+                          icon: Icons.pending_actions_outlined,
+                          label:
+                              '$pendingTaskCount ${pendingTaskCount == 1 ? 'pendente' : 'pendentes'}',
+                          iconSize: 15,
+                          maxWidth: 160,
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    MetadataChip(
-                      icon: Icons.access_time,
-                      label: '${workload}h',
-                      iconSize: 15,
-                      maxWidth: 150,
-                    ),
-                    MetadataChip(
-                      icon: Icons.fact_check_outlined,
-                      label:
-                          '$gradeCount ${gradeCount == 1 ? 'nota' : 'notas'}',
-                      iconSize: 15,
-                      maxWidth: 180,
-                    ),
-                    MetadataChip(
-                      icon: Icons.pending_actions_outlined,
-                      label:
-                          '$pendingTaskCount ${pendingTaskCount == 1 ? 'pendente' : 'pendentes'}',
-                      iconSize: 15,
-                      maxWidth: 160,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              _AverageRing(average: average),
+            ],
           ),
-          const SizedBox(width: 12),
-          _AverageRing(average: average),
         ],
       ),
     );
@@ -200,9 +282,11 @@ class _AverageRing extends StatelessWidget {
                   width: 76,
                   height: 76,
                   child: CircularProgressIndicator(
-                    value: average == null ? 0.0 : (average! / 10).clamp(0.0, 1.0),
+                    value: average == null
+                        ? 0.0
+                        : (average! / 10).clamp(0.0, 1.0),
                     strokeWidth: 5,
-                    backgroundColor: colors.surface,
+                    backgroundColor: colors.surfaceAlt,
                     color: _statusColor(colors),
                   ),
                 ),
@@ -430,6 +514,8 @@ class _SubjectEventRow extends StatelessWidget {
                         MetadataChip(
                           icon: Icons.calendar_today_outlined,
                           label: event.displayDateLabel,
+                          foregroundColor: accentColor,
+                          backgroundColor: accentColor.withValues(alpha: 0.08),
                           iconSize: 13,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -440,6 +526,10 @@ class _SubjectEventRow extends StatelessWidget {
                         MetadataChip(
                           icon: _typeIcon,
                           label: event.type.label,
+                          foregroundColor: colors.primary,
+                          backgroundColor: colors.primary.withValues(
+                            alpha: 0.08,
+                          ),
                           iconSize: 13,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -584,7 +674,10 @@ class _AssessmentRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          _GradeBadge(label: assessment.formattedGrade),
+          _GradeBadge(
+            label: assessment.formattedGrade,
+            grade: assessment.grade,
+          ),
           IconButton(
             tooltip: 'Excluir nota',
             onPressed: onDelete,
@@ -726,12 +819,19 @@ class _SubjectNoteRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _IconTile(icon: Icons.sticky_note_2_outlined, color: accentColor),
-              const SizedBox(width: 12),
+              Container(
+                width: 4,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: accentColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -799,69 +899,80 @@ class _TaskRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              _IconTile(icon: _typeIcon, color: accentColor),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      task.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: colors.textDark,
-                        fontSize: 15,
-                        fontFamily: 'Roboto',
-                        fontWeight: FontWeight.w800,
-                        decoration: task.isChecked
-                            ? TextDecoration.lineThrough
-                            : TextDecoration.none,
+    return Opacity(
+      opacity: task.isChecked ? 0.6 : 1.0,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                _IconTile(icon: _typeIcon, color: accentColor),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        task.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colors.textDark,
+                          fontSize: 15,
+                          fontFamily: 'Roboto',
+                          fontWeight: FontWeight.w800,
+                          decoration: task.isChecked
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 5),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        MetadataChip(
-                          icon: Icons.access_time,
-                          label: task.deadlineLabel,
-                          iconSize: 13,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 5,
+                      const SizedBox(height: 5),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          MetadataChip(
+                            icon: Icons.access_time,
+                            label: task.deadlineLabel,
+                            foregroundColor: colors.textMedium,
+                            backgroundColor: colors.surfaceAlt,
+                            iconSize: 13,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 5,
+                            ),
+                            maxWidth: 160,
                           ),
-                          maxWidth: 160,
-                        ),
-                        MetadataChip(
-                          icon: task.isChecked
-                              ? Icons.check_circle_outline
-                              : Icons.pending_actions_outlined,
-                          label: task.isChecked ? 'Concluída' : 'Pendente',
-                          iconSize: 13,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 5,
+                          MetadataChip(
+                            icon: task.isChecked
+                                ? Icons.check_circle_outline
+                                : Icons.pending_actions_outlined,
+                            label: task.isChecked ? 'Concluída' : 'Pendente',
+                            foregroundColor: task.isChecked
+                                ? colors.success
+                                : colors.warning,
+                            backgroundColor: task.isChecked
+                                ? colors.success.withValues(alpha: 0.08)
+                                : colors.warning.withValues(alpha: 0.08),
+                            iconSize: 13,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 5,
+                            ),
+                            maxWidth: 160,
                           ),
-                          maxWidth: 160,
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right, color: colors.textMuted),
-            ],
+                const SizedBox(width: 8),
+                Icon(Icons.chevron_right, color: colors.textMuted),
+              ],
+            ),
           ),
         ),
       ),
@@ -962,26 +1073,35 @@ class _IconTile extends StatelessWidget {
 
 class _GradeBadge extends StatelessWidget {
   final String label;
+  final double grade;
 
-  const _GradeBadge({required this.label});
+  const _GradeBadge({required this.label, required this.grade});
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final badgeColor = grade >= 7
+        ? colors.success
+        : grade >= 5
+        ? colors.warning
+        : colors.danger;
 
     return Container(
       width: 54,
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: colors.surface.withValues(alpha: 0.78),
+        color: badgeColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.primary.withValues(alpha: 0.32)),
+        border: Border.all(
+          color: badgeColor.withValues(alpha: 0.32),
+          width: 1.5,
+        ),
       ),
       child: Text(
         label,
         textAlign: TextAlign.center,
         style: TextStyle(
-          color: colors.primary,
+          color: badgeColor,
           fontSize: 16,
           fontFamily: 'Roboto',
           fontWeight: FontWeight.w800,
@@ -1008,7 +1128,9 @@ class _AttendanceManagementCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final absences = discipline.absences;
-    final maxAbsences = discipline.maxAbsences > 0 ? discipline.maxAbsences : 12;
+    final maxAbsences = discipline.maxAbsences > 0
+        ? discipline.maxAbsences
+        : 12;
     final pct = absences / maxAbsences;
     final pctClamped = pct.clamp(0.0, 1.0);
 
@@ -1024,9 +1146,16 @@ class _AttendanceManagementCard extends StatelessWidget {
 
     return AppSurface.card(
       padding: const EdgeInsets.all(16),
+      gradient: _disciplineSurfaceGradient(
+        context: context,
+        colors: colors,
+        accentColor: accentColor,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _DisciplineAccentMark(accentColor: accentColor),
+          const SizedBox(height: 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1042,14 +1171,21 @@ class _AttendanceManagementCard extends StatelessWidget {
               GestureDetector(
                 onTap: () => _showEditDialog(context),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.surfaceAlt,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.edit_outlined, size: 14, color: colors.textMedium),
+                      Icon(
+                        Icons.edit_outlined,
+                        size: 14,
+                        color: colors.textMedium,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'Ajustar',
@@ -1122,6 +1258,7 @@ class _AttendanceManagementCard extends StatelessWidget {
             children: [
               _PresenceActionButton(
                 label: '-1',
+                accentColor: accentColor,
                 onPressed: absences > 0
                     ? () {
                         HapticFeedback.lightImpact();
@@ -1137,6 +1274,7 @@ class _AttendanceManagementCard extends StatelessWidget {
                     Expanded(
                       child: _PresenceActionButton(
                         label: '+1',
+                        accentColor: accentColor,
                         onPressed: () {
                           HapticFeedback.lightImpact();
                           onUpdateAbsences(absences + 1);
@@ -1147,6 +1285,7 @@ class _AttendanceManagementCard extends StatelessWidget {
                     Expanded(
                       child: _PresenceActionButton(
                         label: '+2',
+                        accentColor: accentColor,
                         onPressed: () {
                           HapticFeedback.lightImpact();
                           onUpdateAbsences(absences + 2);
@@ -1157,6 +1296,7 @@ class _AttendanceManagementCard extends StatelessWidget {
                     Expanded(
                       child: _PresenceActionButton(
                         label: '+3',
+                        accentColor: accentColor,
                         onPressed: () {
                           HapticFeedback.lightImpact();
                           onUpdateAbsences(absences + 3);
@@ -1167,6 +1307,7 @@ class _AttendanceManagementCard extends StatelessWidget {
                     Expanded(
                       child: _PresenceActionButton(
                         label: '+4',
+                        accentColor: accentColor,
                         onPressed: () {
                           HapticFeedback.lightImpact();
                           onUpdateAbsences(absences + 4);
@@ -1185,8 +1326,12 @@ class _AttendanceManagementCard extends StatelessWidget {
 
   void _showEditDialog(BuildContext context) {
     final colors = context.appColors;
-    final absencesController = TextEditingController(text: discipline.absences.toString());
-    final maxAbsencesController = TextEditingController(text: discipline.maxAbsences.toString());
+    final absencesController = TextEditingController(
+      text: discipline.absences.toString(),
+    );
+    final maxAbsencesController = TextEditingController(
+      text: discipline.maxAbsences.toString(),
+    );
     final formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -1195,7 +1340,9 @@ class _AttendanceManagementCard extends StatelessWidget {
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: colors.surface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+          ),
           title: Text(
             'Ajustar Presença',
             style: TextStyle(
@@ -1218,7 +1365,9 @@ class _AttendanceManagementCard extends StatelessWidget {
                     hintText: 'Ex: 4',
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Informe as faltas.';
+                    if (value == null || value.isEmpty) {
+                      return 'Informe as faltas.';
+                    }
                     final val = int.tryParse(value);
                     if (val == null || val < 0) return 'Valor inválido.';
                     return null;
@@ -1235,9 +1384,13 @@ class _AttendanceManagementCard extends StatelessWidget {
                     hintText: 'Ex: 12',
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Informe o limite.';
+                    if (value == null || value.isEmpty) {
+                      return 'Informe o limite.';
+                    }
                     final val = int.tryParse(value);
-                    if (val == null || val <= 0) return 'O limite deve ser maior que 0.';
+                    if (val == null || val <= 0) {
+                      return 'O limite deve ser maior que 0.';
+                    }
                     return null;
                   },
                 ),
@@ -1261,9 +1414,7 @@ class _AttendanceManagementCard extends StatelessWidget {
                 onUpdateMaxAbsences(newMax);
                 Navigator.of(dialogContext).pop();
               },
-              style: FilledButton.styleFrom(
-                backgroundColor: colors.primary,
-              ),
+              style: FilledButton.styleFrom(backgroundColor: colors.primary),
               child: const Text('Confirmar'),
             ),
           ],
@@ -1277,16 +1428,34 @@ class _PresenceActionButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
   final bool isNegative;
+  final Color accentColor;
 
   const _PresenceActionButton({
     required this.label,
     required this.onPressed,
+    required this.accentColor,
     this.isNegative = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final isDisabled = onPressed == null;
+    final backgroundColor = isDisabled
+        ? colors.surfaceAlt
+        : isNegative
+        ? colors.surfaceAlt
+        : accentColor.withValues(alpha: 0.08);
+    final borderColor = isDisabled
+        ? colors.outline
+        : isNegative
+        ? colors.outlineStrong
+        : accentColor.withValues(alpha: 0.24);
+    final foregroundColor = isDisabled
+        ? colors.textMuted
+        : isNegative
+        ? colors.textMedium
+        : accentColor;
 
     return SizedBox(
       height: 40,
@@ -1294,12 +1463,9 @@ class _PresenceActionButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: isNegative ? colors.textMedium : colors.primary,
-          side: BorderSide(
-            color: isNegative
-                ? colors.outlineStrong
-                : colors.primary.withValues(alpha: 0.38),
-          ),
+          backgroundColor: backgroundColor,
+          foregroundColor: foregroundColor,
+          side: BorderSide(color: borderColor, width: 1.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -1309,7 +1475,8 @@ class _PresenceActionButton extends StatelessWidget {
           label,
           style: const TextStyle(
             fontSize: 14,
-            fontWeight: FontWeight.w700,
+            fontFamily: 'Roboto',
+            fontWeight: FontWeight.w800,
           ),
         ),
       ),

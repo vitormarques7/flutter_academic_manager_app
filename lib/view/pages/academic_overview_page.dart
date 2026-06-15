@@ -38,7 +38,8 @@ class _AcademicOverviewPageState extends State<AcademicOverviewPage>
       vsync: this,
       initialIndex: widget.initialTab,
     );
-    _activeStudyCycleIdFuture = _userProfileRepository.resolveActiveStudyCycleId();
+    _activeStudyCycleIdFuture = _userProfileRepository
+        .resolveActiveStudyCycleId();
   }
 
   @override
@@ -161,7 +162,8 @@ class _AttendanceTab extends StatelessWidget {
     return StreamBuilder<List<Discipline>>(
       stream: disciplineRepository.watchDisciplines(studyCycleId: studyCycleId),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -181,7 +183,10 @@ class _AttendanceTab extends StatelessWidget {
           );
         }
 
-        final totalAbsences = disciplines.fold<int>(0, (sum, d) => sum + d.absences);
+        final totalAbsences = disciplines.fold<int>(
+          0,
+          (sum, d) => sum + d.absences,
+        );
         final warningCount = disciplines.where((d) {
           final max = d.maxAbsences > 0 ? d.maxAbsences : 12;
           return d.absences >= max * 0.8;
@@ -229,12 +234,15 @@ class _AttendanceTab extends StatelessWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: disciplines.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final discipline = disciplines[index];
                   final accentColor = Color(discipline.colorValue);
                   final absences = discipline.absences;
-                  final maxAbsences = discipline.maxAbsences > 0 ? discipline.maxAbsences : 12;
+                  final maxAbsences = discipline.maxAbsences > 0
+                      ? discipline.maxAbsences
+                      : 12;
                   final pct = absences / maxAbsences;
                   final pctClamped = pct.clamp(0.0, 1.0);
 
@@ -266,7 +274,10 @@ class _AttendanceTab extends StatelessWidget {
                         );
                       },
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
                         child: Row(
                           children: [
                             Container(
@@ -312,12 +323,17 @@ class _AttendanceTab extends StatelessWidget {
                                     children: [
                                       Expanded(
                                         child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(4),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
                                           child: LinearProgressIndicator(
                                             value: pctClamped,
                                             minHeight: 6,
                                             backgroundColor: colors.surfaceAlt,
-                                            valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  statusColor,
+                                                ),
                                           ),
                                         ),
                                       ),
@@ -447,7 +463,8 @@ class _NotesTab extends StatelessWidget {
         return StreamBuilder<List<SubjectNote>>(
           stream: noteRepository.watchNotes(studyCycleId: studyCycleId),
           builder: (context, noteSnapshot) {
-            if (noteSnapshot.connectionState == ConnectionState.waiting && !noteSnapshot.hasData) {
+            if (noteSnapshot.connectionState == ConnectionState.waiting &&
+                !noteSnapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
 
@@ -467,130 +484,21 @@ class _NotesTab extends StatelessWidget {
               );
             }
 
+            final noteGroups = _groupNotesByDiscipline(
+              notes: notes,
+              disciplineMap: disciplineMap,
+              fallbackColor: colors.primary,
+            );
+
             return ListView.separated(
               padding: const EdgeInsets.all(20),
-              itemCount: notes.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemCount: noteGroups.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 18),
               itemBuilder: (context, index) {
-                final note = notes[index];
-                final discipline = disciplineMap[note.disciplineId];
-                final accentColor = discipline != null
-                    ? Color(discipline.colorValue)
-                    : colors.primary;
-
-                return AppSurface.card(
-                  padding: EdgeInsets.zero,
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => SubjectNoteDetailsPage(
-                            note: note,
-                            accentColor: accentColor,
-                            onDelete: (n) => noteRepository.deleteNote(n.id),
-                          ),
-                        ),
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 4,
-                            height: 64,
-                            decoration: BoxDecoration(
-                              color: accentColor,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        note.title,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          color: colors.textDark,
-                                          fontSize: 16,
-                                          fontFamily: 'Roboto',
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                    ),
-                                    Icon(
-                                      Icons.chevron_right,
-                                      color: colors.textMuted,
-                                      size: 20,
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  note.content,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: colors.textMuted,
-                                    fontSize: 13,
-                                    fontFamily: 'Roboto',
-                                    height: 1.4,
-                                  ),
-                                ),
-                                const SizedBox(height: 14),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: accentColor.withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: accentColor.withValues(alpha: 0.24),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        note.disciplineName.isEmpty
-                                            ? 'Sem Disciplina'
-                                            : note.disciplineName,
-                                        style: TextStyle(
-                                          color: accentColor,
-                                          fontSize: 11,
-                                          fontFamily: 'Roboto',
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ),
-                                    if (note.updatedAt != null || note.createdAt != null)
-                                      Text(
-                                        _formatDateTime(note.updatedAt ?? note.createdAt!),
-                                        style: TextStyle(
-                                          color: colors.textSubtle,
-                                          fontSize: 11,
-                                          fontFamily: 'Roboto',
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                return _NoteDisciplineSection(
+                  group: noteGroups[index],
+                  noteRepository: noteRepository,
+                  formatDateTime: _formatDateTime,
                 );
               },
             );
@@ -604,5 +512,239 @@ class _NotesTab extends StatelessWidget {
     final day = dt.day.toString().padLeft(2, '0');
     final month = dt.month.toString().padLeft(2, '0');
     return '$day/$month/${dt.year}';
+  }
+
+  List<_NoteDisciplineGroup> _groupNotesByDiscipline({
+    required List<SubjectNote> notes,
+    required Map<String, Discipline> disciplineMap,
+    required Color fallbackColor,
+  }) {
+    final groupsByKey = <String, _NoteDisciplineGroup>{};
+
+    for (final note in notes) {
+      final discipline = disciplineMap[note.disciplineId];
+      final title = _disciplineLabel(note, discipline);
+      final key = discipline?.id ?? note.disciplineId ?? title.toLowerCase();
+
+      groupsByKey.putIfAbsent(
+        key,
+        () => _NoteDisciplineGroup(
+          title: title,
+          accentColor: discipline != null
+              ? Color(discipline.colorValue)
+              : fallbackColor,
+          notes: [],
+        ),
+      );
+      groupsByKey[key]!.notes.add(note);
+    }
+
+    return groupsByKey.values.toList();
+  }
+
+  String _disciplineLabel(SubjectNote note, Discipline? discipline) {
+    final disciplineName = discipline?.name.trim();
+    if (disciplineName != null && disciplineName.isNotEmpty) {
+      return disciplineName;
+    }
+
+    final noteDisciplineName = note.disciplineName.trim();
+    if (noteDisciplineName.isNotEmpty) return noteDisciplineName;
+
+    return 'Sem disciplina';
+  }
+}
+
+class _NoteDisciplineGroup {
+  final String title;
+  final Color accentColor;
+  final List<SubjectNote> notes;
+
+  const _NoteDisciplineGroup({
+    required this.title,
+    required this.accentColor,
+    required this.notes,
+  });
+}
+
+class _NoteDisciplineSection extends StatelessWidget {
+  final _NoteDisciplineGroup group;
+  final SubjectNoteRepository noteRepository;
+  final String Function(DateTime dt) formatDateTime;
+
+  const _NoteDisciplineSection({
+    required this.group,
+    required this.noteRepository,
+    required this.formatDateTime,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 2, right: 2, bottom: 10),
+          child: Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: group.accentColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  group.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colors.textDark,
+                    fontSize: 15,
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Text(
+                '${group.notes.length} ${group.notes.length == 1 ? 'anotação' : 'anotações'}',
+                style: TextStyle(
+                  color: colors.textMuted,
+                  fontSize: 12,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+        for (final entry in group.notes.indexed) ...[
+          _OverviewNoteCard(
+            note: entry.$2,
+            accentColor: group.accentColor,
+            noteRepository: noteRepository,
+            formatDateTime: formatDateTime,
+          ),
+          if (entry.$1 != group.notes.length - 1) const SizedBox(height: 10),
+        ],
+      ],
+    );
+  }
+}
+
+class _OverviewNoteCard extends StatelessWidget {
+  final SubjectNote note;
+  final Color accentColor;
+  final SubjectNoteRepository noteRepository;
+  final String Function(DateTime dt) formatDateTime;
+
+  const _OverviewNoteCard({
+    required this.note,
+    required this.accentColor,
+    required this.noteRepository,
+    required this.formatDateTime,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return AppSurface.card(
+      padding: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => SubjectNoteDetailsPage(
+                note: note,
+                accentColor: accentColor,
+                onDelete: (n) => noteRepository.deleteNote(n.id),
+              ),
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 4,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: accentColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            note.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: colors.textDark,
+                              fontSize: 16,
+                              fontFamily: 'Roboto',
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right,
+                          color: colors.textMuted,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      note.content,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colors.textMuted,
+                        fontSize: 13,
+                        fontFamily: 'Roboto',
+                        height: 1.4,
+                      ),
+                    ),
+                    if (note.updatedAt != null || note.createdAt != null) ...[
+                      const SizedBox(height: 14),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          formatDateTime(note.updatedAt ?? note.createdAt!),
+                          style: TextStyle(
+                            color: colors.textSubtle,
+                            fontSize: 11,
+                            fontFamily: 'Roboto',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
