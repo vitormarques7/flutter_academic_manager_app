@@ -306,7 +306,7 @@ class _CurrentCycleCard extends StatelessWidget {
                           color: colors.textDark,
                           fontSize: 16,
                           fontFamily: 'Roboto',
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),

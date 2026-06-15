@@ -205,7 +205,7 @@ class _SetupDisciplineTile extends StatelessWidget {
                     color: colors.textDark,
                     fontSize: 15,
                     fontFamily: 'Roboto',
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 3),

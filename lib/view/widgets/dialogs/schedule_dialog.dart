@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_theme_colors.dart';
 import '../selectors/weekday_selector.dart';
 
 class ScheduleDialogResult {
@@ -104,7 +104,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
 
     final selectedTime = await showModalBottomSheet<TimeOfDay>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: context.appColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -169,6 +169,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
       backgroundColor: Colors.transparent,
@@ -178,14 +179,14 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(32, 26, 32, 34),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColors.background),
-            boxShadow: const [
+            border: Border.all(color: colors.outline),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x66587DBD),
-                blurRadius: 4,
-                offset: Offset(0, 4),
+                color: colors.primary.withValues(alpha: 0.16),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -199,14 +200,18 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                     InkWell(
                       onTap: () => Navigator.of(context).pop(),
                       borderRadius: BorderRadius.circular(18),
-                      child: const Icon(Icons.chevron_left, size: 34),
+                      child: Icon(
+                        Icons.chevron_left,
+                        color: colors.textDark,
+                        size: 34,
+                      ),
                     ),
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'Adicionar horario',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.black,
+                          color: colors.textDark,
                           fontSize: 24,
                           fontFamily: 'Roboto',
                           fontWeight: FontWeight.w500,
@@ -218,10 +223,10 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                 ),
                 const SizedBox(height: 38),
                 if (widget.showDisciplineNameField) ...[
-                  const Text(
+                  Text(
                     'Disciplina',
                     style: TextStyle(
-                      color: Colors.black,
+                      color: colors.textDark,
                       fontSize: 16,
                       fontFamily: 'Roboto',
                       fontWeight: FontWeight.w500,
@@ -231,25 +236,27 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                   TextField(
                     controller: _disciplineNameController,
                     textInputAction: TextInputAction.next,
+                    style: TextStyle(color: colors.textDark),
                     decoration: InputDecoration(
                       hintText: 'Ex: Programação Mobile',
+                      hintStyle: TextStyle(color: colors.textMuted),
                       filled: true,
-                      fillColor: const Color(0xFFF7F7FD),
+                      fillColor: colors.defaultFieldBackground,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 14,
                         vertical: 13,
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Color(0xFFE2E4F0)),
+                        borderSide: BorderSide(color: colors.outline),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Color(0xFFE2E4F0)),
+                        borderSide: BorderSide(color: colors.outline),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: AppColors.primary),
+                        borderSide: BorderSide(color: colors.primary),
                       ),
                     ),
                     onChanged: (_) {
@@ -260,30 +267,30 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                   ),
                   const SizedBox(height: 26),
                 ],
-                const Text(
+                Text(
                   'Quando acontece?',
                   style: TextStyle(
-                    color: Colors.black,
+                    color: colors.textDark,
                     fontSize: 18,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text(
+                Text(
                   'Defina os dias da semana e horários da sua disciplina.',
                   style: TextStyle(
-                    color: Color(0xFF8E8888),
+                    color: colors.textMedium,
                     fontSize: 15,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
+                Text(
                   'Dias da semana',
                   style: TextStyle(
-                    color: Colors.black,
+                    color: colors.textDark,
                     fontSize: 16,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w500,
@@ -295,10 +302,10 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                   onChanged: _toggleWeekday,
                 ),
                 const SizedBox(height: 30),
-                const Text(
+                Text(
                   'Horários',
                   style: TextStyle(
-                    color: Colors.black,
+                    color: colors.textDark,
                     fontSize: 16,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w500,
@@ -325,9 +332,11 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                   child: OutlinedButton(
                     onPressed: _addTimeRange,
                     style: OutlinedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE4E4FF),
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(color: Color(0x7F514EB6)),
+                      backgroundColor: colors.primarySoft,
+                      foregroundColor: colors.primary,
+                      side: BorderSide(
+                        color: colors.primary.withValues(alpha: 0.5),
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(6),
                       ),
@@ -347,8 +356,8 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                   const SizedBox(height: 8),
                   Text(
                     _errorMessage!,
-                    style: const TextStyle(
-                      color: Colors.red,
+                    style: TextStyle(
+                      color: colors.danger,
                       fontSize: 12,
                       fontFamily: 'Roboto',
                       fontWeight: FontWeight.w500,
@@ -362,8 +371,8 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                   child: ElevatedButton(
                     onPressed: _onContinue,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                      backgroundColor: colors.primary,
+                      foregroundColor: colors.textOnPrimary,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(horizontal: 18),
                       shape: RoundedRectangleBorder(
@@ -403,8 +412,10 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                         ).pop(const ScheduleDialogResult.empty());
                       },
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        side: const BorderSide(color: Color(0x7F514EB6)),
+                        foregroundColor: colors.primary,
+                        side: BorderSide(
+                          color: colors.primary.withValues(alpha: 0.5),
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -451,9 +462,9 @@ class _ScheduleTimeRow extends StatelessWidget {
           child: Container(
             height: 29,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.appColors.defaultFieldBackground,
               borderRadius: BorderRadius.circular(5),
-              border: Border.all(color: AppColors.textMuted),
+              border: Border.all(color: context.appColors.outline),
             ),
             child: Row(
               children: [
@@ -469,11 +480,7 @@ class _ScheduleTimeRow extends StatelessWidget {
                 ),
                 const SizedBox(
                   height: 21,
-                  child: VerticalDivider(
-                    width: 1,
-                    color: AppColors.textMuted,
-                    thickness: 1,
-                  ),
+                  child: VerticalDivider(width: 1, thickness: 1),
                 ),
                 Expanded(
                   child: InkWell(
@@ -495,9 +502,9 @@ class _ScheduleTimeRow extends StatelessWidget {
           height: 29,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.appColors.defaultFieldBackground,
             borderRadius: BorderRadius.circular(5),
-            border: Border.all(color: AppColors.textMuted),
+            border: Border.all(color: context.appColors.outline),
           ),
           child: IconButton(
             onPressed: onDelete,
@@ -525,13 +532,14 @@ class _TimeLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
           title,
-          style: const TextStyle(
-            color: AppColors.textMuted,
+          style: TextStyle(
+            color: colors.textMuted,
             fontSize: 6,
             fontFamily: 'Roboto',
             fontWeight: FontWeight.w500,
@@ -539,8 +547,8 @@ class _TimeLabel extends StatelessWidget {
         ),
         Text(
           time,
-          style: const TextStyle(
-            color: Colors.black,
+          style: TextStyle(
+            color: colors.textDark,
             fontSize: 8,
             fontFamily: 'Roboto',
             fontWeight: FontWeight.w500,
@@ -608,10 +616,10 @@ class _TimeWheelPickerState extends State<_TimeWheelPicker> {
                     child: const Text('Cancelar'),
                   ),
                   const Spacer(),
-                  const Text(
+                  Text(
                     'Definir horário',
                     style: TextStyle(
-                      color: Colors.black,
+                      color: context.appColors.textDark,
                       fontSize: 18,
                       fontFamily: 'Roboto',
                       fontWeight: FontWeight.w600,
@@ -619,9 +627,13 @@ class _TimeWheelPickerState extends State<_TimeWheelPicker> {
                   ),
                   const Spacer(),
                   TextButton(
-                    onPressed: () => Navigator.of(context).pop(
-                      TimeOfDay(hour: _selectedHour, minute: _selectedMinute),
-                    ),
+                    onPressed:
+                        () => Navigator.of(context).pop(
+                          TimeOfDay(
+                            hour: _selectedHour,
+                            minute: _selectedMinute,
+                          ),
+                        ),
                     child: const Text('OK'),
                   ),
                 ],
@@ -640,9 +652,10 @@ class _TimeWheelPickerState extends State<_TimeWheelPicker> {
                       },
                     ),
                   ),
-                  const Text(
+                  Text(
                     ':',
                     style: TextStyle(
+                      color: context.appColors.textDark,
                       fontSize: 24,
                       fontFamily: 'Roboto',
                       fontWeight: FontWeight.w700,
@@ -671,6 +684,7 @@ class _TimeWheelPickerState extends State<_TimeWheelPicker> {
     required int itemCount,
     required ValueChanged<int> onSelectedItemChanged,
   }) {
+    final colors = context.appColors;
     return ListWheelScrollView.useDelegate(
       controller: controller,
       itemExtent: 58,
@@ -687,7 +701,8 @@ class _TimeWheelPickerState extends State<_TimeWheelPicker> {
           return Center(
             child: Text(
               index.toString().padLeft(2, '0'),
-              style: const TextStyle(
+              style: TextStyle(
+                color: colors.textDark,
                 fontSize: 24,
                 fontFamily: 'Roboto',
                 fontWeight: FontWeight.w600,

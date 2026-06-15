@@ -1,7 +1,6 @@
 import 'package:academic_manager_app/config/theme/app_theme_colors.dart';
 import 'package:flutter/material.dart';
 import '../../config/scroll/app_scroll_behavior.dart';
-import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_design_tokens.dart';
 import '../../models/assessment.dart';
 import '../../models/discipline.dart';
@@ -170,10 +169,11 @@ class _SubjectsPageState extends State<SubjectsPage> {
   void _showError(String message) {
     if (!mounted) return;
 
+    final colors = context.appColors;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red.shade700,
+        backgroundColor: colors.danger,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -239,6 +239,7 @@ class _SubjectsPageState extends State<SubjectsPage> {
   }
 
   Future<bool?> _confirmDisciplineDeletion(Discipline discipline) {
+    final colors = context.appColors;
     return showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -253,7 +254,7 @@ class _SubjectsPageState extends State<SubjectsPage> {
               child: const Text('Cancelar'),
             ),
             FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              style: FilledButton.styleFrom(backgroundColor: colors.danger),
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: const Text('Excluir'),
             ),
@@ -299,6 +300,7 @@ class _SubjectsPageState extends State<SubjectsPage> {
 
                         if (activeCycleSnapshot.hasError) {
                           return const EmptyStateCard(
+                            icon: Icons.error_outline_rounded,
                             message:
                                 'Não foi possível carregar seu ciclo de estudos.',
                           );
@@ -319,6 +321,7 @@ class _SubjectsPageState extends State<SubjectsPage> {
 
                             if (snapshot.hasError) {
                               return const EmptyStateCard(
+                                icon: Icons.error_outline_rounded,
                                 message:
                                     'Não foi possível carregar suas disciplinas agora.',
                               );
@@ -349,12 +352,12 @@ class _SubjectsPageState extends State<SubjectsPage> {
                                       averageGrade: stats.overallAverage,
                                       gradeCount: assessments.length,
                                     ),
-                                    const SizedBox(height: 18),
+                                    const SizedBox(height: 16),
                                     SearchField(
                                       controller: _searchController,
                                       hint: 'Pesquise por disciplina',
                                     ),
-                                    const SizedBox(height: 20),
+                                    const SizedBox(height: 16),
                                     ListSectionHeader(
                                       label: 'MINHAS DISCIPLINAS',
                                       count: disciplines.length,
@@ -362,7 +365,7 @@ class _SubjectsPageState extends State<SubjectsPage> {
                                         onSelected: _handleEditAction,
                                       ),
                                     ),
-                                    const SizedBox(height: 12),
+                                    const SizedBox(height: 16),
                                     if (disciplines.isEmpty)
                                       EmptyStateCard(
                                         message: allDisciplines.isEmpty
@@ -376,7 +379,7 @@ class _SubjectsPageState extends State<SubjectsPage> {
                                       ...disciplines.map(
                                         (discipline) => Padding(
                                           padding: const EdgeInsets.only(
-                                            bottom: 12,
+                                            bottom: 16,
                                           ),
                                           child: SubjectCard(
                                             name: discipline.name,
@@ -514,6 +517,8 @@ class _DeleteDisciplineSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return SafeArea(
       top: false,
       child: AppSurface.card(
@@ -530,11 +535,11 @@ class _DeleteDisciplineSheet extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Excluir disciplina',
                       style: TextStyle(
-                        color: Color(0xFF191820),
+                        color: colors.textDark,
                         fontSize: 22,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w800,
@@ -544,15 +549,15 @@ class _DeleteDisciplineSheet extends StatelessWidget {
                   IconButton(
                     tooltip: 'Fechar',
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, color: Color(0xFF6B6875)),
+                    icon: Icon(Icons.close, color: colors.textMuted),
                   ),
                 ],
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Escolha qual disciplina deseja remover.',
                 style: TextStyle(
-                  color: Color(0xFF6B6875),
+                  color: colors.textMedium,
                   fontSize: 13,
                   fontFamily: 'Roboto',
                   fontWeight: FontWeight.w600,
@@ -566,12 +571,13 @@ class _DeleteDisciplineSheet extends StatelessWidget {
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final discipline = disciplines[index];
-                    final teacher = discipline.teacher.isEmpty
-                        ? 'Professor não informado'
-                        : discipline.teacher;
+                    final teacher =
+                        discipline.teacher.isEmpty
+                            ? 'Professor não informado'
+                            : discipline.teacher;
 
                     return Material(
-                      color: AppColors.surfaceAlt,
+                      color: colors.surfaceAlt,
                       borderRadius: BorderRadius.circular(AppRadius.md),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(AppRadius.md),
@@ -584,17 +590,17 @@ class _DeleteDisciplineSheet extends StatelessWidget {
                                 width: 40,
                                 height: 40,
                                 decoration: BoxDecoration(
-                                  color: const Color(
-                                    0xFF514EB6,
-                                  ).withValues(alpha: 0.12),
+                                  color: colors.primary.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: const Color(0x4C514EB6),
+                                    color: colors.primary.withValues(
+                                      alpha: 0.28,
+                                    ),
                                   ),
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.menu_book_outlined,
-                                  color: Color(0xFF514EB6),
+                                  color: colors.primary,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -606,8 +612,8 @@ class _DeleteDisciplineSheet extends StatelessWidget {
                                       discipline.name,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Color(0xFF191820),
+                                      style: TextStyle(
+                                        color: colors.textDark,
                                         fontSize: 15,
                                         fontFamily: 'Roboto',
                                         fontWeight: FontWeight.w800,
@@ -618,8 +624,8 @@ class _DeleteDisciplineSheet extends StatelessWidget {
                                       teacher,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Color(0xFF6B6875),
+                                      style: TextStyle(
+                                        color: colors.textMedium,
                                         fontSize: 12,
                                         fontFamily: 'Roboto',
                                         fontWeight: FontWeight.w600,
@@ -628,10 +634,7 @@ class _DeleteDisciplineSheet extends StatelessWidget {
                                   ],
                                 ),
                               ),
-                              const Icon(
-                                Icons.delete_outline,
-                                color: Colors.red,
-                              ),
+                              Icon(Icons.delete_outline, color: colors.danger),
                             ],
                           ),
                         ),
@@ -661,32 +664,35 @@ class _SubjectsOverview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: SummaryMetricTile(
-            label: 'Disciplinas',
-            value: '$total',
-            icon: Icons.menu_book_outlined,
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: SummaryMetricTile(
+              label: 'Disciplinas',
+              value: '$total',
+              icon: Icons.menu_book_outlined,
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: SummaryMetricTile(
-            label: 'Média',
-            value: averageGrade?.toStringAsFixed(1) ?? '-',
-            icon: Icons.bar_chart_outlined,
+          const SizedBox(width: 10),
+          Expanded(
+            child: SummaryMetricTile(
+              label: 'Média',
+              value: averageGrade?.toStringAsFixed(1) ?? '-',
+              icon: Icons.bar_chart_outlined,
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: SummaryMetricTile(
-            label: 'Notas',
-            value: '$gradeCount',
-            icon: Icons.fact_check_outlined,
+          const SizedBox(width: 10),
+          Expanded(
+            child: SummaryMetricTile(
+              label: 'Notas',
+              value: '$gradeCount',
+              icon: Icons.fact_check_outlined,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -736,8 +742,8 @@ class _SubjectStats {
     );
   }
 
-  double averageFor(String disciplineId) {
-    return _averagesByDisciplineId[disciplineId] ?? 0;
+  double? averageFor(String disciplineId) {
+    return _averagesByDisciplineId[disciplineId];
   }
 }
 
@@ -746,9 +752,10 @@ class _SubjectsLoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 36),
-      child: Center(child: CircularProgressIndicator()),
+    final colors = context.appColors;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 36),
+      child: Center(child: CircularProgressIndicator(color: colors.primary)),
     );
   }
 }

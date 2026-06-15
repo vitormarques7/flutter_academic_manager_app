@@ -5,7 +5,6 @@ import '../../models/discipline.dart';
 import '../../repositories/discipline_repository.dart';
 import '../../repositories/task_repository.dart';
 import '../../repositories/user_profile_repository.dart';
-import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_design_tokens.dart';
 import '../../config/theme/app_theme_colors.dart';
 import '../widgets/common/app_surface.dart';
@@ -179,8 +178,9 @@ class _TasksPageState extends State<TasksPage> {
   void _showError(String message) {
     if (!mounted) return;
 
+    final colors = context.appColors;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red.shade700),
+      SnackBar(content: Text(message), backgroundColor: colors.danger),
     );
   }
 
@@ -215,6 +215,7 @@ class _TasksPageState extends State<TasksPage> {
 
                         if (activeCycleSnapshot.hasError) {
                           return const EmptyStateCard(
+                            icon: Icons.error_outline_rounded,
                             message:
                                 'Não foi possível carregar seu ciclo de estudos.',
                           );
@@ -250,6 +251,7 @@ class _TasksPageState extends State<TasksPage> {
 
                                 if (snapshot.hasError) {
                                   return const EmptyStateCard(
+                                    icon: Icons.error_outline_rounded,
                                     message:
                                         'Não foi possível carregar suas tarefas agora.',
                                   );
@@ -540,27 +542,29 @@ class _GroupedTaskList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final group in groups) ...[
+        for (int i = 0; i < groups.length; i++) ...[
+          if (i > 0) const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: Text(
-              group.label,
+              groups[i].label,
               style: TextStyle(
-                color: colors.textMedium,
+                color: groups[i].label == 'ATRASADAS'
+                    ? colors.danger
+                    : colors.textMedium,
                 fontSize: 12,
                 fontFamily: 'Roboto',
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w800,
                 letterSpacing: 0.6,
               ),
             ),
           ),
-          ...group.tasks.map(
+          ...groups[i].tasks.map(
             (task) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: itemBuilder(task),
             ),
           ),
-          const SizedBox(height: 4),
         ],
       ],
     );
@@ -847,9 +851,10 @@ class _TasksLoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.only(top: 32),
-      child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+    final colors = context.appColors;
+    return Padding(
+      padding: const EdgeInsets.only(top: 32),
+      child: Center(child: CircularProgressIndicator(color: colors.primary)),
     );
   }
 }

@@ -314,6 +314,17 @@ class _ProfileAvatar extends StatelessWidget {
       child: Image.asset(
         'lib/view/assets/profile_pic_v2.png',
         fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          final colors = context.appColors;
+          return CircleAvatar(
+            backgroundColor: colors.primarySurface,
+            child: Icon(
+              Icons.person,
+              size: 54,
+              color: colors.primary,
+            ),
+          );
+        },
       ),
     );
   }
@@ -330,9 +341,9 @@ class _ProfileInfoPill extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(maxWidth: 296, minHeight: 54),
+      constraints: const BoxConstraints(maxWidth: 296, minHeight: 44),
       alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(15),

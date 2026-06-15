@@ -1,7 +1,7 @@
 import 'package:academic_manager_app/config/routes/app_routes.dart';
 import 'package:flutter/material.dart';
-import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../../config/theme/app_theme_colors.dart';
 import '../../models/study_cycle.dart';
 import '../../services/setup/academic_setup_service.dart';
 import '../widgets/buttons/cancel_button.dart';
@@ -77,12 +77,14 @@ class _IndependentConfigPageState extends State<IndependentConfigPage> {
                 RichText(
                   text: TextSpan(
                     text: 'Configure seus\n',
-                    style: AppTextStyles.headline2,
+                    style: AppTextStyles.headline2.copyWith(
+                      color: context.appColors.textDark,
+                    ),
                     children: [
                       TextSpan(
                         text: 'estudos',
                         style: AppTextStyles.headline2.copyWith(
-                          color: AppColors.primary,
+                          color: context.appColors.primary,
                         ),
                       ),
                     ],
@@ -116,7 +118,7 @@ class _IndependentConfigPageState extends State<IndependentConfigPage> {
                   onChanged: (disciplines) => _disciplines = disciplines,
                 ),
 
-                const SizedBox(height: 340),
+                const SizedBox(height: 24),
 
                 PrimaryButton(
                   label: 'Salvar e continuar',

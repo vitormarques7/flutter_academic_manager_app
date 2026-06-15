@@ -73,6 +73,7 @@ class _AssessmentDialogState extends State<_AssessmentDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       backgroundColor: Colors.transparent,
@@ -81,14 +82,14 @@ class _AssessmentDialogState extends State<_AssessmentDialog> {
         child: Container(
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E4F0)),
-            boxShadow: const [
+            border: Border.all(color: colors.outline),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x80514EB6),
+                color: colors.primary.withValues(alpha: 0.28),
                 blurRadius: 18,
-                offset: Offset(0, 6),
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -102,11 +103,11 @@ class _AssessmentDialogState extends State<_AssessmentDialog> {
                   padding: const EdgeInsets.fromLTRB(24, 22, 18, 18),
                   child: Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'Nova nota',
                           style: TextStyle(
-                            color: AppColors.primary,
+                            color: colors.primary,
                             fontSize: 24,
                             fontFamily: 'Roboto',
                             fontWeight: FontWeight.w800,
@@ -116,16 +117,16 @@ class _AssessmentDialogState extends State<_AssessmentDialog> {
                       IconButton(
                         tooltip: 'Fechar',
                         onPressed: () => Navigator.of(context).maybePop(),
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.close,
-                          color: Color(0xFF464552),
+                          color: colors.textMedium,
                           size: 30,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Divider(height: 1, color: Color(0xFFE2E4F0)),
+                Divider(height: 1, color: colors.divider),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 22, 24, 24),
                   child: Column(
@@ -200,26 +201,27 @@ class _AssessmentDialogState extends State<_AssessmentDialog> {
   }
 
   InputDecoration _inputDecoration({required String hintText}) {
+    final colors = context.appColors;
     return InputDecoration(
       hintText: hintText,
-      hintStyle: const TextStyle(
-        color: Color(0xFF6B7280),
+      hintStyle: TextStyle(
+        color: colors.textMuted,
         fontSize: 15,
         fontFamily: 'Roboto',
         fontWeight: FontWeight.w500,
       ),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: colors.defaultFieldBackground,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-      border: _fieldBorder(),
-      enabledBorder: _fieldBorder(),
-      focusedBorder: _fieldBorder(color: AppColors.primary),
-      errorBorder: _fieldBorder(color: Colors.red),
-      focusedErrorBorder: _fieldBorder(color: Colors.red),
+      border: _fieldBorder(color: colors.outline),
+      enabledBorder: _fieldBorder(color: colors.outline),
+      focusedBorder: _fieldBorder(color: colors.primary),
+      errorBorder: _fieldBorder(color: colors.danger),
+      focusedErrorBorder: _fieldBorder(color: colors.danger),
     );
   }
 
-  OutlineInputBorder _fieldBorder({Color color = const Color(0xFFE2E4F0)}) {
+  OutlineInputBorder _fieldBorder({required Color color}) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
       borderSide: BorderSide(color: color),
@@ -291,6 +293,7 @@ class _SubjectEventDialogState extends State<_SubjectEventDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       backgroundColor: Colors.transparent,
@@ -299,14 +302,14 @@ class _SubjectEventDialogState extends State<_SubjectEventDialog> {
         child: Container(
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E4F0)),
-            boxShadow: const [
+            border: Border.all(color: colors.outline),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x80514EB6),
+                color: colors.primary.withValues(alpha: 0.28),
                 blurRadius: 18,
-                offset: Offset(0, 6),
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -321,11 +324,11 @@ class _SubjectEventDialogState extends State<_SubjectEventDialog> {
                     padding: const EdgeInsets.fromLTRB(24, 22, 18, 18),
                     child: Row(
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'Novo evento',
                             style: TextStyle(
-                              color: AppColors.primary,
+                              color: colors.primary,
                               fontSize: 24,
                               fontFamily: 'Roboto',
                               fontWeight: FontWeight.w800,
@@ -335,16 +338,16 @@ class _SubjectEventDialogState extends State<_SubjectEventDialog> {
                         IconButton(
                           tooltip: 'Fechar',
                           onPressed: () => Navigator.of(context).maybePop(),
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.close,
-                            color: Color(0xFF464552),
+                            color: colors.textMedium,
                             size: 30,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const Divider(height: 1, color: Color(0xFFE2E4F0)),
+                  Divider(height: 1, color: colors.divider),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 22, 24, 24),
                     child: Column(
@@ -449,26 +452,27 @@ class _SubjectEventDialogState extends State<_SubjectEventDialog> {
   }
 
   InputDecoration _inputDecoration({required String hintText}) {
+    final colors = context.appColors;
     return InputDecoration(
       hintText: hintText,
-      hintStyle: const TextStyle(
-        color: Color(0xFF6B7280),
+      hintStyle: TextStyle(
+        color: colors.textMuted,
         fontSize: 15,
         fontFamily: 'Roboto',
         fontWeight: FontWeight.w500,
       ),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: colors.defaultFieldBackground,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-      border: _fieldBorder(),
-      enabledBorder: _fieldBorder(),
-      focusedBorder: _fieldBorder(color: AppColors.primary),
-      errorBorder: _fieldBorder(color: Colors.red),
-      focusedErrorBorder: _fieldBorder(color: Colors.red),
+      border: _fieldBorder(color: colors.outline),
+      enabledBorder: _fieldBorder(color: colors.outline),
+      focusedBorder: _fieldBorder(color: colors.primary),
+      errorBorder: _fieldBorder(color: colors.danger),
+      focusedErrorBorder: _fieldBorder(color: colors.danger),
     );
   }
 
-  OutlineInputBorder _fieldBorder({Color color = const Color(0xFFE2E4F0)}) {
+  OutlineInputBorder _fieldBorder({required Color color}) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
       borderSide: BorderSide(color: color),
@@ -515,6 +519,7 @@ class _SubjectNoteDialogState extends State<_SubjectNoteDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       backgroundColor: Colors.transparent,
@@ -523,14 +528,14 @@ class _SubjectNoteDialogState extends State<_SubjectNoteDialog> {
         child: Container(
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E4F0)),
-            boxShadow: const [
+            border: Border.all(color: colors.outline),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x80514EB6),
+                color: colors.primary.withValues(alpha: 0.28),
                 blurRadius: 18,
-                offset: Offset(0, 6),
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -545,11 +550,11 @@ class _SubjectNoteDialogState extends State<_SubjectNoteDialog> {
                     padding: const EdgeInsets.fromLTRB(24, 22, 18, 18),
                     child: Row(
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'Nova anotação',
                             style: TextStyle(
-                              color: AppColors.primary,
+                              color: colors.primary,
                               fontSize: 24,
                               fontFamily: 'Roboto',
                               fontWeight: FontWeight.w800,
@@ -559,16 +564,16 @@ class _SubjectNoteDialogState extends State<_SubjectNoteDialog> {
                         IconButton(
                           tooltip: 'Fechar',
                           onPressed: () => Navigator.of(context).maybePop(),
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.close,
-                            color: Color(0xFF464552),
+                            color: colors.textMedium,
                             size: 30,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const Divider(height: 1, color: Color(0xFFE2E4F0)),
+                  Divider(height: 1, color: colors.divider),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 22, 24, 24),
                     child: Column(
@@ -646,26 +651,27 @@ class _SubjectNoteDialogState extends State<_SubjectNoteDialog> {
   }
 
   InputDecoration _inputDecoration({required String hintText}) {
+    final colors = context.appColors;
     return InputDecoration(
       hintText: hintText,
-      hintStyle: const TextStyle(
-        color: Color(0xFF6B7280),
+      hintStyle: TextStyle(
+        color: colors.textMuted,
         fontSize: 15,
         fontFamily: 'Roboto',
         fontWeight: FontWeight.w500,
       ),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: colors.defaultFieldBackground,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-      border: _fieldBorder(),
-      enabledBorder: _fieldBorder(),
-      focusedBorder: _fieldBorder(color: AppColors.primary),
-      errorBorder: _fieldBorder(color: Colors.red),
-      focusedErrorBorder: _fieldBorder(color: Colors.red),
+      border: _fieldBorder(color: colors.outline),
+      enabledBorder: _fieldBorder(color: colors.outline),
+      focusedBorder: _fieldBorder(color: colors.primary),
+      errorBorder: _fieldBorder(color: colors.danger),
+      focusedErrorBorder: _fieldBorder(color: colors.danger),
     );
   }
 
-  OutlineInputBorder _fieldBorder({Color color = const Color(0xFFE2E4F0)}) {
+  OutlineInputBorder _fieldBorder({required Color color}) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
       borderSide: BorderSide(color: color),
@@ -686,8 +692,8 @@ class _DialogField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: Color(0xFF464552),
+          style: TextStyle(
+            color: context.appColors.textMedium,
             fontSize: 12,
             fontFamily: 'Roboto',
             fontWeight: FontWeight.w800,

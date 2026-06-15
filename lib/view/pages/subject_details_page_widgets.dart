@@ -8,7 +8,7 @@ class _DetailsHeader extends StatelessWidget {
     final colors = context.appColors;
 
     return Container(
-      height: 64,
+      padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: colors.divider, width: 1)),
       ),
@@ -47,7 +47,7 @@ class _DetailsHeader extends StatelessWidget {
 class _SubjectSummaryCard extends StatelessWidget {
   final String name;
   final String teacher;
-  final double average;
+  final double? average;
   final int workload;
   final int gradeCount;
   final int pendingTaskCount;
@@ -171,14 +171,15 @@ class _SubjectSummaryCard extends StatelessWidget {
 }
 
 class _AverageRing extends StatelessWidget {
-  final double average;
+  final double? average;
 
   const _AverageRing({required this.average});
 
-  Color get _statusColor {
-    if (average >= 7) return const Color(0xFF16A34A);
-    if (average >= 5) return const Color(0xFFD97706);
-    return const Color(0xFFDC2626);
+  Color _statusColor(AppThemeColors colors) {
+    if (average == null) return colors.textMuted;
+    if (average! >= 7) return colors.success;
+    if (average! >= 5) return colors.warning;
+    return colors.danger;
   }
 
   @override
@@ -199,14 +200,14 @@ class _AverageRing extends StatelessWidget {
                   width: 76,
                   height: 76,
                   child: CircularProgressIndicator(
-                    value: (average / 10).clamp(0.0, 1.0),
+                    value: average == null ? 0.0 : (average! / 10).clamp(0.0, 1.0),
                     strokeWidth: 5,
                     backgroundColor: colors.surface,
-                    color: _statusColor,
+                    color: _statusColor(colors),
                   ),
                 ),
                 Text(
-                  average.toStringAsFixed(1),
+                  average == null ? '—' : average!.toStringAsFixed(1),
                   style: TextStyle(
                     color: colors.textDark,
                     fontSize: 25,
@@ -983,7 +984,7 @@ class _GradeBadge extends StatelessWidget {
           color: AppColors.primary,
           fontSize: 16,
           fontFamily: 'Roboto',
-          fontWeight: FontWeight.w900,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );

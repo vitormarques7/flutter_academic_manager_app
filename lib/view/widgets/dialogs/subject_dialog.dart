@@ -347,7 +347,7 @@ class _SubjectDialogState extends State<SubjectDialog> {
                           onPressed: () => Navigator.of(context).maybePop(),
                           icon: Icon(
                             Icons.close,
-                            color: colors.textMedium,
+                            color: colors.textMuted,
                             size: 32,
                           ),
                           padding: EdgeInsets.zero,
@@ -564,22 +564,23 @@ class _SubjectDialogState extends State<SubjectDialog> {
   }
 
   InputDecoration _inputDecoration({String? hintText}) {
+    final colors = context.appColors;
     return InputDecoration(
       hintText: hintText,
-      hintStyle: const TextStyle(
-        color: Color(0xFF6B7280),
+      hintStyle: TextStyle(
+        color: colors.textMuted,
         fontSize: 16,
         fontFamily: 'Roboto',
         fontWeight: FontWeight.w400,
       ),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: colors.defaultFieldBackground,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 17),
-      border: _fieldBorder(),
-      enabledBorder: _fieldBorder(),
-      focusedBorder: _fieldBorder(color: AppColors.primary),
-      errorBorder: _fieldBorder(color: Colors.red),
-      focusedErrorBorder: _fieldBorder(color: Colors.red),
+      border: _fieldBorder(color: colors.outline),
+      enabledBorder: _fieldBorder(color: colors.outline),
+      focusedBorder: _fieldBorder(color: colors.primary),
+      errorBorder: _fieldBorder(color: colors.danger),
+      focusedErrorBorder: _fieldBorder(color: colors.danger),
     );
   }
 
@@ -589,7 +590,7 @@ class _SubjectDialogState extends State<SubjectDialog> {
     return '$hour:$minute';
   }
 
-  OutlineInputBorder _fieldBorder({Color color = const Color(0xFFE2E4F0)}) {
+  OutlineInputBorder _fieldBorder({required Color color}) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
       borderSide: BorderSide(color: color),
@@ -605,6 +606,7 @@ class _LabeledField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -612,8 +614,8 @@ class _LabeledField extends StatelessWidget {
           padding: const EdgeInsets.only(left: 4),
           child: Text(
             label,
-            style: const TextStyle(
-              color: Color(0xFF464552),
+            style: TextStyle(
+              color: colors.textMedium,
               fontSize: 12,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w700,
@@ -636,12 +638,13 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Padding(
       padding: const EdgeInsets.only(left: 4),
       child: Text(
         label,
-        style: const TextStyle(
-          color: Color(0xFF464552),
+        style: TextStyle(
+          color: colors.textMedium,
           fontSize: 12,
           fontFamily: 'Roboto',
           fontWeight: FontWeight.w700,
@@ -674,13 +677,14 @@ class _WeekdayScheduleSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F7FD),
+        color: colors.surfaceTint,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E4F0)),
+        border: Border.all(color: colors.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -693,13 +697,13 @@ class _WeekdayScheduleSection extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEDEBFF),
+                  color: colors.primarySoft,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   shortLabel,
-                  style: const TextStyle(
-                    color: AppColors.primary,
+                  style: TextStyle(
+                    color: colors.primary,
                     fontSize: 12,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w800,
@@ -710,8 +714,8 @@ class _WeekdayScheduleSection extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
-                    color: Color(0xFF1B1B20),
+                  style: TextStyle(
+                    color: colors.textDark,
                     fontSize: 15,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w800,
@@ -741,8 +745,8 @@ class _WeekdayScheduleSection extends StatelessWidget {
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Adicionar horário para este dia'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: const BorderSide(color: Color(0x7F514EB6)),
+                foregroundColor: colors.primary,
+                side: BorderSide(color: colors.primary.withValues(alpha: 0.5)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -772,6 +776,7 @@ class _ScheduleTimeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Row(
       children: [
         Expanded(
@@ -780,12 +785,12 @@ class _ScheduleTimeRow extends StatelessWidget {
             onTap: onStartTap,
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Text(
             'até',
             style: TextStyle(
-              color: Color(0xFF464552),
+              color: colors.textMedium,
               fontSize: 13,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w500,
@@ -799,8 +804,8 @@ class _ScheduleTimeRow extends StatelessWidget {
         IconButton(
           onPressed: canDelete ? onDelete : null,
           icon: const Icon(Icons.delete_outline),
-          color: const Color(0xFF464552),
-          disabledColor: const Color(0xFFC7C7D1),
+          color: colors.textDark,
+          disabledColor: colors.textSubtle,
           tooltip: 'Remover horário',
         ),
       ],
@@ -822,13 +827,14 @@ class _TimeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return SizedBox(
       height: 48,
       child: OutlinedButton(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFF1B1B20),
-          side: const BorderSide(color: Color(0xFFE2E4F0)),
+          foregroundColor: colors.textDark,
+          side: BorderSide(color: colors.outline),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),

@@ -10,7 +10,7 @@ class SubjectCard extends StatelessWidget {
   final String name;
   final String teacher;
   final double frequency;
-  final double average;
+  final double? average;
   final int? workload;
   final VoidCallback? onTap;
   final Color accentColor;
@@ -28,19 +28,19 @@ class SubjectCard extends StatelessWidget {
     this.showFrequency = true,
   });
 
-  Color get _averageColor {
-    if (average >= 7) return const Color(0xFF27724D);
-    if (average >= 5) return const Color(0xFF9A6A00);
-    return const Color(0xFF9A2828);
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final effectiveAccentColor = accentColor == AppColors.primary
-        ? colors.primary
-        : accentColor;
+    final effectiveAccentColor =
+        accentColor == AppColors.primary ? colors.primary : accentColor;
     final percentLabel = '${(frequency * 100).round()}%';
+
+    final hasGrade = average != null;
+    final averageColor = hasGrade
+        ? (average! >= 7
+            ? colors.success
+            : (average! >= 5 ? colors.warning : colors.danger))
+        : colors.textMuted;
 
     return Material(
       color: Colors.transparent,
@@ -61,13 +61,6 @@ class SubjectCard extends StatelessWidget {
                   border: Border.all(
                     color: effectiveAccentColor.withValues(alpha: 0.28),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: effectiveAccentColor.withValues(alpha: 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
                 ),
                 child: Icon(
                   Icons.menu_book_outlined,
@@ -191,9 +184,9 @@ class SubjectCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      average.toStringAsFixed(1),
+                      hasGrade ? average!.toStringAsFixed(1) : '—',
                       style: TextStyle(
-                        color: _averageColor,
+                        color: averageColor,
                         fontSize: 32,
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w700,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_theme_colors.dart';
 import '../inputs/date_picker_field.dart';
 
@@ -163,9 +162,10 @@ class _TaskDialogState extends State<TaskDialog> {
     final onDelete = widget.onDelete;
     if (onDelete == null) return;
 
+    final colors = context.appColors;
     final shouldDelete = await showDialog<bool>(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Excluir tarefa?'),
           content: const Text(
@@ -173,12 +173,12 @@ class _TaskDialogState extends State<TaskDialog> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
               child: const Text('Cancelar'),
             ),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: TextButton.styleFrom(foregroundColor: colors.danger),
               child: const Text('Excluir'),
             ),
           ],
@@ -277,7 +277,7 @@ class _TaskDialogState extends State<TaskDialog> {
                               : () => Navigator.of(context).maybePop(),
                           icon: Icon(
                             Icons.close,
-                            color: colors.textMedium,
+                            color: colors.textMuted,
                             size: 32,
                           ),
                           padding: EdgeInsets.zero,
@@ -318,13 +318,16 @@ class _TaskDialogState extends State<TaskDialog> {
                           child: DropdownButtonFormField<String>(
                             initialValue: _selectedSubjectValue,
                             isExpanded: true,
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.keyboard_arrow_down,
-                              color: Color(0xFF6B7280),
+                              color: colors.textSubtle,
                               size: 32,
                             ),
                             decoration: _inputDecoration(),
-                            hint: const Text('Selecione a disciplina'),
+                            hint: Text(
+                              'Selecione a disciplina',
+                              style: TextStyle(color: colors.textMuted),
+                            ),
                             items: widget.subjects
                                 .map(
                                   (subject) => DropdownMenuItem(
@@ -423,7 +426,7 @@ class _TaskDialogState extends State<TaskDialog> {
                       ],
                     ),
                   ),
-                  const Divider(height: 1, color: Color(0xFFE2E4F0)),
+                  Divider(height: 1, color: colors.divider),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
                     child: Column(
@@ -433,16 +436,16 @@ class _TaskDialogState extends State<TaskDialog> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFF1F2),
+                              color: colors.dangerSurface,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: const Color(0xFFFCA5A5),
+                                color: colors.danger.withValues(alpha: 0.28),
                               ),
                             ),
                             child: Text(
                               _errorMessage!,
-                              style: const TextStyle(
-                                color: Color(0xFF991B1B),
+                              style: TextStyle(
+                                color: colors.danger,
                                 fontSize: 13,
                                 fontFamily: 'Roboto',
                                 fontWeight: FontWeight.w500,
@@ -460,8 +463,8 @@ class _TaskDialogState extends State<TaskDialog> {
                                 ? null
                                 : () => Navigator.of(context).maybePop(),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF39349D),
-                              side: const BorderSide(color: Color(0xFF39349D)),
+                              foregroundColor: colors.primary,
+                              side: BorderSide(color: colors.primary),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(999),
                               ),
@@ -485,10 +488,10 @@ class _TaskDialogState extends State<TaskDialog> {
                           child: ElevatedButton(
                             onPressed: _isSaving || _isDeleting ? null : _save,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              elevation: 8,
-                              shadowColor: AppColors.primary.withValues(
+                              backgroundColor: colors.primary,
+                              foregroundColor: colors.textOnPrimary,
+                              elevation: 4,
+                              shadowColor: colors.primary.withValues(
                                 alpha: 0.28,
                               ),
                               shape: RoundedRectangleBorder(
@@ -497,13 +500,13 @@ class _TaskDialogState extends State<TaskDialog> {
                               padding: EdgeInsets.zero,
                             ),
                             child: _isSaving
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 22,
                                     height: 22,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2.4,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
+                                        colors.textOnPrimary,
                                       ),
                                     ),
                                   )
@@ -512,7 +515,7 @@ class _TaskDialogState extends State<TaskDialog> {
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontFamily: 'Roboto',
-                                      fontWeight: FontWeight.w400,
+                                      fontWeight: FontWeight.w700,
                                       height: 1.50,
                                     ),
                                   ),
@@ -528,21 +531,28 @@ class _TaskDialogState extends State<TaskDialog> {
                                   ? null
                                   : _confirmDelete,
                               icon: _isDeleting
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       width: 18,
                                       height: 18,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                              Colors.red,
+                                              colors.danger,
                                             ),
                                       ),
                                     )
-                                  : const Icon(Icons.delete_outline, size: 22),
-                              label: const Text('Excluir tarefa'),
+                                  : Icon(
+                                      Icons.delete_outline,
+                                      color: colors.danger,
+                                      size: 22,
+                                    ),
+                              label: Text(
+                                'Excluir tarefa',
+                                style: TextStyle(color: colors.danger),
+                              ),
                               style: TextButton.styleFrom(
-                                foregroundColor: Colors.red,
+                                foregroundColor: colors.danger,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(999),
                                 ),
@@ -563,26 +573,27 @@ class _TaskDialogState extends State<TaskDialog> {
   }
 
   InputDecoration _inputDecoration({String? hintText}) {
+    final colors = context.appColors;
     return InputDecoration(
       hintText: hintText,
-      hintStyle: const TextStyle(
-        color: Color(0xFF6B7280),
+      hintStyle: TextStyle(
+        color: colors.textMuted,
         fontSize: 16,
         fontFamily: 'Roboto',
         fontWeight: FontWeight.w400,
       ),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: colors.defaultFieldBackground,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 17),
-      border: _fieldBorder(),
-      enabledBorder: _fieldBorder(),
-      focusedBorder: _fieldBorder(color: AppColors.primary),
-      errorBorder: _fieldBorder(color: Colors.red),
-      focusedErrorBorder: _fieldBorder(color: Colors.red),
+      border: _fieldBorder(color: colors.outline),
+      enabledBorder: _fieldBorder(color: colors.outline),
+      focusedBorder: _fieldBorder(color: colors.primary),
+      errorBorder: _fieldBorder(color: colors.danger),
+      focusedErrorBorder: _fieldBorder(color: colors.danger),
     );
   }
 
-  OutlineInputBorder _fieldBorder({Color color = const Color(0xFFE2E4F0)}) {
+  OutlineInputBorder _fieldBorder({required Color color}) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
       borderSide: BorderSide(color: color),
@@ -619,10 +630,11 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Text(
       label,
-      style: const TextStyle(
-        color: Color(0xFF464552),
+      style: TextStyle(
+        color: colors.textMedium,
         fontSize: 12,
         fontFamily: 'Roboto',
         fontWeight: FontWeight.w700,
@@ -648,6 +660,11 @@ class _TypeOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final contentColor = isSelected ? colors.primary : colors.textMedium;
+    final backgroundColor = isSelected ? colors.primarySoft : colors.surface;
+    final borderColor = isSelected ? colors.primary : colors.outline;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -657,24 +674,24 @@ class _TypeOption extends StatelessWidget {
           height: 48,
           padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFEDEAF7) : Colors.white,
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? AppColors.primary : const Color(0xFFE2E4F0),
+              color: borderColor,
             ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: const Color(0xFF464552), size: 22),
+              Icon(icon, color: contentColor, size: 22),
               const SizedBox(width: 7),
               Flexible(
                 child: Text(
                   label,
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF464552),
+                  style: TextStyle(
+                    color: contentColor,
                     fontSize: 13,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w600,

@@ -75,29 +75,32 @@ class TaskCard extends StatelessWidget {
                                 ? colors.successSurface
                                 : colors.surface,
                             shape: RoundedRectangleBorder(
-                              side: BorderSide(
-                                width: 1,
-                                color: isChecked
-                                    ? colors.success.withValues(alpha: 0.22)
-                                    : colors.outlineStrong.withValues(
-                                        alpha: 0.72,
-                                      ),
-                              ),
+                              side: isChecked
+                                  ? BorderSide(
+                                      width: 1,
+                                      color: colors.success.withValues(alpha: 0.22),
+                                    )
+                                  : BorderSide.none,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            shadows: const [
+                            shadows: [
                               BoxShadow(
-                                color: Color(0x06111827),
+                                color: Colors.black.withValues(alpha: 0.06),
                                 blurRadius: 4,
-                                offset: Offset(0, 1),
+                                offset: const Offset(0, 1),
                               ),
                             ],
                           ),
                           child: Checkbox(
                             value: isChecked,
                             onChanged: onChanged,
-                            activeColor: colors.primary,
-                            side: BorderSide.none,
+                            activeColor: colors.success,
+                            side: isChecked
+                                ? BorderSide.none
+                                : BorderSide(
+                                    color: colors.outlineStrong,
+                                    width: 1.5,
+                                  ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(4),
                             ),

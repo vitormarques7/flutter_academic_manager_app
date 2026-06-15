@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_theme_colors.dart';
 import '../../../models/discipline.dart';
 import '../../../models/subject_event.dart';
@@ -189,9 +188,9 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
                           child: DropdownButtonFormField<String>(
                             initialValue: _selectedDisciplineId,
                             isExpanded: true,
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.keyboard_arrow_down_rounded,
-                              color: Color(0xFF6B7280),
+                              color: colors.textSubtle,
                             ),
                             decoration: _inputDecoration(
                               hintText: 'Disciplina',
@@ -223,9 +222,9 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
                           label: 'Tipo',
                           child: DropdownButtonFormField<SubjectEventType>(
                             initialValue: _selectedType,
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.keyboard_arrow_down_rounded,
-                              color: Color(0xFF6B7280),
+                              color: colors.textSubtle,
                             ),
                             decoration: _inputDecoration(hintText: 'Tipo'),
                             items: SubjectEventType.values.map((type) {
@@ -279,8 +278,8 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
                           child: ElevatedButton(
                             onPressed: _submit,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
+                              backgroundColor: colors.primary,
+                              foregroundColor: colors.textOnPrimary,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(999),
                               ),
@@ -301,26 +300,27 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
   }
 
   InputDecoration _inputDecoration({required String hintText}) {
+    final colors = context.appColors;
     return InputDecoration(
       hintText: hintText,
-      hintStyle: const TextStyle(
-        color: Color(0xFF6B7280),
+      hintStyle: TextStyle(
+        color: colors.textMuted,
         fontSize: 15,
         fontFamily: 'Roboto',
         fontWeight: FontWeight.w500,
       ),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: colors.defaultFieldBackground,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-      border: _fieldBorder(),
-      enabledBorder: _fieldBorder(),
-      focusedBorder: _fieldBorder(color: AppColors.primary),
-      errorBorder: _fieldBorder(color: Colors.red),
-      focusedErrorBorder: _fieldBorder(color: Colors.red),
+      border: _fieldBorder(color: colors.outline),
+      enabledBorder: _fieldBorder(color: colors.outline),
+      focusedBorder: _fieldBorder(color: colors.primary),
+      errorBorder: _fieldBorder(color: colors.danger),
+      focusedErrorBorder: _fieldBorder(color: colors.danger),
     );
   }
 
-  OutlineInputBorder _fieldBorder({Color color = const Color(0xFFE2E4F0)}) {
+  OutlineInputBorder _fieldBorder({required Color color}) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
       borderSide: BorderSide(color: color),
@@ -347,13 +347,14 @@ class _DialogField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: Color(0xFF464552),
+          style: TextStyle(
+            color: colors.textMedium,
             fontSize: 12,
             fontFamily: 'Roboto',
             fontWeight: FontWeight.w800,

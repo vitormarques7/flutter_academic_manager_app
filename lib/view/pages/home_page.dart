@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 
 import '../../config/routes/app_routes.dart';
 import '../../config/scroll/app_scroll_behavior.dart';
-import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_design_tokens.dart';
 import '../../config/theme/app_theme_colors.dart';
 import '../../models/academic_task.dart';
@@ -150,19 +149,21 @@ class _HomePageState extends State<HomePage> {
       );
     } on UserProfileRepositoryException catch (error) {
       if (!mounted) return;
+      final colors = context.appColors;
       scaffoldMessenger.showSnackBar(
         SnackBar(
           content: Text(error.message),
-          backgroundColor: AppColors.danger,
+          backgroundColor: colors.danger,
           behavior: SnackBarBehavior.floating,
         ),
       );
     } catch (_) {
       if (!mounted) return;
+      final colors = context.appColors;
       scaffoldMessenger.showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Não foi possível alterar o ciclo atual.'),
-          backgroundColor: AppColors.danger,
+          backgroundColor: colors.danger,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -295,36 +296,97 @@ class _HomeDashboard extends StatelessWidget {
   }
 }
 
-class _StudyCycleMenuButton extends StatelessWidget {
-  final VoidCallback onTap;
+class _StudyCycleMenuButton extends StatefulWidget {
+  final Future<void> Function() onTap;
 
   const _StudyCycleMenuButton({required this.onTap});
+
+  @override
+  State<_StudyCycleMenuButton> createState() => _StudyCycleMenuButtonState();
+}
+
+class _StudyCycleMenuButtonState extends State<_StudyCycleMenuButton> {
+  final _userProfileRepository = UserProfileRepository();
+  final _studyCycleRepository = StudyCycleRepository();
+  Future<String?>? _activeCycleLabelFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadActiveCycleLabel();
+  }
+
+  void _loadActiveCycleLabel() {
+    _activeCycleLabelFuture = () async {
+      try {
+        final activeId = await _userProfileRepository
+            .resolveActiveStudyCycleId();
+        if (activeId == null) return null;
+        final cycles = await _studyCycleRepository.fetchStudyCycles();
+        final activeCycle = cycles.firstWhere((c) => c.id == activeId);
+        return _cycleLabelText(activeCycle);
+      } catch (_) {
+        return null;
+      }
+    }();
+  }
+
+  String _cycleLabelText(StudyCycle cycle) {
+    return switch (cycle.type) {
+      StudyCycleType.university =>
+        cycle.period == null ? 'Período' : '${cycle.period}º Período',
+      StudyCycleType.highSchool =>
+        cycle.schoolYear == null ? 'Ano' : '${cycle.schoolYear}º Ano',
+      StudyCycleType.independent => 'Independente',
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    return Tooltip(
-      message: 'Ciclos de estudo',
-      child: Material(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          child: Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: colors.primarySurface,
+    return FutureBuilder<String?>(
+      future: _activeCycleLabelFuture,
+      builder: (context, snapshot) {
+        final label = snapshot.data;
+        final tooltipMessage = label != null
+            ? 'Ciclos de estudo ($label)'
+            : 'Ciclos de estudo';
+
+        return Tooltip(
+          message: tooltipMessage,
+          child: Material(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            child: InkWell(
+              onTap: () async {
+                await widget.onTap();
+                if (mounted) {
+                  setState(() {
+                    _loadActiveCycleLabel();
+                  });
+                }
+              },
               borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: colors.outline),
-              boxShadow: colors.subtleShadows,
+              child: Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: colors.primarySurface,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(color: colors.outline),
+                  boxShadow: colors.subtleShadows,
+                ),
+                child: Icon(
+                  Icons.menu_rounded,
+                  color: colors.primary,
+                  size: 28,
+                ),
+              ),
             ),
-            child: Icon(Icons.menu_rounded, color: colors.primary, size: 28),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -373,7 +435,7 @@ class _StudyFocusCard extends StatelessWidget {
                         color: colors.textDark,
                         fontSize: 19,
                         fontFamily: 'Roboto',
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w800,
                         height: 1.15,
                       ),
                     ),
@@ -401,7 +463,7 @@ class _StudyFocusCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: data.taskProgress,
               minHeight: 8,
-              backgroundColor: colors.surfaceAlt,
+              backgroundColor: colors.primary.withValues(alpha: 0.18),
               valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
             ),
           ),
@@ -443,32 +505,35 @@ class _OverviewMetrics extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: SummaryMetricTile(
-            label: 'Média',
-            value: data.averageLabel,
-            icon: Icons.bar_chart_outlined,
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: SummaryMetricTile(
+              label: 'Média',
+              value: data.averageLabel,
+              icon: Icons.bar_chart_outlined,
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: SummaryMetricTile(
-            label: 'Pendentes',
-            value: '${data.pendingTasks}',
-            icon: Icons.pending_actions_outlined,
+          const SizedBox(width: 10),
+          Expanded(
+            child: SummaryMetricTile(
+              label: 'Pendentes',
+              value: '${data.pendingTasks}',
+              icon: Icons.pending_actions_outlined,
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: SummaryMetricTile(
-            label: 'Eventos',
-            value: '${data.upcomingEvents.length}',
-            icon: Icons.event_note_outlined,
+          const SizedBox(width: 10),
+          Expanded(
+            child: SummaryMetricTile(
+              label: 'Eventos',
+              value: '${data.upcomingEvents.length}',
+              icon: Icons.event_note_outlined,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -544,7 +609,7 @@ class _TaskRow extends StatelessWidget {
                         color: colors.textDark,
                         fontSize: 15,
                         fontFamily: 'Roboto',
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w800,
                         height: 1.24,
                       ),
                     ),
@@ -565,10 +630,8 @@ class _TaskRow extends StatelessWidget {
                         MetadataChip(
                           icon: Icons.sell_outlined,
                           label: task.type,
-                          foregroundColor: AppColors.primary,
-                          backgroundColor: AppColors.primary.withValues(
-                            alpha: 0.08,
-                          ),
+                          foregroundColor: colors.primary,
+                          backgroundColor: colors.primarySurface,
                           iconSize: 14,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -640,8 +703,8 @@ class _EventRow extends StatelessWidget {
             children: [
               _IconBadge(
                 icon: event.icon,
-                backgroundColor: AppColors.eventSurface,
-                foregroundColor: AppColors.event,
+                backgroundColor: colors.eventSurface,
+                foregroundColor: colors.event,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -656,7 +719,7 @@ class _EventRow extends StatelessWidget {
                         color: colors.textDark,
                         fontSize: 15,
                         fontFamily: 'Roboto',
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w800,
                         height: 1.24,
                       ),
                     ),
@@ -698,11 +761,12 @@ class _EventRow extends StatelessWidget {
   }
 
   void _openDetails(BuildContext context) {
+    final colors = context.appColors;
     Navigator.of(context).push(
       AppRoutes.slideRoute(
         page: SubjectEventDetailsPage(
           event: event.source,
-          accentColor: AppColors.event,
+          accentColor: colors.event,
           onDelete: onDelete,
         ),
       ),
@@ -747,14 +811,14 @@ class _AlertRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final color = switch (alert.level) {
-      _AlertLevel.warning => AppColors.warning,
-      _AlertLevel.danger => AppColors.danger,
-      _AlertLevel.info => AppColors.primary,
+      _AlertLevel.warning => colors.warning,
+      _AlertLevel.danger => colors.danger,
+      _AlertLevel.info => colors.primary,
     };
     final background = switch (alert.level) {
-      _AlertLevel.warning => AppColors.warningSurface,
-      _AlertLevel.danger => AppColors.dangerSurface,
-      _AlertLevel.info => AppColors.primary.withValues(alpha: 0.10),
+      _AlertLevel.warning => colors.warningSurface,
+      _AlertLevel.danger => colors.dangerSurface,
+      _AlertLevel.info => colors.primarySurface,
     };
 
     return Padding(
@@ -780,7 +844,7 @@ class _AlertRow extends StatelessWidget {
                     color: colors.textDark,
                     fontSize: 15,
                     fontFamily: 'Roboto',
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w800,
                     height: 1.24,
                   ),
                 ),
@@ -828,7 +892,7 @@ class _SetupNeededPanel extends StatelessWidget {
               color: colors.textDark,
               fontSize: 20,
               fontFamily: 'Roboto',
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w800,
               height: 1.15,
             ),
           ),
@@ -862,21 +926,23 @@ class _HomeWarningPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return AppSurface(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      color: AppColors.warningSurface,
-      border: Border.all(color: const Color(0xFFFFD7A8)),
+      color: colors.warningSurface,
+      border: Border.all(color: colors.warning.withValues(alpha: 0.3)),
       shadows: const [],
       borderRadius: AppRadius.md,
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.cloud_off_outlined, color: AppColors.warning, size: 20),
-          SizedBox(width: 10),
+          Icon(Icons.cloud_off_outlined, color: colors.warning, size: 20),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               'Algumas informações podem estar incompletas agora.',
               style: TextStyle(
-                color: AppColors.warning,
+                color: colors.warning,
                 fontSize: 13,
                 fontFamily: 'Roboto',
                 fontWeight: FontWeight.w800,
@@ -940,17 +1006,22 @@ class _IconBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final effectiveForegroundColor = foregroundColor ?? colors.primary;
+    final effectiveBackgroundColor =
+        backgroundColor ?? colors.primary.withValues(alpha: 0.10);
+
     return Container(
       width: 42,
       height: 42,
       decoration: BoxDecoration(
-        color: backgroundColor ?? AppColors.primary.withValues(alpha: 0.10),
+        color: effectiveBackgroundColor,
         borderRadius: BorderRadius.circular(AppRadius.sm),
         border: Border.all(
-          color: (foregroundColor ?? AppColors.primary).withValues(alpha: 0.22),
+          color: effectiveForegroundColor.withValues(alpha: 0.22),
         ),
       ),
-      child: Icon(icon, color: foregroundColor ?? AppColors.primary, size: 23),
+      child: Icon(icon, color: effectiveForegroundColor, size: 23),
     );
   }
 }
@@ -983,7 +1054,7 @@ class _DateBadge extends StatelessWidget {
           color: color,
           fontSize: 13,
           fontFamily: 'Roboto',
-          fontWeight: FontWeight.w900,
+          fontWeight: FontWeight.w800,
           height: 1,
         ),
       ),

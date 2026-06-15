@@ -29,7 +29,7 @@ class SubjectDetailsPage extends StatefulWidget {
   final String studyCycleId;
   final String name;
   final String teacher;
-  final double average;
+  final double? average;
   final int workload;
   final int colorValue;
 
@@ -241,7 +241,7 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
     }).toList();
   }
 
-  double _averageFromAssessments(List<Assessment> assessments) {
+  double? _averageFromAssessments(List<Assessment> assessments) {
     if (assessments.isEmpty) return widget.average;
 
     final total = assessments.fold<double>(
