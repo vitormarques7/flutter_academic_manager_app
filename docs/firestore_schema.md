@@ -87,7 +87,7 @@ Observacoes:
 - O dropdown do `TaskDialog` e alimentado por `DisciplineRepository`.
 - `deadline` usa `dd/mm/yyyy` quando informado, ou string vazia quando sem
   prazo.
-- `visualPriority` aceita atualmente `Trabalho` ou `Prova`.
+- `visualPriority` aceita atualmente `Trabalho`, `Prova`, `Estudo`, `Seminário`, `Leitura` ou `Pesquisa`.
 - `description` e opcional na UI e pode ser string vazia.
 - `isChecked` nasce como `false` em `TaskInput.toCreateMap`.
 - `studyCycleId` e preenchido automaticamente pelo `TaskRepository` quando ha

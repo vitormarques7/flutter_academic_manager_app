@@ -222,21 +222,30 @@ A tela permite:
 
 ## Fluxo de agenda
 
-`SchedulePage` mostra calendario mensal, aulas do dia selecionado, eventos do
-dia e um card de grade de horario.
+`SchedulePage` mostra calendário mensal, aulas do dia selecionado, eventos do
+dia, tarefas do dia e um card de grade de horário.
 
 Estado atual:
 
-- As aulas do calendario vem de `ScheduleRepository.watchSchedules`.
-- Eventos vem de `SubjectEventRepository.watchEvents`.
-- Disciplinas vem de `DisciplineRepository.watchDisciplines`.
-- O calendario inicia no dia atual e usa `pt_BR`.
-- Marcadores sao derivados dos dias recorrentes de cada horario e de eventos.
-- O card "Grade de Horario" alterna para uma visualizacao semanal com os
-  horarios reais cadastrados.
-- A acao de editar grade abre `ScheduleEditorSheet`, que cria, atualiza e
-  exclui horarios.
-- O botao `+` abre `ScheduleEventDialog` para criar evento academico.
+- As aulas do calendário vêm de `ScheduleRepository.watchSchedules`.
+- Eventos vêm de `SubjectEventRepository.watchEvents`.
+- Tarefas vêm de `TaskRepository.watchTasks`.
+- Disciplinas vêm de `DisciplineRepository.watchDisciplines`.
+- O calendário inicia no dia atual e usa `pt_BR`.
+- O dia selecionado exibe em `SelectedDayScheduleCard` a lista unificada de aulas, eventos e tarefas pendentes/concluídas para aquele dia.
+  - As tarefas exibidas são interativas: tocar nelas alterna seu estado de conclusão (`isChecked`) no banco através de `TaskRepository.updateCompletion`, atualizando o estilo visual (texto riscado e esmaecido).
+  - Cada tarefa mostra um ícone específico associado ao seu tipo (`visualPriority`).
+- Os marcadores de dia sob o número no calendário são traços horizontais de 20px com extremidades arredondadas, divididos dinamicamente e igualmente entre as categorias ativas no dia:
+  - Aulas: Roxo (`colors.primary`)
+  - Eventos: Vermelho/Rosa (`colors.event`)
+  - Tarefas: Verde (`colors.success`)
+  - Se houver múltiplos tipos (ex: aula + tarefa), o traço é dividido ao meio (10px cada). Se houver os três, em três partes (6.6px cada).
+- O card "Grade de Horário" alterna para uma visualização semanal com os
+  horários reais cadastrados.
+- A ação de editar grade abre `ScheduleEditorSheet`, que cria, atualiza e
+  exclui horários.
+- O botão `+` abre `ScheduleEventDialog` para criar evento acadêmico.
+
 
 ## Fluxo de perfil
 
