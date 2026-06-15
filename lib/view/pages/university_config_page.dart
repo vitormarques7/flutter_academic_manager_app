@@ -126,9 +126,9 @@ class _UniversityConfigPageState extends State<UniversityConfigPage> {
                       color: AppColors.textMuted,
                     ),
                   ),
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.keyboard_arrow_down,
-                    color: AppColors.primary,
+                    color: context.appColors.primary,
                     size: 28,
                   ),
                   decoration: const InputDecoration(

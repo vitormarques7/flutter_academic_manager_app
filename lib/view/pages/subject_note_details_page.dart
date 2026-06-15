@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../config/theme/app_theme_colors.dart';
 import '../../models/subject_note.dart';
-import '../widgets/common/app_surface.dart';
-import '../widgets/common/metadata_chip.dart';
+import '../../repositories/subject_note_repository.dart';
+import 'subject_details_page.dart';
 
 class SubjectNoteDetailsPage extends StatefulWidget {
   final SubjectNote note;
@@ -22,7 +22,23 @@ class SubjectNoteDetailsPage extends StatefulWidget {
 }
 
 class _SubjectNoteDetailsPageState extends State<SubjectNoteDetailsPage> {
+  late SubjectNote _currentNote;
   bool _isDeleting = false;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentNote = widget.note;
+  }
+
+  String _formatDateTime(DateTime dt) {
+    final day = dt.day.toString().padLeft(2, '0');
+    final month = dt.month.toString().padLeft(2, '0');
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '$day/$month/${dt.year} às $hour:$minute';
+  }
 
   Future<void> _confirmDelete() async {
     final shouldDelete = await showDialog<bool>(
@@ -30,7 +46,7 @@ class _SubjectNoteDetailsPageState extends State<SubjectNoteDetailsPage> {
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Excluir anotação?'),
-          content: Text('Isso removerá "${widget.note.title}".'),
+          content: Text('Isso removerá "${_currentNote.title}".'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -51,7 +67,7 @@ class _SubjectNoteDetailsPageState extends State<SubjectNoteDetailsPage> {
     setState(() => _isDeleting = true);
 
     try {
-      await widget.onDelete(widget.note);
+      await widget.onDelete(_currentNote);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -73,88 +89,320 @@ class _SubjectNoteDetailsPageState extends State<SubjectNoteDetailsPage> {
     }
   }
 
+  Future<void> _openEditDialog() async {
+    final result = await showDialog<SubjectNoteDialogResult>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.28),
+      builder: (_) => SubjectNoteDialog(initialNote: _currentNote),
+    );
+
+    if (result == null || !mounted) return;
+
+    setState(() => _isSaving = true);
+
+    try {
+      final input = SubjectNoteInput(
+        studyCycleId: _currentNote.studyCycleId,
+        disciplineId: _currentNote.disciplineId,
+        disciplineName: _currentNote.disciplineName,
+        title: result.title,
+        content: result.content,
+      );
+
+      await SubjectNoteRepository().updateNote(
+        id: _currentNote.id,
+        input: input,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _isSaving = false;
+        _currentNote = SubjectNote(
+          id: _currentNote.id,
+          studyCycleId: _currentNote.studyCycleId,
+          disciplineId: _currentNote.disciplineId,
+          disciplineName: _currentNote.disciplineName,
+          title: result.title,
+          content: result.content,
+          createdAt: _currentNote.createdAt,
+          updatedAt: DateTime.now(),
+        );
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Anotação atualizada com sucesso.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Não foi possível salvar a anotação: ${error.toString()}'),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final disciplineLabel = widget.note.disciplineName.isEmpty
+    final disciplineLabel = _currentNote.disciplineName.isEmpty
         ? 'Sem disciplina'
-        : widget.note.disciplineName;
+        : _currentNote.disciplineName;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: colors.background,
+      appBar: AppBar(
+        backgroundColor: widget.accentColor,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+        title: const Text(
+          'Anotação',
+          style: TextStyle(
+            color: Colors.white,
+            fontFamily: 'Roboto',
+            fontWeight: FontWeight.w800,
+            fontSize: 20,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, color: Colors.white),
+            onPressed: _isDeleting || _isSaving ? null : _openEditDialog,
+            tooltip: 'Editar anotação',
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            _NoteDetailsHeader(onBack: () => Navigator.of(context).maybePop()),
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: widget.accentColor,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                ),
+                boxShadow: colors.subtleShadows,
+              ),
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.sticky_note_2_outlined, color: Colors.white, size: 14),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'ANOTAÇÃO',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontFamily: 'Roboto',
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    _currentNote.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 26,
+                      fontFamily: 'Roboto',
+                      fontWeight: FontWeight.w900,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    disciplineLabel,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      fontSize: 15,
+                      fontFamily: 'Roboto',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Expanded(
               child: SingleChildScrollView(
                 physics: const ClampingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(20, 22, 20, 34),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _NoteHeroCard(
-                      title: widget.note.title,
-                      disciplineName: disciplineLabel,
-                      accentColor: widget.accentColor,
-                    ),
-                    const SizedBox(height: 24),
-                    _NoteInfoSection(
-                      title: 'Anotação',
-                      icon: Icons.notes_outlined,
-                      accentColor: widget.accentColor,
-                      child: Text(
-                        widget.note.content.isEmpty
-                            ? 'Nenhum conteúdo cadastrado para esta anotação.'
-                            : widget.note.content,
-                        style: TextStyle(
-                          color: colors.textDark,
-                          fontSize: 14,
-                          fontFamily: 'Roboto',
-                          fontWeight: FontWeight.w600,
-                          height: 1.4,
-                        ),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: colors.surface,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: colors.outline),
+                        boxShadow: colors.subtleShadows,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.notes_rounded, color: widget.accentColor, size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Conteúdo',
+                                style: TextStyle(
+                                  color: colors.textDark,
+                                  fontSize: 16,
+                                  fontFamily: 'Roboto',
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Container(
+                                  width: 4,
+                                  decoration: BoxDecoration(
+                                    color: widget.accentColor,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Text(
+                                    _currentNote.content.isEmpty
+                                        ? 'Nenhum conteúdo cadastrado para esta anotação.'
+                                        : _currentNote.content,
+                                    style: TextStyle(
+                                      color: _currentNote.content.isEmpty
+                                          ? colors.textMuted
+                                          : colors.textDark,
+                                      fontSize: 15,
+                                      fontFamily: 'Roboto',
+                                      height: 1.6,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_currentNote.createdAt != null || _currentNote.updatedAt != null) ...[
+                            const SizedBox(height: 20),
+                            Divider(color: colors.divider, height: 1),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Icon(Icons.access_time_rounded, color: colors.textSubtle, size: 14),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _currentNote.updatedAt != null
+                                      ? 'Atualizada em ${_formatDateTime(_currentNote.updatedAt!)}'
+                                      : 'Criada em ${_formatDateTime(_currentNote.createdAt!)}',
+                                  style: TextStyle(
+                                    color: colors.textSubtle,
+                                    fontSize: 12,
+                                    fontFamily: 'Roboto',
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _NoteInfoSection(
-                      title: 'Detalhes',
-                      icon: Icons.info_outline,
-                      accentColor: widget.accentColor,
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: colors.surface,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: colors.outline),
+                        boxShadow: colors.subtleShadows,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          MetadataChip(
-                            icon: Icons.menu_book_outlined,
-                            label: disciplineLabel,
-                            maxWidth: 260,
+                          Row(
+                            children: [
+                              Icon(Icons.info_outline_rounded, color: widget.accentColor, size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Informações',
+                                style: TextStyle(
+                                  color: colors.textDark,
+                                  fontSize: 16,
+                                  fontFamily: 'Roboto',
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          _DetailRow(
+                            icon: Icons.menu_book_rounded,
+                            title: 'Disciplina',
+                            value: disciplineLabel,
+                            iconColor: widget.accentColor,
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 22),
-                    SizedBox(
-                      height: 46,
-                      child: OutlinedButton(
-                        onPressed: _isDeleting ? null : _confirmDelete,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red.shade700,
-                          side: BorderSide(color: Colors.red.shade200),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                        ),
-                        child: _isDeleting
+                    const SizedBox(height: 28),
+                    Center(
+                      child: IconButton(
+                        icon: _isDeleting
                             ? SizedBox(
-                                width: 20,
-                                height: 20,
+                                width: 24,
+                                height: 24,
                                 child: CircularProgressIndicator(
-                                  strokeWidth: 2.2,
-                                  color: Colors.red.shade700,
+                                  strokeWidth: 2,
+                                  color: colors.textSubtle,
                                 ),
                               )
-                            : const Text('Excluir anotação'),
+                            : Icon(
+                                Icons.delete_outline_rounded,
+                                color: colors.textSubtle,
+                                size: 28,
+                              ),
+                        onPressed: _isDeleting || _isSaving ? null : _confirmDelete,
+                        tooltip: 'Excluir anotação',
+                        style: IconButton.styleFrom(
+                          padding: const EdgeInsets.all(16),
+                        ),
                       ),
                     ),
                   ],
@@ -168,178 +416,60 @@ class _SubjectNoteDetailsPageState extends State<SubjectNoteDetailsPage> {
   }
 }
 
-class _NoteDetailsHeader extends StatelessWidget {
-  final VoidCallback onBack;
-
-  const _NoteDetailsHeader({required this.onBack});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-
-    return Container(
-      height: 64,
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: colors.divider, width: 1)),
-      ),
-      child: Row(
-        children: [
-          const SizedBox(width: 8),
-          IconButton(
-            tooltip: 'Voltar',
-            onPressed: onBack,
-            icon: Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: colors.textDark,
-              size: 28,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              'Detalhes da anotação',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: colors.textDark,
-                fontSize: 25,
-                fontFamily: 'Roboto',
-                fontWeight: FontWeight.w800,
-                height: 1.1,
-              ),
-            ),
-          ),
-          const SizedBox(width: 18),
-        ],
-      ),
-    );
-  }
-}
-
-class _NoteHeroCard extends StatelessWidget {
-  final String title;
-  final String disciplineName;
-  final Color accentColor;
-
-  const _NoteHeroCard({
-    required this.title,
-    required this.disciplineName,
-    required this.accentColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-
-    return AppSurface.soft(
-      padding: const EdgeInsets.all(16),
-      shadows: colors.cardShadows,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _NoteIconTile(
-            icon: Icons.sticky_note_2_outlined,
-            color: accentColor,
-            size: 58,
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: colors.textDark,
-                    fontSize: 24,
-                    fontFamily: 'Roboto',
-                    fontWeight: FontWeight.w800,
-                    height: 1.1,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                MetadataChip(
-                  icon: Icons.menu_book_outlined,
-                  label: disciplineName,
-                  maxWidth: 230,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NoteInfoSection extends StatelessWidget {
-  final String title;
+class _DetailRow extends StatelessWidget {
   final IconData icon;
-  final Color accentColor;
-  final Widget child;
+  final String title;
+  final String value;
+  final Color iconColor;
 
-  const _NoteInfoSection({
-    required this.title,
+  const _DetailRow({
     required this.icon,
-    required this.accentColor,
-    required this.child,
+    required this.title,
+    required this.value,
+    required this.iconColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-
-    return AppSurface.card(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: iconColor, size: 20),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _NoteIconTile(icon: icon, color: accentColor, size: 38),
-              const SizedBox(width: 10),
               Text(
                 title,
                 style: TextStyle(
-                  color: colors.textDark,
-                  fontSize: 17,
+                  color: colors.textSubtle,
+                  fontSize: 12,
                   fontFamily: 'Roboto',
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: TextStyle(
+                  color: colors.textDark,
+                  fontSize: 15,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _NoteIconTile extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final double size;
-
-  const _NoteIconTile({
-    required this.icon,
-    required this.color,
-    required this.size,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.30)),
-      ),
-      child: Icon(icon, color: color, size: size * 0.50),
+        ),
+      ],
     );
   }
 }

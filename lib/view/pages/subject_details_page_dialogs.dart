@@ -180,7 +180,7 @@ class _AssessmentDialogState extends State<_AssessmentDialog> {
                         child: ElevatedButton(
                           onPressed: _submit,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
+                            backgroundColor: colors.primary,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(999),
@@ -229,13 +229,13 @@ class _AssessmentDialogState extends State<_AssessmentDialog> {
   }
 }
 
-class _SubjectEventDialogResult {
+class SubjectEventDialogResult {
   final String title;
   final SubjectEventType type;
   final DateTime eventDate;
   final String description;
 
-  const _SubjectEventDialogResult({
+  const SubjectEventDialogResult({
     required this.title,
     required this.type,
     required this.eventDate,
@@ -243,19 +243,32 @@ class _SubjectEventDialogResult {
   });
 }
 
-class _SubjectEventDialog extends StatefulWidget {
-  const _SubjectEventDialog();
+class SubjectEventDialog extends StatefulWidget {
+  final SubjectEvent? initialEvent;
+
+  const SubjectEventDialog({super.key, this.initialEvent});
 
   @override
-  State<_SubjectEventDialog> createState() => _SubjectEventDialogState();
+  State<SubjectEventDialog> createState() => _SubjectEventDialogState();
 }
 
-class _SubjectEventDialogState extends State<_SubjectEventDialog> {
+class _SubjectEventDialogState extends State<SubjectEventDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _dateController = TextEditingController();
   final _descriptionController = TextEditingController();
   SubjectEventType _selectedType = SubjectEventType.exam;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialEvent != null) {
+      _titleController.text = widget.initialEvent!.title;
+      _dateController.text = widget.initialEvent!.displayDateLabel;
+      _descriptionController.text = widget.initialEvent!.description;
+      _selectedType = widget.initialEvent!.type;
+    }
+  }
 
   @override
   void dispose() {
@@ -269,7 +282,7 @@ class _SubjectEventDialogState extends State<_SubjectEventDialog> {
     if (!_formKey.currentState!.validate()) return;
 
     Navigator.of(context).pop(
-      _SubjectEventDialogResult(
+      SubjectEventDialogResult(
         title: _titleController.text.trim(),
         type: _selectedType,
         eventDate: parseBrazilianDate(_dateController.text)!,
@@ -326,7 +339,7 @@ class _SubjectEventDialogState extends State<_SubjectEventDialog> {
                       children: [
                         Expanded(
                           child: Text(
-                            'Novo evento',
+                            widget.initialEvent != null ? 'Editar evento' : 'Novo evento',
                             style: TextStyle(
                               color: colors.primary,
                               fontSize: 24,
@@ -430,7 +443,7 @@ class _SubjectEventDialogState extends State<_SubjectEventDialog> {
                           child: ElevatedButton(
                             onPressed: _submit,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
+                              backgroundColor: colors.primary,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(999),
@@ -480,24 +493,35 @@ class _SubjectEventDialogState extends State<_SubjectEventDialog> {
   }
 }
 
-class _SubjectNoteDialogResult {
+class SubjectNoteDialogResult {
   final String title;
   final String content;
 
-  const _SubjectNoteDialogResult({required this.title, required this.content});
+  const SubjectNoteDialogResult({required this.title, required this.content});
 }
 
-class _SubjectNoteDialog extends StatefulWidget {
-  const _SubjectNoteDialog();
+class SubjectNoteDialog extends StatefulWidget {
+  final SubjectNote? initialNote;
+
+  const SubjectNoteDialog({super.key, this.initialNote});
 
   @override
-  State<_SubjectNoteDialog> createState() => _SubjectNoteDialogState();
+  State<SubjectNoteDialog> createState() => _SubjectNoteDialogState();
 }
 
-class _SubjectNoteDialogState extends State<_SubjectNoteDialog> {
+class _SubjectNoteDialogState extends State<SubjectNoteDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialNote != null) {
+      _titleController.text = widget.initialNote!.title;
+      _contentController.text = widget.initialNote!.content;
+    }
+  }
 
   @override
   void dispose() {
@@ -510,7 +534,7 @@ class _SubjectNoteDialogState extends State<_SubjectNoteDialog> {
     if (!_formKey.currentState!.validate()) return;
 
     Navigator.of(context).pop(
-      _SubjectNoteDialogResult(
+      SubjectNoteDialogResult(
         title: _titleController.text.trim(),
         content: _contentController.text.trim(),
       ),
@@ -552,7 +576,7 @@ class _SubjectNoteDialogState extends State<_SubjectNoteDialog> {
                       children: [
                         Expanded(
                           child: Text(
-                            'Nova anotação',
+                            widget.initialNote != null ? 'Editar anotação' : 'Nova anotação',
                             style: TextStyle(
                               color: colors.primary,
                               fontSize: 24,
@@ -629,7 +653,7 @@ class _SubjectNoteDialogState extends State<_SubjectNoteDialog> {
                           child: ElevatedButton(
                             onPressed: _submit,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
+                              backgroundColor: colors.primary,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(999),

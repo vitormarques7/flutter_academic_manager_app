@@ -10,11 +10,11 @@ class AnimatedAuthPanel extends StatelessWidget {
     return ClipRect(
       child: TweenAnimationBuilder<double>(
         tween: Tween<double>(begin: 0, end: 1),
-        duration: const Duration(milliseconds: 520),
-        curve: Curves.easeOutCubic,
+        duration: const Duration(milliseconds: 700),
+        curve: Curves.easeOutQuart,
         builder: (context, value, animatedChild) {
-          final slideDistance = 72 * (1 - value);
-          final scale = 0.985 + (0.015 * value);
+          final slideDistance = 500 * (1 - value);
+          final scale = 0.96 + (0.04 * value);
 
           return Transform.translate(
             offset: Offset(0, slideDistance),

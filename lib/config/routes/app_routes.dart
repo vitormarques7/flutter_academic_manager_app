@@ -77,11 +77,23 @@ class AppRoutes {
   }
 
   static void toLogin(BuildContext context) {
-    Navigator.of(context).push(slideRoute(page: const LoginPage()));
+    Navigator.of(context).push(
+      slideRoute(
+        page: const LoginPage(),
+        begin: const Offset(0, 1),
+        duration: const Duration(milliseconds: 320),
+      ),
+    );
   }
 
   static void toRegister(BuildContext context) {
-    Navigator.of(context).push(slideRoute(page: const RegisterPage()));
+    Navigator.of(context).push(
+      slideRoute(
+        page: const RegisterPage(),
+        begin: const Offset(0, 1),
+        duration: const Duration(milliseconds: 320),
+      ),
+    );
   }
 
   static void toStudentProfile(BuildContext context) {

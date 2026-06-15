@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_theme_colors.dart';
 
 class AppLogo extends StatelessWidget {
   final double scale;
@@ -23,7 +24,8 @@ class AppLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = color ?? AppColors.primary;
+    final colors = context.appColors;
+    final effectiveColor = color ?? colors.primary;
 
     // Dimensões base (extraídas do Figma)
     final double w = 228 * scale;

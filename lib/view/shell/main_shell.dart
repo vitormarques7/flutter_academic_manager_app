@@ -16,8 +16,7 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   late int _currentIndex;
-  int? _previousIndex;
-  int _navigationDirection = 1;
+  int _navigationDirection = 1; // 1 for right, -1 for left
 
   static const List<Widget> _pages = [
     HomePage(),
@@ -36,34 +35,40 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: ClipRect(
-        child: TweenAnimationBuilder<double>(
-          key: ValueKey(_currentIndex),
-          tween: Tween<double>(begin: _previousIndex == null ? 1 : 0, end: 1),
-          duration: _previousIndex == null
-              ? Duration.zero
-              : Duration(milliseconds: _navigationDirection == 1 ? 210 : 180),
-          curve: _navigationDirection == 1 ? Curves.easeOutCubic : Curves.easeInCubic,
-          onEnd: () {
-            if (_previousIndex == null || !mounted) return;
-            setState(() => _previousIndex = null);
-          },
-          builder: (context, value, child) {
-            final previousIndex = _previousIndex;
-            if (previousIndex == null) return _pages[_currentIndex];
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          switchInCurve: Curves.easeInOutCubic,
+          switchOutCurve: Curves.easeInOutCubic,
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            final isEntering = child.key == ValueKey<int>(_currentIndex);
+            
+            final offsetTween = isEntering
+                ? Tween<Offset>(
+                    begin: Offset(_navigationDirection * 1.0, 0.0),
+                    end: Offset.zero,
+                  )
+                : Tween<Offset>(
+                    begin: Offset(-_navigationDirection * 1.0, 0.0),
+                    end: Offset.zero,
+                  );
 
+            return SlideTransition(
+              position: offsetTween.animate(animation),
+              child: child,
+            );
+          },
+          layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
             return Stack(
-              children: [
-                _TabPageSlide(
-                  translation: Offset(-_navigationDirection * value, 0),
-                  child: _pages[previousIndex],
-                ),
-                _TabPageSlide(
-                  translation: Offset(_navigationDirection * (1 - value), 0),
-                  child: _pages[_currentIndex],
-                ),
+              children: <Widget>[
+                ...previousChildren.map((child) => Positioned.fill(child: child)),
+                if (currentChild != null) Positioned.fill(child: currentChild),
               ],
             );
           },
+          child: KeyedSubtree(
+            key: ValueKey<int>(_currentIndex),
+            child: _pages[_currentIndex],
+          ),
         ),
       ),
       bottomNavigationBar: AppBottomNavBar(
@@ -72,26 +77,11 @@ class _MainShellState extends State<MainShell> {
           if (index == _currentIndex) return;
 
           setState(() {
-            _previousIndex = _currentIndex;
             _navigationDirection = index > _currentIndex ? 1 : -1;
             _currentIndex = index;
           });
         },
       ),
-    );
-  }
-}
-
-class _TabPageSlide extends StatelessWidget {
-  final Offset translation;
-  final Widget child;
-
-  const _TabPageSlide({required this.translation, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: FractionalTranslation(translation: translation, child: child),
     );
   }
 }

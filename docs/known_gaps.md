@@ -20,11 +20,11 @@ adicionar calculos mais avancados.
 
 Os fluxos de detalhes de disciplina permitem criar e excluir:
 
-- notas;
+- notas (avaliações);
 - eventos;
 - anotacoes.
 
-Ainda falta implementar edicao dessas entidades depois de criadas.
+A edição de eventos e anotações já foi totalmente implementada e integrada às respectivas telas de detalhes. Ainda falta implementar a edição de notas (avaliações).
 
 ### Lembretes
 

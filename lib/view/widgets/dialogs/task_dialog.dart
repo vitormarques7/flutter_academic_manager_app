@@ -457,33 +457,6 @@ class _TaskDialogState extends State<TaskDialog> {
                         ],
                         SizedBox(
                           width: double.infinity,
-                          height: 40,
-                          child: OutlinedButton(
-                            onPressed: _isSaving || _isDeleting
-                                ? null
-                                : () => Navigator.of(context).maybePop(),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: colors.primary,
-                              side: BorderSide(color: colors.primary),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              padding: EdgeInsets.zero,
-                            ),
-                            child: const Text(
-                              'Cancelar',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontFamily: 'Roboto',
-                                fontWeight: FontWeight.w400,
-                                height: 1.50,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
                           height: 48,
                           child: ElevatedButton(
                             onPressed: _isSaving || _isDeleting ? null : _save,
@@ -521,6 +494,34 @@ class _TaskDialogState extends State<TaskDialog> {
                                   ),
                           ),
                         ),
+                        const SizedBox(height: 12),
+                        Center(
+                          child: TextButton(
+                            onPressed: _isSaving || _isDeleting
+                                ? null
+                                : () => Navigator.of(context).maybePop(),
+                            style: TextButton.styleFrom(
+                              foregroundColor: colors.textMedium,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                            ),
+                            child: const Text(
+                              'Cancelar',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontFamily: 'Roboto',
+                                fontWeight: FontWeight.w500,
+                                height: 1.50,
+                              ),
+                            ),
+                          ),
+                        ),
+
                         if (_isEditing && widget.onDelete != null) ...[
                           const SizedBox(height: 12),
                           SizedBox(

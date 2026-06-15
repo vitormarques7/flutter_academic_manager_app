@@ -177,6 +177,8 @@ class _PersonalDataPageState extends State<PersonalDataPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
@@ -184,8 +186,8 @@ class _PersonalDataPageState extends State<PersonalDataPage> {
           future: _personalDataFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
+              return Center(
+                child: CircularProgressIndicator(color: colors.primary),
               );
             }
 
@@ -409,7 +411,7 @@ class _AcademicCard extends StatelessWidget {
                 icon: const Icon(Icons.tune_rounded, size: 19),
                 label: const Text('Gerenciar'),
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
+                  foregroundColor: colors.primary,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
                     vertical: 8,
@@ -549,10 +551,10 @@ class _CycleRow extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.12),
+              color: colors.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(_cycleIcon(cycle), color: AppColors.primary, size: 22),
+            child: Icon(_cycleIcon(cycle), color: colors.primary, size: 22),
           ),
           const SizedBox(width: 11),
           Expanded(
@@ -594,7 +596,7 @@ class _CycleRow extends StatelessWidget {
               icon: const Icon(Icons.check_circle_outline_rounded, size: 17),
               label: const Text('Ativar'),
               style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
+                foregroundColor: colors.primary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
                   vertical: 8,
@@ -617,16 +619,18 @@ class _CurrentCycleBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.12),
+        color: colors.primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
-      child: const Text(
+      child: Text(
         'Atual',
         style: TextStyle(
-          color: AppColors.primary,
+          color: colors.primary,
           fontSize: 11,
           fontFamily: 'Roboto',
           fontWeight: FontWeight.w800,
@@ -906,6 +910,8 @@ class _StudyCycleManagementSheetState
   }
 
   Widget _buildEditForm() {
+    final colors = context.appColors;
+
     return Form(
       key: _formKey,
       child: Column(
@@ -1010,7 +1016,7 @@ class _StudyCycleManagementSheetState
                 child: FilledButton(
                   onPressed: _submit,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: colors.primary,
                     foregroundColor: AppColors.textOnPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 13),
                   ),
@@ -1222,7 +1228,7 @@ class _CycleActivationRow extends StatelessWidget {
               icon: const Icon(Icons.check_circle_outline_rounded, size: 17),
               label: const Text('Ativar'),
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: colors.primary,
                 foregroundColor: AppColors.textOnPrimary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,

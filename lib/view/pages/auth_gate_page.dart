@@ -6,7 +6,6 @@ import 'package:academic_manager_app/view/shell/main_shell.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_theme_colors.dart';
 
 class AuthGatePage extends StatefulWidget {
@@ -157,7 +156,7 @@ class _AuthGateError extends StatelessWidget {
               FilledButton(
                 onPressed: onRetry,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: colors.primary,
                 ),
                 child: const Text('Tentar novamente'),
               ),

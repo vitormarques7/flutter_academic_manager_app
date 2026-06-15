@@ -731,12 +731,12 @@ class _CoursePicker extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const SizedBox(
+            SizedBox(
               width: 18,
               height: 18,
               child: CircularProgressIndicator(
                 strokeWidth: 2.2,
-                color: AppColors.primary,
+                color: colors.primary,
               ),
             ),
             const SizedBox(width: 12),
@@ -855,15 +855,17 @@ class _CourseActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return OutlinedButton.icon(
       onPressed: onPressed,
       icon: Icon(icon, size: 18),
       label: Text(label),
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.primary,
+        foregroundColor: colors.primary,
         minimumSize: const Size(0, 44),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-        side: const BorderSide(color: AppColors.primary, width: 1.2),
+        side: BorderSide(color: colors.primary, width: 1.2),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         textStyle: const TextStyle(
           fontSize: 14,

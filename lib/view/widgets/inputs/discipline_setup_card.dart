@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_text_styles.dart';
+import '../../../config/theme/app_theme_colors.dart';
 import '../buttons/discipline_delete_button.dart';
 
 class DisciplineSetupCard extends StatelessWidget {
@@ -19,19 +19,21 @@ class DisciplineSetupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       height: isConfirmed ? 58 : 112,
       padding: isConfirmed
           ? const EdgeInsets.fromLTRB(18, 11, 10, 12)
           : const EdgeInsets.fromLTRB(14, 10, 14, 12),
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: colors.primary,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: AppColors.shadowPrimary,
+            color: colors.primary.withValues(alpha: 0.18),
             blurRadius: 4,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),

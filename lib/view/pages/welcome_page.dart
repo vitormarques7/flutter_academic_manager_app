@@ -373,12 +373,13 @@ class _BrandAccent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       width: width,
       height: 8,
       decoration: BoxDecoration(
-        color: colors.primary.withValues(alpha: 0.16),
+        color: colors.primary.withValues(alpha: isDark ? 0.38 : 0.16),
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
     );

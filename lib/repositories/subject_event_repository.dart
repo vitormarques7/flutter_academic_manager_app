@@ -95,6 +95,15 @@ class SubjectEventRepository {
     });
   }
 
+  Future<void> updateEvent({required String id, required SubjectEventInput input}) {
+    final uid = _currentUserId;
+
+    return _guardFirestoreCall(() {
+      return _eventsCollection(uid).doc(id).update(input.toUpdateMap());
+    });
+  }
+
+
   List<SubjectEvent> _sortEvents(List<SubjectEvent> events) {
     events.sort(SubjectEvent.compareByDate);
     return events;

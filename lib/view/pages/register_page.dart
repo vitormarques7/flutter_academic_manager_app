@@ -7,7 +7,7 @@ import '../widgets/buttons/primary_button.dart';
 import '../../config/routes/app_routes.dart';
 import '../widgets/inputs/auth_text_field.dart';
 import '../widgets/inputs/visibility_toggle.dart';
-import '../widgets/buttons/back_image_button.dart';
+
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -249,7 +249,28 @@ class _RegisterPageState extends State<RegisterPage> {
             ],
           ),
 
-          const Positioned(left: 47, bottom: 32, child: BackImageButton()),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 32,
+            child: Center(
+              child: TextButton(
+                onPressed: () => Navigator.of(context).maybePop(),
+                style: TextButton.styleFrom(
+                  foregroundColor: colors.textOnPrimary,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                ),
+                child: const Text(
+                  'Cancelar',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

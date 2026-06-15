@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_theme_colors.dart';
 import '../../../services/setup/academic_setup_service.dart';
 import '../dialogs/subject_dialog.dart';
@@ -37,6 +36,7 @@ class _DisciplineSetupListState extends State<DisciplineSetupList> {
           name: disciplineName,
           teacher: result.teacher,
           workload: result.workload,
+          maxAbsences: result.maxAbsences,
           schedules: result.schedule.map((entry) {
             return AcademicSetupScheduleDraft(
               weekdays: [entry.weekdayIndex],
@@ -86,6 +86,8 @@ class _DisciplineSetupListState extends State<DisciplineSetupList> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -108,8 +110,8 @@ class _DisciplineSetupListState extends State<DisciplineSetupList> {
             icon: const Icon(Icons.add, size: 22),
             label: const Text('Adicionar disciplina'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              side: const BorderSide(color: Color(0x7F514EB6)),
+              foregroundColor: colors.primary,
+              side: BorderSide(color: colors.primary.withValues(alpha: 0.5)),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),

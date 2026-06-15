@@ -90,6 +90,15 @@ class SubjectNoteRepository {
     });
   }
 
+  Future<void> updateNote({required String id, required SubjectNoteInput input}) {
+    final uid = _currentUserId;
+
+    return _guardFirestoreCall(() {
+      return _notesCollection(uid).doc(id).update(input.toUpdateMap());
+    });
+  }
+
+
   List<SubjectNote> _sortNotes(List<SubjectNote> notes) {
     notes.sort(SubjectNote.compareByMostRecent);
     return notes;

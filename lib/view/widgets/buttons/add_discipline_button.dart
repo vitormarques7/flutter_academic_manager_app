@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_text_styles.dart';
+import '../../../config/theme/app_theme_colors.dart';
 
 class AddDisciplineButton extends StatelessWidget {
   final VoidCallback? onTap;
@@ -9,6 +9,8 @@ class AddDisciplineButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -16,10 +18,10 @@ class AddDisciplineButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(35),
         child: Ink(
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.12),
+            color: colors.primary.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(35),
             border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.4),
+              color: colors.primary.withValues(alpha: 0.4),
               width: 1.5,
             ),
           ),
@@ -27,12 +29,12 @@ class AddDisciplineButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.add, color: AppColors.primary, size: 20),
+              Icon(Icons.add, color: colors.primary, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Adicionar Disciplina',
                 style: AppTextStyles.bodyRegular.copyWith(
-                  color: AppColors.primary,
+                  color: colors.primary,
                   fontWeight: FontWeight.w600,
                 ),
               ),

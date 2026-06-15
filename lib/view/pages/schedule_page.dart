@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../config/scroll/app_scroll_behavior.dart';
-import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_theme_colors.dart';
 import '../../models/academic_task.dart';
 import '../../models/discipline.dart';
@@ -715,7 +714,7 @@ class _SchedulePageState extends State<SchedulePage> {
     Map<String, Color> disciplineColors,
   ) {
     final disciplineName = _normalizedDisciplineName(event.disciplineName);
-    if (disciplineName == null) return AppColors.primary;
+    if (disciplineName == null) return context.appColors.primary;
 
     return disciplineColors[disciplineName] ??
         Color(Schedule.colorValueForDisciplineName(disciplineName));
