@@ -8,10 +8,12 @@ import '../../config/theme/app_design_tokens.dart';
 import '../../config/theme/app_theme_colors.dart';
 import '../../models/academic_task.dart';
 import '../../models/assessment.dart';
+import '../../models/discipline.dart';
 import '../../models/schedule.dart';
 import '../../models/study_cycle.dart';
 import '../../models/subject_event.dart';
 import '../../repositories/assessment_repository.dart';
+import '../../repositories/discipline_repository.dart';
 import '../../repositories/schedule_repository.dart';
 import '../../repositories/study_cycle_repository.dart';
 import '../../repositories/subject_event_repository.dart';
@@ -40,6 +42,7 @@ class _HomePageState extends State<HomePage> {
   final SubjectEventRepository _eventRepository = SubjectEventRepository();
   final AssessmentRepository _assessmentRepository = AssessmentRepository();
   final UserProfileRepository _userProfileRepository = UserProfileRepository();
+  final DisciplineRepository _disciplineRepository = DisciplineRepository();
 
   late Future<String?> _activeStudyCycleIdFuture;
 
@@ -99,6 +102,7 @@ class _HomePageState extends State<HomePage> {
                     scheduleRepository: _scheduleRepository,
                     eventRepository: _eventRepository,
                     assessmentRepository: _assessmentRepository,
+                    disciplineRepository: _disciplineRepository,
                   );
                 },
               ),
@@ -177,6 +181,7 @@ class _HomeDashboard extends StatelessWidget {
   final ScheduleRepository scheduleRepository;
   final SubjectEventRepository eventRepository;
   final AssessmentRepository assessmentRepository;
+  final DisciplineRepository disciplineRepository;
 
   const _HomeDashboard({
     required this.activeStudyCycleId,
@@ -184,51 +189,60 @@ class _HomeDashboard extends StatelessWidget {
     required this.scheduleRepository,
     required this.eventRepository,
     required this.assessmentRepository,
+    required this.disciplineRepository,
   });
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<AcademicTask>>(
-      stream: taskRepository.watchTasks(studyCycleId: activeStudyCycleId),
-      builder: (context, taskSnapshot) {
-        return StreamBuilder<List<Schedule>>(
-          stream: scheduleRepository.watchSchedules(
-            studyCycleId: activeStudyCycleId,
-          ),
-          builder: (context, scheduleSnapshot) {
-            return StreamBuilder<List<SubjectEvent>>(
-              stream: eventRepository.watchEvents(
+    return StreamBuilder<List<Discipline>>(
+      stream: disciplineRepository.watchDisciplines(
+        studyCycleId: activeStudyCycleId,
+      ),
+      builder: (context, disciplineSnapshot) {
+        return StreamBuilder<List<AcademicTask>>(
+          stream: taskRepository.watchTasks(studyCycleId: activeStudyCycleId),
+          builder: (context, taskSnapshot) {
+            return StreamBuilder<List<Schedule>>(
+              stream: scheduleRepository.watchSchedules(
                 studyCycleId: activeStudyCycleId,
-                upcomingOnly: true,
               ),
-              builder: (context, eventSnapshot) {
-                return StreamBuilder<List<Assessment>>(
-                  stream: assessmentRepository.watchAssessments(
+              builder: (context, scheduleSnapshot) {
+                return StreamBuilder<List<SubjectEvent>>(
+                  stream: eventRepository.watchEvents(
                     studyCycleId: activeStudyCycleId,
+                    upcomingOnly: true,
                   ),
-                  builder: (context, assessmentSnapshot) {
-                    final isLoading =
-                        _isWaiting(taskSnapshot) ||
-                        _isWaiting(scheduleSnapshot) ||
-                        _isWaiting(eventSnapshot) ||
-                        _isWaiting(assessmentSnapshot);
-                    if (isLoading) return const _HomeLoadingState();
+                  builder: (context, eventSnapshot) {
+                    return StreamBuilder<List<Assessment>>(
+                      stream: assessmentRepository.watchAssessments(
+                        studyCycleId: activeStudyCycleId,
+                      ),
+                      builder: (context, assessmentSnapshot) {
+                        final isLoading =
+                            _isWaiting(disciplineSnapshot) ||
+                            _isWaiting(taskSnapshot) ||
+                            _isWaiting(scheduleSnapshot) ||
+                            _isWaiting(eventSnapshot) ||
+                            _isWaiting(assessmentSnapshot);
+                        if (isLoading) return const _HomeLoadingState();
 
-                    final hasError =
-                        taskSnapshot.hasError ||
-                        scheduleSnapshot.hasError ||
-                        eventSnapshot.hasError ||
-                        assessmentSnapshot.hasError;
-                    final tasks = _tasksForCycle(
-                      taskSnapshot.data ?? const [],
-                      activeStudyCycleId,
-                    );
-                    final dashboard = _HomeDashboardData.from(
-                      tasks: tasks,
-                      schedules: scheduleSnapshot.data ?? const [],
-                      events: eventSnapshot.data ?? const [],
-                      assessments: assessmentSnapshot.data ?? const [],
-                    );
+                        final hasError =
+                            disciplineSnapshot.hasError ||
+                            taskSnapshot.hasError ||
+                            scheduleSnapshot.hasError ||
+                            eventSnapshot.hasError ||
+                            assessmentSnapshot.hasError;
+                        final tasks = _tasksForCycle(
+                          taskSnapshot.data ?? const [],
+                          activeStudyCycleId,
+                        );
+                        final dashboard = _HomeDashboardData.from(
+                          tasks: tasks,
+                          schedules: scheduleSnapshot.data ?? const [],
+                          events: eventSnapshot.data ?? const [],
+                          assessments: assessmentSnapshot.data ?? const [],
+                          disciplines: disciplineSnapshot.data ?? const [],
+                        );
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,6 +288,8 @@ class _HomeDashboard extends StatelessWidget {
         );
       },
     );
+  },
+);
   }
 
   bool _isWaiting(AsyncSnapshot<Object?> snapshot) {
@@ -1105,6 +1121,7 @@ class _HomeDashboardData {
     required List<Schedule> schedules,
     required List<SubjectEvent> events,
     required List<Assessment> assessments,
+    required List<Discipline> disciplines,
   }) {
     final pendingTasks = tasks.where((task) => !task.isChecked).toList();
     final completedTasks = tasks.where((task) => task.isChecked).length;
@@ -1132,6 +1149,7 @@ class _HomeDashboardData {
         schedules: schedules,
         events: upcomingEvents,
         assessments: assessments,
+        disciplines: disciplines,
       ),
       nextClass: nextClass,
     );
@@ -1188,6 +1206,7 @@ class _HomeDashboardData {
     required List<Schedule> schedules,
     required List<SubjectEvent> events,
     required List<Assessment> assessments,
+    required List<Discipline> disciplines,
   }) {
     final today = _dateOnly(DateTime.now());
     final overdueCount = pendingTasks.where((task) {
@@ -1215,6 +1234,23 @@ class _HomeDashboardData {
         ),
       );
     }
+
+    // Perigo de reprovação por faltas >= 80% do limite
+    for (final discipline in disciplines) {
+      final absences = discipline.absences;
+      final maxAbsences = discipline.maxAbsences > 0 ? discipline.maxAbsences : 12;
+      if (absences >= maxAbsences * 0.8) {
+        alerts.add(
+          _HomeAlert(
+            title: 'Perigo de reprovação',
+            description: 'Você tem $absences/$maxAbsences faltas em ${discipline.name}.',
+            level: _AlertLevel.danger,
+            icon: Icons.warning_amber_rounded,
+          ),
+        );
+      }
+    }
+
     if (todayCount > 0) {
       alerts.add(
         _HomeAlert(

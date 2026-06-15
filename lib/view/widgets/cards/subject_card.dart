@@ -12,6 +12,8 @@ class SubjectCard extends StatelessWidget {
   final double frequency;
   final double? average;
   final int? workload;
+  final int? absences;
+  final int? maxAbsences;
   final VoidCallback? onTap;
   final Color accentColor;
   final bool showFrequency;
@@ -23,6 +25,8 @@ class SubjectCard extends StatelessWidget {
     required this.frequency,
     required this.average,
     this.workload,
+    this.absences,
+    this.maxAbsences,
     this.onTap,
     this.accentColor = AppColors.primary,
     this.showFrequency = true,
@@ -140,20 +144,47 @@ class SubjectCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                    if (workload != null) ...[
+                    if (workload != null || (absences != null && maxAbsences != null)) ...[
                       const SizedBox(height: 10),
-                      MetadataChip(
-                        icon: Icons.access_time,
-                        label: '${workload}h',
-                        foregroundColor: effectiveAccentColor,
-                        backgroundColor: effectiveAccentColor.withValues(
-                          alpha: 0.08,
-                        ),
-                        iconSize: 15,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 6,
-                        ),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          if (workload != null)
+                            MetadataChip(
+                              icon: Icons.access_time,
+                              label: '${workload}h',
+                              foregroundColor: effectiveAccentColor,
+                              backgroundColor: effectiveAccentColor.withValues(
+                                alpha: 0.08,
+                              ),
+                              iconSize: 15,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 9,
+                                vertical: 6,
+                              ),
+                            ),
+                          if (absences != null && maxAbsences != null)
+                            MetadataChip(
+                              icon: Icons.warning_amber_rounded,
+                              label: '$absences / $maxAbsences faltas',
+                              foregroundColor: absences! >= maxAbsences! * 0.8
+                                  ? colors.danger
+                                  : (absences! >= maxAbsences! * 0.5
+                                      ? colors.warning
+                                      : colors.textMedium),
+                              backgroundColor: absences! >= maxAbsences! * 0.8
+                                  ? colors.danger.withValues(alpha: 0.08)
+                                  : (absences! >= maxAbsences! * 0.5
+                                      ? colors.warning.withValues(alpha: 0.08)
+                                      : colors.surfaceAlt),
+                              iconSize: 15,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 9,
+                                vertical: 6,
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ],

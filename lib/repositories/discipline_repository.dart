@@ -147,6 +147,28 @@ class DisciplineRepository {
     });
   }
 
+  Future<void> updateAbsences(String disciplineId, int absences) {
+    final uid = _currentUserId;
+
+    return _guardFirestoreCall(() {
+      return _disciplinesCollection(uid).doc(disciplineId).update({
+        'absences': absences < 0 ? 0 : absences,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+  Future<void> updateMaxAbsences(String disciplineId, int maxAbsences) {
+    final uid = _currentUserId;
+
+    return _guardFirestoreCall(() {
+      return _disciplinesCollection(uid).doc(disciplineId).update({
+        'maxAbsences': maxAbsences < 0 ? 0 : maxAbsences,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
   List<Discipline> _sortDisciplines(List<Discipline> disciplines) {
     disciplines.sort(Discipline.compareByName);
     return disciplines;

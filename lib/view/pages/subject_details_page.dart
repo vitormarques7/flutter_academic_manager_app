@@ -3,14 +3,16 @@ import 'package:flutter/services.dart';
 
 import '../../config/routes/app_routes.dart';
 import '../../config/scroll/app_scroll_behavior.dart';
-import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../../config/theme/app_design_tokens.dart';
 import '../../config/theme/app_theme_colors.dart';
 import '../../models/academic_task.dart';
 import '../../models/assessment.dart';
+import '../../models/discipline.dart';
 import '../../models/subject_event.dart';
 import '../../models/subject_note.dart';
 import '../../repositories/assessment_repository.dart';
+import '../../repositories/discipline_repository.dart';
 import '../../repositories/subject_event_repository.dart';
 import '../../repositories/subject_note_repository.dart';
 import '../../repositories/task_repository.dart';
@@ -53,6 +55,7 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
   final SubjectEventRepository _eventRepository = SubjectEventRepository();
   final SubjectNoteRepository _noteRepository = SubjectNoteRepository();
   final TaskRepository _taskRepository = TaskRepository();
+  final DisciplineRepository _disciplineRepository = DisciplineRepository();
 
   Color get _accentColor => Color(widget.colorValue);
 
@@ -137,10 +140,10 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
   }
 
   Future<void> _openEventDialog() async {
-    final result = await showDialog<_SubjectEventDialogResult>(
+    final result = await showDialog<SubjectEventDialogResult>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.28),
-      builder: (_) => const _SubjectEventDialog(),
+      builder: (_) => const SubjectEventDialog(),
     );
 
     if (result == null) return;
@@ -157,7 +160,7 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
           description: result.description,
         ),
       );
-      _showSuccess('Evento salvo com sucesso.');
+      _showSuccess('Evento saved successfully.');
     } on SubjectEventRepositoryException catch (error) {
       _showError(error.message);
     } catch (_) {
@@ -182,11 +185,12 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
   }
 
   Future<void> _openNoteDialog() async {
-    final result = await showDialog<_SubjectNoteDialogResult>(
+    final result = await showDialog<SubjectNoteDialogResult>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.28),
-      builder: (_) => const _SubjectNoteDialog(),
+      builder: (_) => const SubjectNoteDialog(),
     );
+
 
     if (result == null) return;
 
@@ -295,137 +299,174 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 22, 20, 34),
                 sliver: SliverToBoxAdapter(
-                  child: StreamBuilder<List<Assessment>>(
-                    stream: _assessmentRepository.watchAssessments(
+                  child: StreamBuilder<List<Discipline>>(
+                    stream: _disciplineRepository.watchDisciplines(
                       studyCycleId: widget.studyCycleId,
-                      disciplineId: widget.disciplineId,
                     ),
-                    builder: (context, assessmentSnapshot) {
-                      final assessments = assessmentSnapshot.data ?? const [];
-                      final assessmentsAreLoading =
-                          assessmentSnapshot.connectionState ==
-                              ConnectionState.waiting &&
-                          !assessmentSnapshot.hasData;
-                      final assessmentsHaveError = assessmentSnapshot.hasError;
-                      final average = _averageFromAssessments(assessments);
-
-                      return StreamBuilder<List<AcademicTask>>(
-                        stream: _taskRepository.watchTasks(
+                    builder: (context, disciplineSnapshot) {
+                      final disciplines = disciplineSnapshot.data ?? const [];
+                      final currentDiscipline = disciplines.firstWhere(
+                        (d) => d.id == widget.disciplineId,
+                        orElse: () => Discipline(
+                          id: widget.disciplineId,
+                          name: widget.name,
+                          teacher: widget.teacher,
+                          workload: widget.workload,
+                          colorValue: widget.colorValue,
                           studyCycleId: widget.studyCycleId,
                         ),
-                        builder: (context, taskSnapshot) {
-                          final tasks = _relatedTasks(
-                            taskSnapshot.data ?? const [],
-                          );
-                          final tasksAreLoading =
-                              taskSnapshot.connectionState ==
-                                  ConnectionState.waiting &&
-                              !taskSnapshot.hasData;
-                          final tasksHaveError = taskSnapshot.hasError;
-                          final pendingTasks = tasks
-                              .where((task) => !task.isChecked)
-                              .length;
+                      );
 
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              _SubjectSummaryCard(
-                                name: widget.name,
-                                teacher: widget.teacher,
-                                average: average,
-                                workload: widget.workload,
-                                gradeCount: assessments.length,
-                                pendingTaskCount: pendingTasks,
-                                accentColor: _accentColor,
-                              ),
-                              const SizedBox(height: 26),
-                              _SectionHeader(
-                                title: 'Eventos',
-                                trailing: _InlineActionButton(
-                                  label: 'Adicionar',
-                                  icon: Icons.event_available_outlined,
-                                  onTap: _openEventDialog,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              StreamBuilder<List<SubjectEvent>>(
-                                stream: _eventRepository.watchEvents(
-                                  studyCycleId: widget.studyCycleId,
-                                  disciplineId: widget.disciplineId,
-                                  upcomingOnly: true,
-                                ),
-                                builder: (context, eventSnapshot) {
-                                  return _SubjectEventsPanel(
-                                    events: eventSnapshot.data ?? const [],
-                                    isLoading:
-                                        eventSnapshot.connectionState ==
-                                            ConnectionState.waiting &&
-                                        !eventSnapshot.hasData,
-                                    hasError: eventSnapshot.hasError,
+                      return StreamBuilder<List<Assessment>>(
+                        stream: _assessmentRepository.watchAssessments(
+                          studyCycleId: widget.studyCycleId,
+                          disciplineId: widget.disciplineId,
+                        ),
+                        builder: (context, assessmentSnapshot) {
+                          final assessments = assessmentSnapshot.data ?? const [];
+                          final assessmentsAreLoading =
+                              assessmentSnapshot.connectionState ==
+                                  ConnectionState.waiting &&
+                              !assessmentSnapshot.hasData;
+                          final assessmentsHaveError = assessmentSnapshot.hasError;
+                          final average = _averageFromAssessments(assessments);
+
+                          return StreamBuilder<List<AcademicTask>>(
+                            stream: _taskRepository.watchTasks(
+                              studyCycleId: widget.studyCycleId,
+                            ),
+                            builder: (context, taskSnapshot) {
+                              final tasks = _relatedTasks(
+                                taskSnapshot.data ?? const [],
+                              );
+                              final tasksAreLoading =
+                                  taskSnapshot.connectionState ==
+                                      ConnectionState.waiting &&
+                                  !taskSnapshot.hasData;
+                              final tasksHaveError = taskSnapshot.hasError;
+                              final pendingTasks = tasks
+                                  .where((task) => !task.isChecked)
+                                  .length;
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _SubjectSummaryCard(
+                                    name: currentDiscipline.name,
+                                    teacher: currentDiscipline.teacher,
+                                    average: average,
+                                    workload: currentDiscipline.workload,
+                                    gradeCount: assessments.length,
+                                    pendingTaskCount: pendingTasks,
                                     accentColor: _accentColor,
-                                    onOpen: _openEventDetails,
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: 28),
-                              _SectionHeader(
-                                title: 'Notas',
-                                trailing: _InlineActionButton(
-                                  label: 'Adicionar',
-                                  icon: Icons.add,
-                                  onTap: _openAssessmentDialog,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              _AssessmentsPanel(
-                                assessments: assessments,
-                                isLoading: assessmentsAreLoading,
-                                hasError: assessmentsHaveError,
-                                accentColor: _accentColor,
-                                onAdd: _openAssessmentDialog,
-                                onDelete: _deleteAssessment,
-                              ),
-                              const SizedBox(height: 28),
-                              const _SectionHeader(
-                                title: 'Tarefas relacionadas',
-                              ),
-                              const SizedBox(height: 12),
-                              _RelatedTasksPanel(
-                                tasks: tasks,
-                                isLoading: tasksAreLoading,
-                                hasError: tasksHaveError,
-                                accentColor: _accentColor,
-                                onOpenTasks: () => _onBottomNavTap(context, 2),
-                              ),
-                              const SizedBox(height: 28),
-                              _SectionHeader(
-                                title: 'Anotações',
-                                trailing: _InlineActionButton(
-                                  label: 'Adicionar',
-                                  icon: Icons.note_add_outlined,
-                                  onTap: _openNoteDialog,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              StreamBuilder<List<SubjectNote>>(
-                                stream: _noteRepository.watchNotes(
-                                  studyCycleId: widget.studyCycleId,
-                                  disciplineId: widget.disciplineId,
-                                ),
-                                builder: (context, noteSnapshot) {
-                                  return _SubjectNotesPanel(
-                                    notes: noteSnapshot.data ?? const [],
-                                    isLoading:
-                                        noteSnapshot.connectionState ==
-                                            ConnectionState.waiting &&
-                                        !noteSnapshot.hasData,
-                                    hasError: noteSnapshot.hasError,
+                                  ),
+                                  const SizedBox(height: 26),
+                                  _AttendanceManagementCard(
+                                    discipline: currentDiscipline,
                                     accentColor: _accentColor,
-                                    onOpen: _openNoteDetails,
-                                  );
-                                },
-                              ),
-                            ],
+                                    onUpdateAbsences: (absences) {
+                                      _disciplineRepository.updateAbsences(
+                                        currentDiscipline.id,
+                                        absences,
+                                      );
+                                    },
+                                    onUpdateMaxAbsences: (maxAbsences) {
+                                      _disciplineRepository.updateMaxAbsences(
+                                        currentDiscipline.id,
+                                        maxAbsences,
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 26),
+                                  _SectionHeader(
+                                    title: 'Eventos',
+                                    trailing: _InlineActionButton(
+                                      label: 'Adicionar',
+                                      icon: Icons.event_available_outlined,
+                                      onTap: _openEventDialog,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  StreamBuilder<List<SubjectEvent>>(
+                                    stream: _eventRepository.watchEvents(
+                                      studyCycleId: widget.studyCycleId,
+                                      disciplineId: widget.disciplineId,
+                                      upcomingOnly: true,
+                                    ),
+                                    builder: (context, eventSnapshot) {
+                                      return _SubjectEventsPanel(
+                                        events: eventSnapshot.data ?? const [],
+                                        isLoading:
+                                            eventSnapshot.connectionState ==
+                                                ConnectionState.waiting &&
+                                            !eventSnapshot.hasData,
+                                        hasError: eventSnapshot.hasError,
+                                        accentColor: _accentColor,
+                                        onOpen: _openEventDetails,
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 28),
+                                  _SectionHeader(
+                                    title: 'Notas',
+                                    trailing: _InlineActionButton(
+                                      label: 'Adicionar',
+                                      icon: Icons.add,
+                                      onTap: _openAssessmentDialog,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _AssessmentsPanel(
+                                    assessments: assessments,
+                                    isLoading: assessmentsAreLoading,
+                                    hasError: assessmentsHaveError,
+                                    accentColor: _accentColor,
+                                    onAdd: _openAssessmentDialog,
+                                    onDelete: _deleteAssessment,
+                                  ),
+                                  const SizedBox(height: 28),
+                                  const _SectionHeader(
+                                    title: 'Tarefas relacionadas',
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _RelatedTasksPanel(
+                                    tasks: tasks,
+                                    isLoading: tasksAreLoading,
+                                    hasError: tasksHaveError,
+                                    accentColor: _accentColor,
+                                    onOpenTasks: () => _onBottomNavTap(context, 2),
+                                  ),
+                                  const SizedBox(height: 28),
+                                  _SectionHeader(
+                                    title: 'Anotações',
+                                    trailing: _InlineActionButton(
+                                      label: 'Adicionar',
+                                      icon: Icons.note_add_outlined,
+                                      onTap: _openNoteDialog,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  StreamBuilder<List<SubjectNote>>(
+                                    stream: _noteRepository.watchNotes(
+                                      studyCycleId: widget.studyCycleId,
+                                      disciplineId: widget.disciplineId,
+                                    ),
+                                    builder: (context, noteSnapshot) {
+                                      return _SubjectNotesPanel(
+                                        notes: noteSnapshot.data ?? const [],
+                                        isLoading:
+                                            noteSnapshot.connectionState ==
+                                                ConnectionState.waiting &&
+                                            !noteSnapshot.hasData,
+                                        hasError: noteSnapshot.hasError,
+                                        accentColor: _accentColor,
+                                        onOpen: _openNoteDetails,
+                                      );
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
                           );
                         },
                       );

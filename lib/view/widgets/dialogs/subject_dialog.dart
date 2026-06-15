@@ -9,12 +9,14 @@ class SubjectDialogResult {
   final String name;
   final String teacher;
   final int workload;
+  final int maxAbsences;
   final List<SubjectScheduleEntry> schedule;
 
   const SubjectDialogResult({
     required this.name,
     required this.teacher,
     required this.workload,
+    required this.maxAbsences,
     required this.schedule,
   });
 }
@@ -76,16 +78,37 @@ class _SubjectDialogState extends State<SubjectDialog> {
   final _nameController = TextEditingController();
   final _teacherController = TextEditingController();
   final _workloadController = TextEditingController();
+  final _maxAbsencesController = TextEditingController(text: '12');
   final Set<int> _selectedWeekdays = {};
   final Map<int, List<_ScheduleTimeRange>> _timeRangesByWeekday = {};
   String? _scheduleErrorMessage;
+  bool _userEditedMaxAbsences = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _workloadController.addListener(_onWorkloadChanged);
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _teacherController.dispose();
     _workloadController.dispose();
+    _maxAbsencesController.dispose();
     super.dispose();
+  }
+
+  void _onWorkloadChanged() {
+    if (!_userEditedMaxAbsences) {
+      final workload = int.tryParse(_workloadController.text.trim()) ?? 0;
+      if (workload > 0) {
+        final calc = (workload * 0.25).round();
+        _maxAbsencesController.text = calc > 0 ? calc.toString() : '12';
+      } else {
+        _maxAbsencesController.text = '12';
+      }
+    }
   }
 
   void _save() {
@@ -104,6 +127,7 @@ class _SubjectDialogState extends State<SubjectDialog> {
             ? 'Professor não informado'
             : _teacherController.text.trim(),
         workload: int.tryParse(_workloadController.text.trim()) ?? 0,
+        maxAbsences: int.tryParse(_maxAbsencesController.text.trim()) ?? 12,
         schedule: _buildSchedule(),
       ),
     );
@@ -406,6 +430,28 @@ class _SubjectDialogState extends State<SubjectDialog> {
                           ),
                         ),
                         const SizedBox(height: 24),
+                        _LabeledField(
+                          label: 'LIMITE DE FALTAS',
+                          child: TextFormField(
+                            controller: _maxAbsencesController,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            decoration: _inputDecoration(hintText: 'Ex: 12'),
+                            onChanged: (val) => _userEditedMaxAbsences = true,
+                            validator: (value) {
+                              final text = value?.trim() ?? '';
+                              if (text.isEmpty) return 'Informe o limite de faltas.';
+                              final val = int.tryParse(text);
+                              if (val == null || val <= 0) {
+                                return 'O limite deve ser maior que 0.';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
                         const _FieldLabel('DIAS DA SEMANA'),
                         const SizedBox(height: 10),
                         WeekdaySelector(
@@ -500,31 +546,6 @@ class _SubjectDialogState extends State<SubjectDialog> {
                       children: [
                         SizedBox(
                           width: double.infinity,
-                          height: 40,
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.of(context).maybePop(),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF39349D),
-                              side: const BorderSide(color: Color(0xFF39349D)),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              padding: EdgeInsets.zero,
-                            ),
-                            child: const Text(
-                              'Cancelar',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontFamily: 'Roboto',
-                                fontWeight: FontWeight.w400,
-                                height: 1.50,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
                           height: 48,
                           child: ElevatedButton(
                             onPressed: _save,
@@ -546,6 +567,31 @@ class _SubjectDialogState extends State<SubjectDialog> {
                                 fontSize: 16,
                                 fontFamily: 'Roboto',
                                 fontWeight: FontWeight.w400,
+                                height: 1.50,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Center(
+                          child: TextButton(
+                            onPressed: () => Navigator.of(context).maybePop(),
+                            style: TextButton.styleFrom(
+                              foregroundColor: colors.textMedium,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                            ),
+                            child: const Text(
+                              'Cancelar',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontFamily: 'Roboto',
+                                fontWeight: FontWeight.w500,
                                 height: 1.50,
                               ),
                             ),

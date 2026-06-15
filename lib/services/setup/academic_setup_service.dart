@@ -19,12 +19,14 @@ class AcademicSetupDisciplineDraft {
   final String name;
   final String teacher;
   final int workload;
+  final int maxAbsences;
   final List<AcademicSetupScheduleDraft> schedules;
 
   const AcademicSetupDisciplineDraft({
     required this.name,
     this.teacher = '',
     this.workload = 0,
+    this.maxAbsences = 12,
     this.schedules = const [],
   });
 }
@@ -77,6 +79,7 @@ class AcademicSetupService {
             name: disciplineName,
             teacher: discipline.teacher.trim(),
             workload: discipline.workload,
+            maxAbsences: discipline.maxAbsences,
             colorValue: Schedule.colorValueForDisciplineName(disciplineName),
             studyCycleId: studyCycleId,
           ),

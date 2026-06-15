@@ -9,6 +9,8 @@ class Discipline {
   final int workload;
   final int colorValue;
   final String studyCycleId;
+  final int absences;
+  final int maxAbsences;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -19,6 +21,8 @@ class Discipline {
     required this.workload,
     required this.colorValue,
     required this.studyCycleId,
+    this.absences = 0,
+    this.maxAbsences = 12,
     this.createdAt,
     this.updatedAt,
   });
@@ -33,13 +37,18 @@ class Discipline {
     required String id,
     required Map<String, dynamic> data,
   }) {
+    final workloadVal = _readNonNegativeInt(data['workload']);
     return Discipline(
       id: id,
       name: _readString(data['name']),
       teacher: _readString(data['teacher']),
-      workload: _readNonNegativeInt(data['workload']),
+      workload: workloadVal,
       colorValue: _readColorValue(data['colorValue']),
       studyCycleId: _readString(data['studyCycleId']),
+      absences: _readNonNegativeInt(data['absences']),
+      maxAbsences: data['maxAbsences'] is int
+          ? data['maxAbsences'] as int
+          : (workloadVal > 0 ? (workloadVal * 0.25).round() : 12),
       createdAt: _readTimestamp(data['createdAt']),
       updatedAt: _readTimestamp(data['updatedAt']),
     );
@@ -52,9 +61,37 @@ class Discipline {
       'workload': workload,
       'colorValue': colorValue,
       'studyCycleId': studyCycleId,
+      'absences': absences,
+      'maxAbsences': maxAbsences,
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
       if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
     };
+  }
+
+  Discipline copyWith({
+    String? id,
+    String? name,
+    String? teacher,
+    int? workload,
+    int? colorValue,
+    String? studyCycleId,
+    int? absences,
+    int? maxAbsences,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return Discipline(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      teacher: teacher ?? this.teacher,
+      workload: workload ?? this.workload,
+      colorValue: colorValue ?? this.colorValue,
+      studyCycleId: studyCycleId ?? this.studyCycleId,
+      absences: absences ?? this.absences,
+      maxAbsences: maxAbsences ?? this.maxAbsences,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
   }
 
   static int compareByName(Discipline a, Discipline b) {
@@ -91,6 +128,8 @@ class DisciplineInput {
   final int workload;
   final int colorValue;
   final String studyCycleId;
+  final int absences;
+  final int maxAbsences;
 
   const DisciplineInput({
     required this.name,
@@ -98,7 +137,29 @@ class DisciplineInput {
     required this.workload,
     required this.colorValue,
     required this.studyCycleId,
+    this.absences = 0,
+    this.maxAbsences = 12,
   });
+
+  DisciplineInput copyWith({
+    String? name,
+    String? teacher,
+    int? workload,
+    int? colorValue,
+    String? studyCycleId,
+    int? absences,
+    int? maxAbsences,
+  }) {
+    return DisciplineInput(
+      name: name ?? this.name,
+      teacher: teacher ?? this.teacher,
+      workload: workload ?? this.workload,
+      colorValue: colorValue ?? this.colorValue,
+      studyCycleId: studyCycleId ?? this.studyCycleId,
+      absences: absences ?? this.absences,
+      maxAbsences: maxAbsences ?? this.maxAbsences,
+    );
+  }
 
   Map<String, dynamic> toCreateMap() {
     return {...toUpdateMap(), 'createdAt': FieldValue.serverTimestamp()};
@@ -111,6 +172,10 @@ class DisciplineInput {
       'workload': workload < 0 ? 0 : workload,
       'colorValue': colorValue < 0 ? Discipline.defaultColorValue : colorValue,
       'studyCycleId': studyCycleId.trim(),
+      'absences': absences < 0 ? 0 : absences,
+      'maxAbsences': maxAbsences <= 0
+          ? (workload > 0 ? (workload * 0.25).round() : 12)
+          : maxAbsences,
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }

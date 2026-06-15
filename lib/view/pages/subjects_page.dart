@@ -93,6 +93,7 @@ class _SubjectsPageState extends State<SubjectsPage> {
           name: result.name,
           teacher: result.teacher,
           workload: result.workload,
+          maxAbsences: result.maxAbsences,
           colorValue: Schedule.colorValueForDisciplineName(result.name),
           studyCycleId: activeStudyCycleId,
         ),
@@ -388,6 +389,8 @@ class _SubjectsPageState extends State<SubjectsPage> {
                                                 : discipline.teacher,
                                             frequency: 0,
                                             showFrequency: false,
+                                            absences: discipline.absences,
+                                            maxAbsences: discipline.maxAbsences,
                                             average: stats.averageFor(
                                               discipline.id,
                                             ),

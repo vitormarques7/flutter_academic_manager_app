@@ -296,12 +296,12 @@ class _InlineActionButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: AppColors.primary, size: 18),
+              Icon(icon, color: colors.primary, size: 18),
               const SizedBox(width: 5),
               Text(
                 label,
-                style: const TextStyle(
-                  color: AppColors.primary,
+                style: TextStyle(
+                  color: colors.primary,
                   fontSize: 12,
                   fontFamily: 'Roboto',
                   fontWeight: FontWeight.w800,
@@ -980,11 +980,337 @@ class _GradeBadge extends StatelessWidget {
       child: Text(
         label,
         textAlign: TextAlign.center,
-        style: const TextStyle(
-          color: AppColors.primary,
+        style: TextStyle(
+          color: colors.primary,
           fontSize: 16,
           fontFamily: 'Roboto',
           fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _AttendanceManagementCard extends StatelessWidget {
+  final Discipline discipline;
+  final Color accentColor;
+  final ValueChanged<int> onUpdateAbsences;
+  final ValueChanged<int> onUpdateMaxAbsences;
+
+  const _AttendanceManagementCard({
+    required this.discipline,
+    required this.accentColor,
+    required this.onUpdateAbsences,
+    required this.onUpdateMaxAbsences,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final absences = discipline.absences;
+    final maxAbsences = discipline.maxAbsences > 0 ? discipline.maxAbsences : 12;
+    final pct = absences / maxAbsences;
+    final pctClamped = pct.clamp(0.0, 1.0);
+
+    Color progressColor = colors.success;
+    String riskLabel = 'Frequência regular';
+    if (pct >= 0.8) {
+      progressColor = colors.danger;
+      riskLabel = 'Perigo: limite de faltas!';
+    } else if (pct >= 0.5) {
+      progressColor = colors.warning;
+      riskLabel = 'Atenção: faltas elevadas';
+    }
+
+    return AppSurface.card(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Presenças e Faltas',
+                style: TextStyle(
+                  color: colors.textDark,
+                  fontSize: 18,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              GestureDetector(
+                onTap: () => _showEditDialog(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: colors.surfaceAlt,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit_outlined, size: 14, color: colors.textMedium),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Ajustar',
+                        style: TextStyle(
+                          color: colors.textMedium,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    '$absences',
+                    style: TextStyle(
+                      color: progressColor,
+                      fontSize: 32,
+                      fontFamily: 'Roboto',
+                      fontWeight: FontWeight.w800,
+                      height: 1.0,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '/ $maxAbsences faltas permitidas',
+                    style: TextStyle(
+                      color: colors.textLight,
+                      fontSize: 14,
+                      fontFamily: 'Roboto',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                riskLabel,
+                style: TextStyle(
+                  color: progressColor,
+                  fontSize: 13,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: pctClamped,
+              minHeight: 8,
+              backgroundColor: colors.surfaceAlt,
+              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              _PresenceActionButton(
+                label: '-1',
+                onPressed: absences > 0
+                    ? () {
+                        HapticFeedback.lightImpact();
+                        onUpdateAbsences(absences - 1);
+                      }
+                    : null,
+                isNegative: true,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _PresenceActionButton(
+                        label: '+1',
+                        onPressed: () {
+                          HapticFeedback.lightImpact();
+                          onUpdateAbsences(absences + 1);
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: _PresenceActionButton(
+                        label: '+2',
+                        onPressed: () {
+                          HapticFeedback.lightImpact();
+                          onUpdateAbsences(absences + 2);
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: _PresenceActionButton(
+                        label: '+3',
+                        onPressed: () {
+                          HapticFeedback.lightImpact();
+                          onUpdateAbsences(absences + 3);
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: _PresenceActionButton(
+                        label: '+4',
+                        onPressed: () {
+                          HapticFeedback.lightImpact();
+                          onUpdateAbsences(absences + 4);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditDialog(BuildContext context) {
+    final colors = context.appColors;
+    final absencesController = TextEditingController(text: discipline.absences.toString());
+    final maxAbsencesController = TextEditingController(text: discipline.maxAbsences.toString());
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.28),
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: colors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+          title: Text(
+            'Ajustar Presença',
+            style: TextStyle(
+              color: colors.textDark,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: absencesController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    labelText: 'Faltas atuais',
+                    labelStyle: TextStyle(color: colors.textMedium),
+                    hintText: 'Ex: 4',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Informe as faltas.';
+                    final val = int.tryParse(value);
+                    if (val == null || val < 0) return 'Valor inválido.';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: maxAbsencesController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    labelText: 'Limite máximo de faltas',
+                    labelStyle: TextStyle(color: colors.textMedium),
+                    hintText: 'Ex: 12',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Informe o limite.';
+                    final val = int.tryParse(value);
+                    if (val == null || val <= 0) return 'O limite deve ser maior que 0.';
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                'Cancelar',
+                style: TextStyle(color: colors.textMedium),
+              ),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (!formKey.currentState!.validate()) return;
+                final newAbsences = int.parse(absencesController.text);
+                final newMax = int.parse(maxAbsencesController.text);
+                onUpdateAbsences(newAbsences);
+                onUpdateMaxAbsences(newMax);
+                Navigator.of(dialogContext).pop();
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: colors.primary,
+              ),
+              child: const Text('Confirmar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PresenceActionButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+  final bool isNegative;
+
+  const _PresenceActionButton({
+    required this.label,
+    required this.onPressed,
+    this.isNegative = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return SizedBox(
+      height: 40,
+      width: isNegative ? 64 : null,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: isNegative ? colors.textMedium : colors.primary,
+          side: BorderSide(
+            color: isNegative
+                ? colors.outlineStrong
+                : colors.primary.withValues(alpha: 0.38),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: EdgeInsets.zero,
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );
