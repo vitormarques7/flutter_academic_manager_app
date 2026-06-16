@@ -7,6 +7,7 @@ import '../widgets/common/page_header.dart';
 import '../widgets/common/section_label.dart';
 import '../widgets/inputs/search_field.dart';
 import '../widgets/common/floating_add_button.dart';
+import '../widgets/common/hero_form_sheet.dart';
 import '../widgets/cards/swipeable_subject_card.dart';
 import '../widgets/dialogs/subject_dialog.dart';
 
@@ -79,10 +80,9 @@ class _SubjectsPageState extends State<SubjectsPage> {
   }
 
   Future<void> _openSubjectDialog() async {
-    final result = await showDialog<SubjectDialogResult>(
+    final result = await showHeroFormDialog<SubjectDialogResult>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.28),
-      builder: (_) => const SubjectDialog(),
+      child: const SubjectDialog(),
     );
 
     if (result == null || !mounted) return;

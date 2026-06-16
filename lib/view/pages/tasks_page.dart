@@ -8,6 +8,7 @@ import '../widgets/common/section_label.dart';
 import '../widgets/selectors/task_filter_chip.dart';
 import '../widgets/cards/swipeable_task_card.dart';
 import '../widgets/common/floating_add_button.dart';
+import '../widgets/common/hero_form_sheet.dart';
 import '../widgets/dialogs/task_dialog.dart';
 
 class TasksPage extends StatefulWidget {
@@ -49,10 +50,9 @@ class _TasksPageState extends State<TasksPage> {
 
     if (!mounted) return;
 
-    await showDialog<void>(
+    await showHeroFormDialog<void>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.28),
-      builder: (_) => TaskDialog(
+      child: TaskDialog(
         subjects: subjects,
         initialTask: task == null
             ? null

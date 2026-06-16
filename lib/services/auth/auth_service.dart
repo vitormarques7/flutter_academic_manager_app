@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../repositories/user_profile_repository.dart';
+
 class AuthException implements Exception {
   final String message;
 
@@ -12,12 +14,18 @@ class AuthException implements Exception {
 }
 
 class AuthService {
-  AuthService({FirebaseAuth? firebaseAuth, GoogleSignIn? googleSignIn})
-    : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-      _googleSignIn = googleSignIn ?? GoogleSignIn(scopes: const ['email']);
+  AuthService({
+    FirebaseAuth? firebaseAuth,
+    GoogleSignIn? googleSignIn,
+    UserProfileRepository? userProfileRepository,
+  }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+       _googleSignIn = googleSignIn ?? GoogleSignIn(scopes: const ['email']),
+       _userProfileRepository =
+           userProfileRepository ?? UserProfileRepository();
 
   final FirebaseAuth _firebaseAuth;
   final GoogleSignIn _googleSignIn;
+  final UserProfileRepository _userProfileRepository;
 
   Future<void> ensureInitialized() async {
     if (kIsWeb) {
@@ -44,10 +52,12 @@ class AuthService {
 
   Future<UserCredential> signInWithEmail(String email, String password) async {
     try {
-      return await _firebaseAuth.signInWithEmailAndPassword(
+      final credential = await _firebaseAuth.signInWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );
+      await _syncUserProfile(credential.user);
+      return credential;
     } on FirebaseAuthException catch (error) {
       throw AuthException(_mapFirebaseAuthError(error));
     }
@@ -69,6 +79,7 @@ class AuthService {
         await credential.user?.updateDisplayName(displayName);
       }
 
+      await _syncUserProfile(credential.user);
       return credential;
     } on FirebaseAuthException catch (error) {
       throw AuthException(_mapFirebaseAuthError(error));
@@ -97,7 +108,11 @@ class AuthService {
         idToken: googleAuth.idToken,
       );
 
-      return await _firebaseAuth.signInWithCredential(credential);
+      final userCredential = await _firebaseAuth.signInWithCredential(
+        credential,
+      );
+      await _syncUserProfile(userCredential.user);
+      return userCredential;
     } on FirebaseAuthException catch (error) {
       throw AuthException(_mapFirebaseAuthError(error));
     } on AuthException {
@@ -128,6 +143,17 @@ class AuthService {
       throw const AuthException(
         'Não foi possível sair da conta. Tente novamente.',
       );
+    }
+  }
+
+  Future<void> _syncUserProfile(User? user) async {
+    final uid = user?.uid;
+    if (uid == null) return;
+
+    try {
+      await _userProfileRepository.ensureUserDocument(uid);
+    } catch (_) {
+      // O perfil no Firestore é auxiliar; não bloqueia o login.
     }
   }
 

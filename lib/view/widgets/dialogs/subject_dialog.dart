@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../config/theme/app_colors.dart';
+import '../common/hero_form_sheet.dart';
 import '../selectors/weekday_selector.dart';
 
 class SubjectDialogResult {
@@ -194,264 +195,117 @@ class _SubjectDialogState extends State<SubjectDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      backgroundColor: Colors.transparent,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 380),
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E4F0)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x80514EB6),
-                blurRadius: 18,
-                offset: Offset(0, 6),
+    return HeroFormSheet(
+      heroIcon: Icons.menu_book_rounded,
+      title: 'Nova Disciplina',
+      subtitle: 'Organize sua grade acadêmica',
+      badge: 'Cadastro',
+      onBack: () => Navigator.of(context).maybePop(),
+      onSave: _save,
+      formContent: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            HeroFormField(
+              label: 'DISCIPLINA',
+              child: TextFormField(
+                controller: _nameController,
+                textInputAction: TextInputAction.next,
+                decoration: heroFormInputDecoration(hintText: 'Ex: Programação'),
+                validator: (value) {
+                  if ((value?.trim() ?? '').isEmpty) {
+                    return 'Informe o nome da disciplina.';
+                  }
+                  return null;
+                },
               ),
-            ],
-          ),
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
+            ),
+            const SizedBox(height: 20),
+            HeroFormField(
+              label: 'PROFESSOR',
+              child: TextFormField(
+                controller: _teacherController,
+                textInputAction: TextInputAction.next,
+                decoration: heroFormInputDecoration(hintText: 'Ex: Prof. Alguém'),
+              ),
+            ),
+            const SizedBox(height: 20),
+            HeroFormField(
+              label: 'CARGA HORÁRIA',
+              child: TextFormField(
+                controller: _workloadController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: heroFormInputDecoration(hintText: 'Ex: 60'),
+                validator: _validateWorkload,
+              ),
+            ),
+            const SizedBox(height: 20),
+            HeroFormField(
+              label: 'DIAS DA SEMANA',
+              child: WeekdaySelector(
+                selectedIndexes: _selectedWeekdays,
+                onChanged: _toggleWeekday,
+              ),
+            ),
+            const SizedBox(height: 20),
+            HeroFormField(
+              label: 'HORÁRIO(S)',
               child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            'Nova Disciplina',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 24,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w700,
-                              height: 1.33,
-                              letterSpacing: -0.36,
-                            ),
-                          ),
+                  ..._timeRanges.asMap().entries.map((entry) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _ScheduleTimeRow(
+                        range: entry.value,
+                        canDelete: _timeRanges.length > 1,
+                        onStartTap: () => _pickTime(
+                          index: entry.key,
+                          isStartTime: true,
                         ),
-                        IconButton(
-                          onPressed: () => Navigator.of(context).maybePop(),
-                          icon: const Icon(
-                            Icons.close,
-                            color: Color(0xFF464552),
-                            size: 32,
-                          ),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 40,
-                            minHeight: 40,
-                          ),
+                        onEndTap: () => _pickTime(
+                          index: entry.key,
+                          isStartTime: false,
                         ),
-                      ],
+                        onDelete: () => _removeTimeRange(entry.key),
+                      ),
+                    );
+                  }),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 42,
+                    child: OutlinedButton.icon(
+                      onPressed: _addTimeRange,
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Adicionar horário'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(color: Color(0x7F514EB6)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
                     ),
                   ),
-                  const Divider(height: 1, color: Color(0xFFE2E4F0)),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _LabeledField(
-                          label: 'DISCIPLINA',
-                          child: TextFormField(
-                            controller: _nameController,
-                            textInputAction: TextInputAction.next,
-                            decoration: _inputDecoration(
-                              hintText: 'Ex: Programação',
-                            ),
-                            validator: (value) {
-                              if ((value?.trim() ?? '').isEmpty) {
-                                return 'Informe o nome da disciplina.';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        _LabeledField(
-                          label: 'PROFESSOR',
-                          child: TextFormField(
-                            controller: _teacherController,
-                            textInputAction: TextInputAction.next,
-                            decoration: _inputDecoration(
-                              hintText: 'Ex: Prof. Alguém',
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        _LabeledField(
-                          label: 'CARGA HORÁRIA',
-                          child: TextFormField(
-                            controller: _workloadController,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            decoration: _inputDecoration(hintText: 'Ex: 60'),
-                            validator: _validateWorkload,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        const _FieldLabel('DIAS DA SEMANA'),
-                        const SizedBox(height: 10),
-                        WeekdaySelector(
-                          selectedIndexes: _selectedWeekdays,
-                          onChanged: _toggleWeekday,
-                        ),
-                        const SizedBox(height: 24),
-                        const _FieldLabel('HORÁRIO(S)'),
-                        const SizedBox(height: 10),
-                        ..._timeRanges.asMap().entries.map((entry) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: _ScheduleTimeRow(
-                              range: entry.value,
-                              canDelete: _timeRanges.length > 1,
-                              onStartTap: () => _pickTime(
-                                index: entry.key,
-                                isStartTime: true,
-                              ),
-                              onEndTap: () => _pickTime(
-                                index: entry.key,
-                                isStartTime: false,
-                              ),
-                              onDelete: () => _removeTimeRange(entry.key),
-                            ),
-                          );
-                        }),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 38,
-                          child: OutlinedButton.icon(
-                            onPressed: _addTimeRange,
-                            icon: const Icon(Icons.add, size: 18),
-                            label: const Text('Adicionar horário'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.primary,
-                              side: const BorderSide(color: Color(0x7F514EB6)),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                        if (_validateSchedule() != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            _validateSchedule()!,
-                            style: const TextStyle(
-                              color: Colors.red,
-                              fontSize: 12,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ],
+                  if (_validateSchedule() != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _validateSchedule()!,
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontSize: 12,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  const Divider(height: 1, color: Color(0xFFE2E4F0)),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
-                    child: Column(
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          height: 40,
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.of(context).maybePop(),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF39349D),
-                              side: const BorderSide(color: Color(0xFF39349D)),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              padding: EdgeInsets.zero,
-                            ),
-                            child: const Text(
-                              'Cancelar',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontFamily: 'Inter',
-                                fontWeight: FontWeight.w400,
-                                height: 1.50,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: _save,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              elevation: 8,
-                              shadowColor: AppColors.primary.withValues(
-                                alpha: 0.28,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              padding: EdgeInsets.zero,
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.save_outlined, size: 28),
-                                SizedBox(width: 10),
-                                Text(
-                                  'Salvar',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontFamily: 'Inter',
-                                    fontWeight: FontWeight.w400,
-                                    height: 1.50,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),
-          ),
+          ],
         ),
       ),
-    );
-  }
-
-  InputDecoration _inputDecoration({String? hintText}) {
-    return InputDecoration(
-      hintText: hintText,
-      hintStyle: const TextStyle(
-        color: Color(0xFF6B7280),
-        fontSize: 16,
-        fontFamily: 'Inter',
-        fontWeight: FontWeight.w400,
-      ),
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 17),
-      border: _fieldBorder(),
-      enabledBorder: _fieldBorder(),
-      focusedBorder: _fieldBorder(color: AppColors.primary),
-      errorBorder: _fieldBorder(color: Colors.red),
-      focusedErrorBorder: _fieldBorder(color: Colors.red),
     );
   }
 
@@ -459,69 +313,6 @@ class _SubjectDialogState extends State<SubjectDialog> {
     final hour = time.hour.toString().padLeft(2, '0');
     final minute = time.minute.toString().padLeft(2, '0');
     return '$hour:$minute';
-  }
-
-  OutlineInputBorder _fieldBorder({Color color = const Color(0xFFE2E4F0)}) {
-    return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(color: color),
-    );
-  }
-}
-
-class _LabeledField extends StatelessWidget {
-  final String label;
-  final Widget child;
-
-  const _LabeledField({required this.label, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4),
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFF464552),
-              fontSize: 12,
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w700,
-              height: 1.50,
-              letterSpacing: 0.72,
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        child,
-      ],
-    );
-  }
-}
-
-class _FieldLabel extends StatelessWidget {
-  final String label;
-
-  const _FieldLabel(this.label);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Color(0xFF464552),
-          fontSize: 12,
-          fontFamily: 'Inter',
-          fontWeight: FontWeight.w700,
-          height: 1.50,
-          letterSpacing: 0.72,
-        ),
-      ),
-    );
   }
 }
 
@@ -598,7 +389,8 @@ class _TimeButton extends StatelessWidget {
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           foregroundColor: const Color(0xFF1B1B20),
-          side: const BorderSide(color: Color(0xFFE2E4F0)),
+          side: const BorderSide(color: Color(0xFFE8EAF2)),
+          backgroundColor: const Color(0xFFF5F6FA),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
