@@ -8,15 +8,24 @@ LinearGradient _disciplineSurfaceGradient({
   final isDark = Theme.of(context).brightness == Brightness.dark;
 
   if (isDark) {
+    final glow = Color.alphaBlend(
+      accentColor.withValues(alpha: 0.052),
+      colors.surface,
+    );
+    final whisper = Color.alphaBlend(
+      accentColor.withValues(alpha: 0.026),
+      colors.surface,
+    );
+    final fade = Color.alphaBlend(
+      accentColor.withValues(alpha: 0.010),
+      colors.surface,
+    );
+
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [
-        accentColor.withValues(alpha: 0.10),
-        accentColor.withValues(alpha: 0.035),
-        colors.surface,
-      ],
-      stops: const [0.0, 0.48, 1.0],
+      colors: [glow, whisper, fade, colors.surface],
+      stops: const [0.0, 0.30, 0.68, 1.0],
     );
   }
 

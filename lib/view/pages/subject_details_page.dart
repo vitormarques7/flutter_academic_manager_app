@@ -174,8 +174,8 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
 
   void _openEventDetails(SubjectEvent event) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SubjectEventDetailsPage(
+      AppRoutes.detailRoute(
+        page: SubjectEventDetailsPage(
           event: event,
           accentColor: _accentColor,
           onDelete: _deleteEvent,
@@ -190,7 +190,6 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
       barrierColor: Colors.black.withValues(alpha: 0.28),
       builder: (_) => const SubjectNoteDialog(),
     );
-
 
     if (result == null) return;
 
@@ -218,8 +217,8 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
 
   void _openNoteDetails(SubjectNote note) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SubjectNoteDetailsPage(
+      AppRoutes.detailRoute(
+        page: SubjectNoteDetailsPage(
           note: note,
           accentColor: _accentColor,
           onDelete: _deleteNote,
@@ -323,12 +322,14 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
                           disciplineId: widget.disciplineId,
                         ),
                         builder: (context, assessmentSnapshot) {
-                          final assessments = assessmentSnapshot.data ?? const [];
+                          final assessments =
+                              assessmentSnapshot.data ?? const [];
                           final assessmentsAreLoading =
                               assessmentSnapshot.connectionState ==
                                   ConnectionState.waiting &&
                               !assessmentSnapshot.hasData;
-                          final assessmentsHaveError = assessmentSnapshot.hasError;
+                          final assessmentsHaveError =
+                              assessmentSnapshot.hasError;
                           final average = _averageFromAssessments(assessments);
 
                           return StreamBuilder<List<AcademicTask>>(
@@ -434,7 +435,8 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
                                     isLoading: tasksAreLoading,
                                     hasError: tasksHaveError,
                                     accentColor: _accentColor,
-                                    onOpenTasks: () => _onBottomNavTap(context, 2),
+                                    onOpenTasks: () =>
+                                        _onBottomNavTap(context, 2),
                                   ),
                                   const SizedBox(height: 28),
                                   _SectionHeader(

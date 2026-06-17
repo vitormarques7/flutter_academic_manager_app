@@ -149,7 +149,9 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Não foi possível salvar o evento: ${error.toString()}'),
+          content: Text(
+            'Não foi possível salvar o evento: ${error.toString()}',
+          ),
           backgroundColor: Colors.red.shade700,
           behavior: SnackBarBehavior.floating,
         ),
@@ -170,7 +172,10 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
         backgroundColor: widget.accentColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+          ),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: const Text(
@@ -195,221 +200,292 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
       body: SafeArea(
         child: Column(
           children: [
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: widget.accentColor,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
+            _EntranceSlideFade(
+              beginOffset: const Offset(0, -28),
+              fade: false,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: widget.accentColor,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(32),
+                    bottomRight: Radius.circular(32),
+                  ),
+                  boxShadow: colors.subtleShadows,
                 ),
-                boxShadow: colors.subtleShadows,
-              ),
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(_eventIcon, color: Colors.white, size: 14),
+                              const SizedBox(width: 6),
+                              Text(
+                                _currentEvent.type.label.toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontFamily: 'Roboto',
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(_eventIcon, color: Colors.white, size: 14),
-                            const SizedBox(width: 6),
-                            Text(
-                              _currentEvent.type.label.toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
+                        const Spacer(),
+                        if (_currentEvent.isUpcoming)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'Pendente',
+                              style: TextStyle(
+                                color: widget.accentColor,
+                                fontSize: 11,
                                 fontFamily: 'Roboto',
                                 fontWeight: FontWeight.w800,
-                                letterSpacing: 1.0,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                      const Spacer(),
-                      if (_currentEvent.isUpcoming)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Text(
-                            'Pendente',
-                            style: TextStyle(
-                              color: widget.accentColor,
-                              fontSize: 11,
-                              fontFamily: 'Roboto',
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    _currentEvent.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 26,
-                      fontFamily: 'Roboto',
-                      fontWeight: FontWeight.w900,
-                      height: 1.2,
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    disciplineLabel,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontSize: 15,
-                      fontFamily: 'Roboto',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const ClampingScrollPhysics(),
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: colors.outline),
-                        boxShadow: colors.subtleShadows,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.description_outlined, color: widget.accentColor, size: 20),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Descrição',
-                                style: TextStyle(
-                                  color: colors.textDark,
-                                  fontSize: 16,
-                                  fontFamily: 'Roboto',
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            _currentEvent.description.isEmpty
-                                ? 'Nenhuma descrição cadastrada para este evento.'
-                                : _currentEvent.description,
-                            style: TextStyle(
-                              color: _currentEvent.description.isEmpty ? colors.textMuted : colors.textMedium,
-                              fontSize: 15,
-                              fontFamily: 'Roboto',
-                              height: 1.5,
-                            ),
-                          ),
-                        ],
+                    const SizedBox(height: 20),
+                    Text(
+                      _currentEvent.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 26,
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.w900,
+                        height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: colors.outline),
-                        boxShadow: colors.subtleShadows,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.info_outline_rounded, color: widget.accentColor, size: 20),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Detalhes do Evento',
-                                style: TextStyle(
-                                  color: colors.textDark,
-                                  fontSize: 16,
-                                  fontFamily: 'Roboto',
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          _DetailRow(
-                            icon: Icons.calendar_today_rounded,
-                            title: 'Data',
-                            value: _currentEvent.displayDateLabel,
-                            iconColor: widget.accentColor,
-                          ),
-                          Divider(height: 24, color: colors.divider),
-                          _DetailRow(
-                            icon: _eventIcon,
-                            title: 'Tipo de Evento',
-                            value: _currentEvent.type.label,
-                            iconColor: widget.accentColor,
-                          ),
-                          Divider(height: 24, color: colors.divider),
-                          _DetailRow(
-                            icon: Icons.menu_book_rounded,
-                            title: 'Disciplina',
-                            value: disciplineLabel,
-                            iconColor: widget.accentColor,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-                    Center(
-                      child: IconButton(
-                        icon: _isDeleting
-                            ? SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: colors.textSubtle,
-                                ),
-                              )
-                            : Icon(
-                                Icons.delete_outline_rounded,
-                                color: colors.textSubtle,
-                                size: 28,
-                              ),
-                        onPressed: _isDeleting || _isSaving ? null : _confirmDelete,
-                        tooltip: 'Excluir evento',
-                        style: IconButton.styleFrom(
-                          padding: const EdgeInsets.all(16),
-                        ),
+                    const SizedBox(height: 12),
+                    Text(
+                      disciplineLabel,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 15,
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
+            Expanded(
+              child: _EntranceSlideFade(
+                beginOffset: const Offset(0, 32),
+                start: 0.14,
+                duration: const Duration(milliseconds: 880),
+                child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: colors.surface,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: colors.outline),
+                          boxShadow: colors.subtleShadows,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.description_outlined,
+                                  color: widget.accentColor,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Descrição',
+                                  style: TextStyle(
+                                    color: colors.textDark,
+                                    fontSize: 16,
+                                    fontFamily: 'Roboto',
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              _currentEvent.description.isEmpty
+                                  ? 'Nenhuma descrição cadastrada para este evento.'
+                                  : _currentEvent.description,
+                              style: TextStyle(
+                                color: _currentEvent.description.isEmpty
+                                    ? colors.textMuted
+                                    : colors.textMedium,
+                                fontSize: 15,
+                                fontFamily: 'Roboto',
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: colors.surface,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: colors.outline),
+                          boxShadow: colors.subtleShadows,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline_rounded,
+                                  color: widget.accentColor,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Detalhes do Evento',
+                                  style: TextStyle(
+                                    color: colors.textDark,
+                                    fontSize: 16,
+                                    fontFamily: 'Roboto',
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            _DetailRow(
+                              icon: Icons.calendar_today_rounded,
+                              title: 'Data',
+                              value: _currentEvent.displayDateLabel,
+                              iconColor: widget.accentColor,
+                            ),
+                            Divider(height: 24, color: colors.divider),
+                            _DetailRow(
+                              icon: _eventIcon,
+                              title: 'Tipo de Evento',
+                              value: _currentEvent.type.label,
+                              iconColor: widget.accentColor,
+                            ),
+                            Divider(height: 24, color: colors.divider),
+                            _DetailRow(
+                              icon: Icons.menu_book_rounded,
+                              title: 'Disciplina',
+                              value: disciplineLabel,
+                              iconColor: widget.accentColor,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      Center(
+                        child: IconButton(
+                          icon: _isDeleting
+                              ? SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: colors.textSubtle,
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.delete_outline_rounded,
+                                  color: colors.textSubtle,
+                                  size: 28,
+                                ),
+                          onPressed: _isDeleting || _isSaving
+                              ? null
+                              : _confirmDelete,
+                          tooltip: 'Excluir evento',
+                          style: IconButton.styleFrom(
+                            padding: const EdgeInsets.all(16),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _EntranceSlideFade extends StatelessWidget {
+  final Widget child;
+  final Offset beginOffset;
+  final Duration duration;
+  final double start;
+  final bool fade;
+
+  const _EntranceSlideFade({
+    required this.child,
+    required this.beginOffset,
+    this.duration = const Duration(milliseconds: 760),
+    this.start = 0,
+    this.fade = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: duration,
+      curve: Curves.linear,
+      builder: (context, value, child) {
+        final progress = Interval(
+          start,
+          1,
+          curve: Curves.easeOutQuart,
+        ).transform(value);
+
+        final translatedChild = Transform.translate(
+          offset: Offset.lerp(beginOffset, Offset.zero, progress)!,
+          child: child,
+        );
+
+        if (!fade) return translatedChild;
+
+        return Opacity(opacity: progress, child: translatedChild);
+      },
+      child: child,
     );
   }
 }
