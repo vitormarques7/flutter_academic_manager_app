@@ -779,7 +779,7 @@ class _EventRow extends StatelessWidget {
   void _openDetails(BuildContext context) {
     final colors = context.appColors;
     Navigator.of(context).push(
-      AppRoutes.slideRoute(
+      AppRoutes.detailRoute(
         page: SubjectEventDetailsPage(
           event: event.source,
           accentColor: colors.event,

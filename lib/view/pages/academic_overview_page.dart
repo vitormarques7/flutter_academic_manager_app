@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../config/routes/app_routes.dart';
 import '../../config/theme/app_theme_colors.dart';
 import '../../config/theme/app_design_tokens.dart';
 import '../../models/discipline.dart';
@@ -661,8 +662,8 @@ class _OverviewNoteCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.lg),
         onTap: () {
           Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => SubjectNoteDetailsPage(
+            AppRoutes.detailRoute(
+              page: SubjectNoteDetailsPage(
                 note: note,
                 accentColor: accentColor,
                 onDelete: (n) => noteRepository.deleteNote(n.id),

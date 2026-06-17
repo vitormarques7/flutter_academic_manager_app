@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../config/routes/app_routes.dart';
 import '../../config/scroll/app_scroll_behavior.dart';
 import '../../config/theme/app_theme_colors.dart';
 import '../../models/academic_task.dart';
@@ -644,8 +645,8 @@ class _SchedulePageState extends State<SchedulePage> {
 
   void _openEventDetails(SubjectEvent event, Color accentColor) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SubjectEventDetailsPage(
+      AppRoutes.detailRoute(
+        page: SubjectEventDetailsPage(
           event: event,
           accentColor: accentColor,
           onDelete: _deleteEvent,

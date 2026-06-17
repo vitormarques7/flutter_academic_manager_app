@@ -76,6 +76,14 @@ class AppRoutes {
     );
   }
 
+  static Route<T> detailRoute<T>({required Widget page}) {
+    return PageRouteBuilder<T>(
+      transitionDuration: Duration.zero,
+      reverseTransitionDuration: Duration.zero,
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+    );
+  }
+
   static void toLogin(BuildContext context) {
     Navigator.of(context).push(
       slideRoute(
