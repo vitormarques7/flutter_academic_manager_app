@@ -58,6 +58,42 @@ void main() {
       expect(task.createdAt, isNull);
       expect(task.updatedAt, isNull);
     });
+
+    test('copyWith updates selected fields and can clear nullable fields', () {
+      final createdAt = DateTime(2026, 6, 3, 10);
+      final updatedAt = DateTime(2026, 6, 3, 11);
+      final task = AcademicTask(
+        id: 'task-1',
+        title: 'Seminario de Java',
+        disciplineId: 'discipline-1',
+        subject: 'Programacao',
+        deadline: '26/06/2026',
+        visualPriority: 'Trabalho',
+        description: 'Preparar slides e roteiro.',
+        isChecked: false,
+        userId: 'user-1',
+        studyCycleId: 'cycle-1',
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+
+      final updatedTask = task.copyWith(
+        title: 'Seminario atualizado',
+        disciplineId: null,
+        isChecked: true,
+        studyCycleId: null,
+        updatedAt: null,
+      );
+
+      expect(updatedTask.id, task.id);
+      expect(updatedTask.title, 'Seminario atualizado');
+      expect(updatedTask.disciplineId, isNull);
+      expect(updatedTask.subject, task.subject);
+      expect(updatedTask.isChecked, isTrue);
+      expect(updatedTask.studyCycleId, isNull);
+      expect(updatedTask.createdAt, createdAt);
+      expect(updatedTask.updatedAt, isNull);
+    });
   });
 
   group('TaskInput', () {

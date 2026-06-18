@@ -4,11 +4,14 @@ import '../../../config/theme/app_theme_colors.dart';
 import '../../../models/discipline.dart';
 import '../../../models/subject_event.dart';
 import '../inputs/date_picker_field.dart';
+import '../inputs/time_range_picker_field.dart';
 
 class ScheduleEventDialogResult {
   final String title;
   final SubjectEventType type;
   final DateTime eventDate;
+  final int? startTimeMinutes;
+  final int? endTimeMinutes;
   final String description;
   final String? disciplineId;
   final String disciplineName;
@@ -17,6 +20,8 @@ class ScheduleEventDialogResult {
     required this.title,
     required this.type,
     required this.eventDate,
+    this.startTimeMinutes,
+    this.endTimeMinutes,
     required this.description,
     required this.disciplineId,
     required this.disciplineName,
@@ -46,6 +51,10 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
   final _descriptionController = TextEditingController();
   SubjectEventType _selectedType = SubjectEventType.exam;
   String _selectedDisciplineId = _noDisciplineValue;
+  bool _hasTimeRange = false;
+  TimeOfDay _startTime = const TimeOfDay(hour: 8, minute: 0);
+  TimeOfDay _endTime = const TimeOfDay(hour: 9, minute: 0);
+  String? _timeErrorMessage;
 
   @override
   void initState() {
@@ -65,6 +74,11 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    final timeRangeError = _validateTimeRange();
+    if (timeRangeError != null) {
+      setState(() => _timeErrorMessage = timeRangeError);
+      return;
+    }
 
     final discipline = _selectedDisciplineId == _noDisciplineValue
         ? null
@@ -75,6 +89,8 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
         title: _titleController.text.trim(),
         type: _selectedType,
         eventDate: parseBrazilianDate(_dateController.text)!,
+        startTimeMinutes: _hasTimeRange ? timeOfDayToMinutes(_startTime) : null,
+        endTimeMinutes: _hasTimeRange ? timeOfDayToMinutes(_endTime) : null,
         description: _descriptionController.text.trim(),
         disciplineId: discipline?.id,
         disciplineName: discipline?.name ?? '',
@@ -92,6 +108,37 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
     }
 
     return null;
+  }
+
+  String? _validateTimeRange() {
+    if (!_hasTimeRange) return null;
+
+    final startMinutes = timeOfDayToMinutes(_startTime);
+    final endMinutes = timeOfDayToMinutes(_endTime);
+
+    if (endMinutes <= startMinutes) {
+      return 'O horário final deve ser depois do inicial.';
+    }
+
+    return null;
+  }
+
+  Future<void> _pickTime({required bool isStartTime}) async {
+    final selectedTime = await showAppTimePicker(
+      context: context,
+      initialTime: isStartTime ? _startTime : _endTime,
+    );
+
+    if (selectedTime == null || !mounted) return;
+
+    setState(() {
+      if (isStartTime) {
+        _startTime = selectedTime;
+      } else {
+        _endTime = selectedTime;
+      }
+      _timeErrorMessage = null;
+    });
   }
 
   Discipline? _selectedDiscipline() {
@@ -251,6 +298,24 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
                             initialDate: _futureOrToday(widget.initialDate),
                             helpText: 'Escolher data do evento',
                             validator: _validateDate,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _DialogField(
+                          label: 'Horário',
+                          child: OptionalTimeRangeField(
+                            hasTimeRange: _hasTimeRange,
+                            startTime: _startTime,
+                            endTime: _endTime,
+                            errorText: _timeErrorMessage,
+                            onHasTimeRangeChanged: (value) {
+                              setState(() {
+                                _hasTimeRange = value;
+                                _timeErrorMessage = null;
+                              });
+                            },
+                            onStartTap: () => _pickTime(isStartTime: true),
+                            onEndTap: () => _pickTime(isStartTime: false),
                           ),
                         ),
                         const SizedBox(height: 16),

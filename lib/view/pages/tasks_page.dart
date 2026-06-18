@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../config/routes/app_routes.dart';
 import '../../config/scroll/app_scroll_behavior.dart';
 import '../../models/academic_task.dart';
 import '../../models/discipline.dart';
@@ -14,6 +15,7 @@ import '../widgets/common/floating_add_button.dart';
 import '../widgets/dialogs/task_dialog.dart';
 import '../widgets/common/empty_state_card.dart';
 import '../widgets/common/list_section_header.dart';
+import 'task_details_page.dart';
 
 enum _TaskFilter {
   pending('Pendentes'),
@@ -162,6 +164,22 @@ class _TasksPageState extends State<TasksPage> {
     );
   }
 
+  void _openTaskDetails({
+    required AcademicTask task,
+    required List<TaskDialogSubject> subjects,
+    String? activeStudyCycleId,
+  }) {
+    Navigator.of(context).push(
+      AppRoutes.detailRoute(
+        page: TaskDetailsPage(
+          task: task,
+          subjects: _subjectsForDialog(subjects: subjects, task: task),
+          activeStudyCycleId: activeStudyCycleId,
+        ),
+      ),
+    );
+  }
+
   Future<void> _updateTaskCompletion(AcademicTask task, bool value) async {
     try {
       await _taskRepository.updateCompletion(id: task.id, isChecked: value);
@@ -198,7 +216,7 @@ class _TasksPageState extends State<TasksPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const PageHeader(title: 'Suas Tarefas'),
+                    const PageHeader(title: 'Suas Tarefas', avatarSize: 46),
 
                     const SizedBox(height: 24),
 
@@ -223,20 +241,19 @@ class _TasksPageState extends State<TasksPage> {
                             studyCycleId: activeCycleSnapshot.data,
                           ),
                           builder: (context, disciplineSnapshot) {
-                            final isLoadingSubjects =
-                                disciplineSnapshot.connectionState ==
-                                    ConnectionState.waiting &&
-                                !disciplineSnapshot.hasData;
                             final hasSubjectsError =
                                 disciplineSnapshot.hasError;
-                            final disciplines = disciplineSnapshot.data ?? const [];
+                            final disciplines =
+                                disciplineSnapshot.data ?? const [];
                             final subjects = hasSubjectsError
                                 ? const <TaskDialogSubject>[]
                                 : _subjectOptionsFromDisciplines(disciplines);
 
                             // Clean up selected discipline if it's no longer present
                             if (_selectedDisciplineId != null &&
-                                !disciplines.any((d) => d.id == _selectedDisciplineId)) {
+                                !disciplines.any(
+                                  (d) => d.id == _selectedDisciplineId,
+                                )) {
                               _selectedDisciplineId = null;
                             }
 
@@ -260,28 +277,40 @@ class _TasksPageState extends State<TasksPage> {
                                 }
 
                                 final allTasks = snapshot.data ?? [];
-                                final disciplineTasks = _selectedDisciplineId == null
+                                final disciplineTasks =
+                                    _selectedDisciplineId == null
                                     ? allTasks
                                     : allTasks
-                                        .where((t) => t.disciplineId == _selectedDisciplineId)
-                                        .toList();
+                                          .where(
+                                            (t) =>
+                                                t.disciplineId ==
+                                                _selectedDisciplineId,
+                                          )
+                                          .toList();
 
-                                // mainListTasks: if completed tab is selected, show completed.
-                                // Otherwise, show only pending in the main list.
-                                final mainListTasks = _selectedFilter == _TaskFilter.completed
-                                    ? disciplineTasks.where((t) => t.isChecked).toList()
-                                    : disciplineTasks.where((t) => !t.isChecked).toList();
+                                final mainListTasks = switch (_selectedFilter) {
+                                  _TaskFilter.completed =>
+                                    disciplineTasks
+                                        .where((t) => t.isChecked)
+                                        .toList(),
+                                  _TaskFilter.all => disciplineTasks,
+                                  _TaskFilter.pending =>
+                                    disciplineTasks
+                                        .where((t) => !t.isChecked)
+                                        .toList(),
+                                };
 
-                                // showCompletedCollapsible: if pending or all filter is selected, and there are completed tasks.
-                                final completedTasksList =
-                                    disciplineTasks.where((t) => t.isChecked).toList();
+                                final completedTasksList = disciplineTasks
+                                    .where((t) => t.isChecked)
+                                    .toList();
                                 final showCompletedCollapsible =
-                                    (_selectedFilter == _TaskFilter.pending ||
-                                            _selectedFilter == _TaskFilter.all) &&
-                                        completedTasksList.isNotEmpty;
+                                    _selectedFilter == _TaskFilter.pending &&
+                                    completedTasksList.isNotEmpty;
 
                                 final timelineStats =
-                                    _TaskTimelineStats.fromTasks(disciplineTasks);
+                                    _TaskTimelineStats.fromTasks(
+                                      disciplineTasks,
+                                    );
 
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -289,9 +318,12 @@ class _TasksPageState extends State<TasksPage> {
                                     if (disciplines.isNotEmpty) ...[
                                       _DisciplineFilterSelector(
                                         disciplines: disciplines,
-                                        selectedDisciplineId: _selectedDisciplineId,
+                                        selectedDisciplineId:
+                                            _selectedDisciplineId,
                                         onSelected: (id) {
-                                          setState(() => _selectedDisciplineId = id);
+                                          setState(
+                                            () => _selectedDisciplineId = id,
+                                          );
                                         },
                                       ),
                                       const SizedBox(height: 18),
@@ -303,7 +335,8 @@ class _TasksPageState extends State<TasksPage> {
                                     const SizedBox(height: 22),
                                     ListSectionHeader(
                                       label: 'LISTA DE TAREFAS',
-                                      count: mainListTasks.length +
+                                      count:
+                                          mainListTasks.length +
                                           (showCompletedCollapsible
                                               ? completedTasksList.length
                                               : 0),
@@ -318,7 +351,8 @@ class _TasksPageState extends State<TasksPage> {
                                       },
                                     ),
                                     const SizedBox(height: 18),
-                                    if (mainListTasks.isEmpty && !showCompletedCollapsible)
+                                    if (mainListTasks.isEmpty &&
+                                        !showCompletedCollapsible)
                                       EmptyStateCard(
                                         message: allTasks.isEmpty
                                             ? 'Nenhuma tarefa criada ainda.'
@@ -343,14 +377,11 @@ class _TasksPageState extends State<TasksPage> {
                                                 value ?? false,
                                               );
                                             },
-                                            onTap: () => _openTaskDialog(
+                                            onTap: () => _openTaskDetails(
                                               task: task,
                                               subjects: subjects,
                                               activeStudyCycleId:
                                                   activeCycleSnapshot.data,
-                                              isLoadingSubjects:
-                                                  isLoadingSubjects,
-                                              hasSubjectsError: hasSubjectsError,
                                             ),
                                           ),
                                         ),
@@ -370,14 +401,11 @@ class _TasksPageState extends State<TasksPage> {
                                                 value ?? false,
                                               );
                                             },
-                                            onTap: () => _openTaskDialog(
+                                            onTap: () => _openTaskDetails(
                                               task: task,
                                               subjects: subjects,
                                               activeStudyCycleId:
                                                   activeCycleSnapshot.data,
-                                              isLoadingSubjects:
-                                                  isLoadingSubjects,
-                                              hasSubjectsError: hasSubjectsError,
                                             ),
                                           ),
                                         ),
@@ -452,10 +480,7 @@ class _TasksOverview extends StatelessWidget {
   final List<AcademicTask> tasks;
   final _TaskTimelineStats timelineStats;
 
-  const _TasksOverview({
-    required this.tasks,
-    required this.timelineStats,
-  });
+  const _TasksOverview({required this.tasks, required this.timelineStats});
 
   @override
   Widget build(BuildContext context) {
@@ -463,34 +488,13 @@ class _TasksOverview extends StatelessWidget {
     final total = tasks.length;
     final pending = tasks.where((task) => !task.isChecked).length;
     final completed = tasks.where((task) => task.isChecked).length;
-
-    // Calculate weights
-    int taskWeight(AcademicTask t) {
-      final priority = t.visualPriority.toLowerCase().trim();
-      if (priority == 'prova' || priority == 'seminário' || priority == 'seminario') return 3;
-      if (priority == 'trabalho' || priority == 'pesquisa') return 2;
-      return 1;
-    }
-
-    final totalWeight = tasks.fold<int>(0, (sum, t) => sum + taskWeight(t));
-    final completedWeight = tasks.where((t) => t.isChecked).fold<int>(0, (sum, t) => sum + taskWeight(t));
-
-    final progress = totalWeight == 0 ? 0.0 : completedWeight / totalWeight;
-    final progressPercent = (progress * 100).round();
-    final focusText = _focusText(
-      progressPercent: progressPercent,
-      totalCount: total,
-      pendingCount: pending,
+    final focusText = _focusText(totalCount: total, pendingCount: pending);
+    final radarColor = _radarColor(colors, pending);
+    final supportText = _supportText(
+      total: total,
+      pending: pending,
+      completed: completed,
     );
-
-    Color progressColor = colors.primary;
-    if (progressPercent < 35) {
-      progressColor = colors.danger;
-    } else if (progressPercent <= 70) {
-      progressColor = colors.warning;
-    } else {
-      progressColor = colors.success;
-    }
 
     return AppSurface.soft(
       width: double.infinity,
@@ -499,27 +503,40 @@ class _TasksOverview extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(
+          Container(
             width: 74,
             height: 74,
-            child: Stack(
-              alignment: Alignment.center,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: radarColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: radarColor.withValues(alpha: 0.22)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(
-                  width: 74,
-                  height: 74,
-                  child: CircularProgressIndicator(
-                    value: progress,
-                    strokeWidth: 7,
-                    backgroundColor: colors.surface.withValues(alpha: 0.72),
-                    color: progressColor,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '$pending',
+                    maxLines: 1,
+                    style: TextStyle(
+                      color: radarColor,
+                      fontSize: 30,
+                      fontFamily: 'Roboto',
+                      fontWeight: FontWeight.w900,
+                      height: 1,
+                    ),
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
-                  '$progressPercent%',
+                  _plural(pending, 'pendente', 'pendentes'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: colors.textDark,
-                    fontSize: 16,
+                    color: radarColor,
+                    fontSize: 10,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w800,
                     height: 1,
@@ -547,9 +564,7 @@ class _TasksOverview extends StatelessWidget {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  total == 0
-                      ? 'Crie sua primeira tarefa para montar seu radar.'
-                      : '$completed de $total ${_plural(total, 'tarefa', 'tarefas')} concluídas',
+                  supportText,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -574,6 +589,12 @@ class _TasksOverview extends StatelessWidget {
                       label: 'Hoje',
                       value: '${timelineStats.dueToday}',
                       icon: Icons.today_outlined,
+                      isAlert: timelineStats.dueToday > 0,
+                    ),
+                    _TaskInsightPill(
+                      label: 'Semana',
+                      value: '${timelineStats.dueThisWeek}',
+                      icon: Icons.date_range_outlined,
                     ),
                     _TaskInsightPill(
                       label: 'Atrasadas',
@@ -591,7 +612,7 @@ class _TasksOverview extends StatelessWidget {
     );
   }
 
-  String _focusText({required int progressPercent, required int totalCount, required int pendingCount}) {
+  String _focusText({required int totalCount, required int pendingCount}) {
     if (totalCount == 0) return 'Seu radar está limpo';
     if (pendingCount == 0) return 'Tudo concluído por aqui';
     if (timelineStats.overdue > 0) {
@@ -600,17 +621,35 @@ class _TasksOverview extends StatelessWidget {
     if (timelineStats.dueToday > 0) {
       return '${timelineStats.dueToday} ${_plural(timelineStats.dueToday, 'tarefa para hoje', 'tarefas para hoje')}';
     }
-    if (progressPercent > 70) {
-      return 'Ritmo excelente nas tarefas!';
-    }
-    if (progressPercent >= 35) {
-      return 'Bom progresso nas tarefas';
+    if (timelineStats.dueThisWeek > 0) {
+      return '${timelineStats.dueThisWeek} ${_plural(timelineStats.dueThisWeek, 'tarefa nos próximos 7 dias', 'tarefas nos próximos 7 dias')}';
     }
     final nextDeadline = timelineStats.nextDeadlineLabel;
     if (nextDeadline != null) return 'Próximo prazo: $nextDeadline';
     if (timelineStats.noDeadline > 0) return 'Há tarefas sem prazo definido';
 
     return 'Sem pendências no radar';
+  }
+
+  String _supportText({
+    required int total,
+    required int pending,
+    required int completed,
+  }) {
+    if (total == 0) return 'Crie sua primeira tarefa para montar seu radar.';
+    if (pending == 0) {
+      return '$completed de $total ${_plural(total, 'tarefa', 'tarefas')} concluídas.';
+    }
+
+    return '$completed concluídas de $total ${_plural(total, 'tarefa', 'tarefas')} no total.';
+  }
+
+  Color _radarColor(AppThemeColors colors, int pending) {
+    if (pending == 0 && tasks.isNotEmpty) return colors.success;
+    if (timelineStats.overdue > 0) return colors.danger;
+    if (timelineStats.dueToday > 0) return colors.warning;
+
+    return colors.primary;
   }
 }
 
@@ -849,12 +888,14 @@ class _TaskFilterTabs extends StatelessWidget {
 
 class _TaskTimelineStats {
   final int dueToday;
+  final int dueThisWeek;
   final int overdue;
   final int noDeadline;
   final DateTime? nextDeadline;
 
   const _TaskTimelineStats({
     required this.dueToday,
+    required this.dueThisWeek,
     required this.overdue,
     required this.noDeadline,
     required this.nextDeadline,
@@ -863,6 +904,7 @@ class _TaskTimelineStats {
   factory _TaskTimelineStats.fromTasks(List<AcademicTask> tasks) {
     final today = _dateOnly(DateTime.now());
     var dueToday = 0;
+    var dueThisWeek = 0;
     var overdue = 0;
     var noDeadline = 0;
     DateTime? nextDeadline;
@@ -882,6 +924,7 @@ class _TaskTimelineStats {
 
       final daysUntil = deadline.difference(today).inDays;
       if (daysUntil == 0) dueToday++;
+      if (daysUntil > 0 && daysUntil <= 7) dueThisWeek++;
 
       if (nextDeadline == null || deadline.isBefore(nextDeadline)) {
         nextDeadline = deadline;
@@ -890,6 +933,7 @@ class _TaskTimelineStats {
 
     return _TaskTimelineStats(
       dueToday: dueToday,
+      dueThisWeek: dueThisWeek,
       overdue: overdue,
       noDeadline: noDeadline,
       nextDeadline: nextDeadline,
@@ -1006,9 +1050,7 @@ class _DisciplineFilterSelector extends StatelessWidget {
                 selectedColor: disciplineColor,
                 backgroundColor: colors.surface,
                 labelStyle: TextStyle(
-                  color: isSelected
-                      ? Colors.white
-                      : colors.textMedium,
+                  color: isSelected ? Colors.white : colors.textMedium,
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
                 ),
@@ -1037,10 +1079,12 @@ class _CompletedTasksCollapseCard extends StatefulWidget {
   });
 
   @override
-  State<_CompletedTasksCollapseCard> createState() => _CompletedTasksCollapseCardState();
+  State<_CompletedTasksCollapseCard> createState() =>
+      _CompletedTasksCollapseCardState();
 }
 
-class _CompletedTasksCollapseCardState extends State<_CompletedTasksCollapseCard> {
+class _CompletedTasksCollapseCardState
+    extends State<_CompletedTasksCollapseCard> {
   bool _isExpanded = false;
 
   @override
@@ -1048,9 +1092,7 @@ class _CompletedTasksCollapseCardState extends State<_CompletedTasksCollapseCard
     final colors = context.appColors;
 
     return Theme(
-      data: Theme.of(context).copyWith(
-        dividerColor: Colors.transparent,
-      ),
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: AppSurface.card(
         padding: EdgeInsets.zero,
         child: ExpansionTile(
@@ -1065,7 +1107,9 @@ class _CompletedTasksCollapseCardState extends State<_CompletedTasksCollapseCard
             ),
           ),
           trailing: Icon(
-            _isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+            _isExpanded
+                ? Icons.keyboard_arrow_up_rounded
+                : Icons.keyboard_arrow_down_rounded,
             color: colors.textMedium,
           ),
           onExpansionChanged: (expanded) {

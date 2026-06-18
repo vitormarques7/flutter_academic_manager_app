@@ -1,24 +1,26 @@
 import 'package:academic_manager_app/config/theme/app_theme_colors.dart';
 import 'package:flutter/material.dart';
+import '../../config/routes/app_routes.dart';
 import '../../config/scroll/app_scroll_behavior.dart';
 import '../../config/theme/app_design_tokens.dart';
 import '../../models/assessment.dart';
 import '../../models/discipline.dart';
+import '../../models/grade_summary.dart';
+import '../../models/study_cycle.dart';
 import '../../models/schedule.dart';
 import '../../repositories/assessment_repository.dart';
 import '../../repositories/discipline_repository.dart';
 import '../../repositories/schedule_repository.dart';
+import '../../repositories/study_cycle_repository.dart';
 import '../../repositories/user_profile_repository.dart';
 import 'subject_details_page.dart';
 import 'academic_overview_page.dart';
 import '../widgets/common/app_surface.dart';
-import '../widgets/common/page_header.dart';
 import '../widgets/inputs/search_field.dart';
 import '../widgets/cards/subject_card.dart';
 import '../widgets/dialogs/subject_dialog.dart';
 import '../widgets/common/empty_state_card.dart';
 import '../widgets/common/list_section_header.dart';
-import '../widgets/common/summary_metric_tile.dart';
 
 class SubjectsPage extends StatefulWidget {
   const SubjectsPage({super.key});
@@ -32,6 +34,7 @@ class _SubjectsPageState extends State<SubjectsPage> {
   final AssessmentRepository _assessmentRepository = AssessmentRepository();
   final DisciplineRepository _disciplineRepository = DisciplineRepository();
   final ScheduleRepository _scheduleRepository = ScheduleRepository();
+  final StudyCycleRepository _studyCycleRepository = StudyCycleRepository();
   final UserProfileRepository _userProfileRepository = UserProfileRepository();
   late Future<String?> _activeStudyCycleIdFuture;
 
@@ -229,7 +232,7 @@ class _SubjectsPageState extends State<SubjectsPage> {
     if (shouldDelete != true || !mounted) return;
 
     try {
-      await _disciplineRepository.deleteDisciplineWithSchedules(
+      await _disciplineRepository.deleteDisciplineWithRelatedData(
         selectedDiscipline,
       );
       _showSuccess('Disciplina excluída com sucesso.');
@@ -248,7 +251,7 @@ class _SubjectsPageState extends State<SubjectsPage> {
         return AlertDialog(
           title: const Text('Excluir disciplina?'),
           content: Text(
-            'Isso removerá "${discipline.name}" e os horários vinculados a ela.',
+            'Isso removerá "${discipline.name}", seus horários e suas notas vinculadas.',
           ),
           actions: [
             TextButton(
@@ -288,12 +291,9 @@ class _SubjectsPageState extends State<SubjectsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const PageHeader(
-                      title: 'Suas Disciplinas',
-                      trailing: _AcademicOverviewMenuButton(),
-                    ),
+                    const _SubjectsHeader(),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 18),
 
                     FutureBuilder<String?>(
                       future: _activeStudyCycleIdFuture,
@@ -313,126 +313,154 @@ class _SubjectsPageState extends State<SubjectsPage> {
 
                         final activeStudyCycleId = activeCycleSnapshot.data;
 
-                        return StreamBuilder<List<Discipline>>(
-                          stream: _disciplineRepository.watchDisciplines(
-                            studyCycleId: activeStudyCycleId,
-                          ),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                    ConnectionState.waiting &&
-                                !snapshot.hasData) {
-                              return const _SubjectsLoadingState();
-                            }
-
-                            if (snapshot.hasError) {
-                              return const EmptyStateCard(
-                                icon: Icons.error_outline_rounded,
-                                message:
-                                    'Não foi possível carregar suas disciplinas agora.',
-                              );
-                            }
-
-                            final allDisciplines = snapshot.data ?? [];
-                            final disciplines = _filterDisciplines(
-                              allDisciplines,
+                        return StreamBuilder<List<StudyCycle>>(
+                          stream: _studyCycleRepository.watchStudyCycles(),
+                          builder: (context, studyCycleSnapshot) {
+                            final studyCycles =
+                                studyCycleSnapshot.data ?? const [];
+                            final activeCycle = studyCycles.firstWhere(
+                              (c) => c.id == activeStudyCycleId,
+                              orElse: () => StudyCycle(
+                                id: activeStudyCycleId ?? '',
+                                type: StudyCycleType.independent,
+                                passingGrade: 7.0,
+                              ),
                             );
+                            final passingGrade = activeCycle.passingGrade;
 
-                            return StreamBuilder<List<Assessment>>(
-                              stream: _assessmentRepository.watchAssessments(
+                            return StreamBuilder<List<Discipline>>(
+                              stream: _disciplineRepository.watchDisciplines(
                                 studyCycleId: activeStudyCycleId,
                               ),
-                              builder: (context, assessmentSnapshot) {
-                                final assessments =
-                                    assessmentSnapshot.data ?? const [];
-                                final stats = _SubjectStats.from(
-                                  disciplines: allDisciplines,
-                                  assessments: assessments,
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                        ConnectionState.waiting &&
+                                    !snapshot.hasData) {
+                                  return const _SubjectsLoadingState();
+                                }
+
+                                if (snapshot.hasError) {
+                                  return const EmptyStateCard(
+                                    icon: Icons.error_outline_rounded,
+                                    message:
+                                        'Não foi possível carregar suas disciplinas agora.',
+                                  );
+                                }
+
+                                final allDisciplines = snapshot.data ?? [];
+                                final disciplines = _filterDisciplines(
+                                  allDisciplines,
                                 );
 
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _SubjectsOverview(
-                                      total: allDisciplines.length,
-                                      averageGrade: stats.overallAverage,
-                                      gradeCount: assessments.length,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    SearchField(
-                                      controller: _searchController,
-                                      hint: 'Pesquise por disciplina',
-                                    ),
-                                    const SizedBox(height: 16),
-                                    ListSectionHeader(
-                                      label: 'MINHAS DISCIPLINAS',
-                                      count: disciplines.length,
-                                      trailing: _EditSubjectsButton(
-                                        onSelected: _handleEditAction,
+                                return StreamBuilder<List<Assessment>>(
+                                  stream: _assessmentRepository
+                                      .watchAssessments(
+                                        studyCycleId: activeStudyCycleId,
                                       ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    if (disciplines.isEmpty)
-                                      EmptyStateCard(
-                                        message: allDisciplines.isEmpty
-                                            ? 'Nenhuma disciplina criada ainda.'
-                                            : 'Nenhuma disciplina encontrada.',
-                                        icon: allDisciplines.isEmpty
-                                            ? Icons.menu_book_outlined
-                                            : Icons.search_off_outlined,
-                                      )
-                                    else
-                                      ...disciplines.map(
-                                        (discipline) => Padding(
-                                          padding: const EdgeInsets.only(
-                                            bottom: 16,
-                                          ),
-                                          child: SubjectCard(
-                                            name: discipline.name,
-                                            teacher: discipline.teacher.isEmpty
-                                                ? 'Professor não informado'
-                                                : discipline.teacher,
-                                            frequency: 0,
-                                            showFrequency: false,
-                                            average: stats.averageFor(
-                                              discipline.id,
-                                            ),
-                                            workload: discipline.workload,
-                                            accentColor: Color(
-                                              discipline.colorValue,
-                                            ),
-                                            onTap: () {
-                                              Navigator.of(context).push(
-                                                MaterialPageRoute(
-                                                  builder: (_) =>
-                                                      SubjectDetailsPage(
-                                                        disciplineId:
-                                                            discipline.id,
-                                                        studyCycleId: discipline
-                                                            .studyCycleId,
-                                                        name: discipline.name,
-                                                        teacher:
-                                                            discipline
-                                                                .teacher
-                                                                .isEmpty
-                                                            ? 'Professor não informado'
-                                                            : discipline
-                                                                  .teacher,
-                                                        average: stats
-                                                            .averageFor(
-                                                              discipline.id,
-                                                            ),
-                                                        workload:
-                                                            discipline.workload,
-                                                        colorValue: discipline
-                                                            .colorValue,
-                                                      ),
-                                                ),
-                                              );
-                                            },
+                                  builder: (context, assessmentSnapshot) {
+                                    final assessments =
+                                        assessmentSnapshot.data ?? const [];
+                                    final stats = GradeSummary.calculate(
+                                      disciplines: allDisciplines,
+                                      assessments: assessments,
+                                      passingGrade: passingGrade,
+                                    );
+
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _SubjectsOverview(
+                                          total: allDisciplines.length,
+                                          gradeCount: stats.totalGrades,
+                                          riskCount: stats.countByStatus(
+                                            GradeStatus.risk,
                                           ),
                                         ),
-                                      ),
-                                  ],
+                                        const SizedBox(height: 16),
+                                        SearchField(
+                                          controller: _searchController,
+                                          hint: 'Pesquise por disciplina',
+                                          height: 48,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        ListSectionHeader(
+                                          label: 'MINHAS DISCIPLINAS',
+                                          count: disciplines.length,
+                                          trailing: _EditSubjectsButton(
+                                            onSelected: _handleEditAction,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        if (disciplines.isEmpty)
+                                          EmptyStateCard(
+                                            message: allDisciplines.isEmpty
+                                                ? 'Nenhuma disciplina criada ainda.'
+                                                : 'Nenhuma disciplina encontrada.',
+                                            icon: allDisciplines.isEmpty
+                                                ? Icons.menu_book_outlined
+                                                : Icons.search_off_outlined,
+                                          )
+                                        else
+                                          ...disciplines.map(
+                                            (discipline) => Padding(
+                                              padding: const EdgeInsets.only(
+                                                bottom: 12,
+                                              ),
+                                              child: SubjectCard(
+                                                name: discipline.name,
+                                                teacher:
+                                                    discipline.teacher.isEmpty
+                                                    ? 'Professor não informado'
+                                                    : discipline.teacher,
+                                                frequency: 0,
+                                                showFrequency: false,
+                                                average: stats.averageFor(
+                                                  discipline.id,
+                                                ),
+                                                passingGrade: passingGrade,
+                                                workload: discipline.workload,
+                                                accentColor: Color(
+                                                  discipline.colorValue,
+                                                ),
+                                                onTap: () {
+                                                  Navigator.of(context).push(
+                                                    MaterialPageRoute(
+                                                      builder: (_) =>
+                                                          SubjectDetailsPage(
+                                                            disciplineId:
+                                                                discipline.id,
+                                                            studyCycleId:
+                                                                discipline
+                                                                    .studyCycleId,
+                                                            name:
+                                                                discipline.name,
+                                                            teacher:
+                                                                discipline
+                                                                    .teacher
+                                                                    .isEmpty
+                                                                ? 'Professor não informado'
+                                                                : discipline
+                                                                      .teacher,
+                                                            average: stats
+                                                                .averageFor(
+                                                                  discipline.id,
+                                                                ),
+                                                            workload: discipline
+                                                                .workload,
+                                                            colorValue:
+                                                                discipline
+                                                                    .colorValue,
+                                                          ),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    );
+                                  },
                                 );
                               },
                             );
@@ -515,6 +543,58 @@ class _EditSubjectsButton extends StatelessWidget {
   }
 }
 
+class _SubjectsHeader extends StatelessWidget {
+  const _SubjectsHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Row(
+      children: [
+        Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: colors.subtleShadows,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: Ink.image(
+              image: const AssetImage('lib/view/assets/profile_pic_v2.png'),
+              fit: BoxFit.cover,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () => AppRoutes.toProfile(context),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            'Suas Disciplinas',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: colors.textDark,
+              fontSize: 26,
+              fontFamily: 'Roboto',
+              fontWeight: FontWeight.w900,
+              height: 1.08,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        const _AcademicOverviewMenuButton(),
+      ],
+    );
+  }
+}
+
 class _DeleteDisciplineSheet extends StatelessWidget {
   final List<Discipline> disciplines;
 
@@ -576,10 +656,9 @@ class _DeleteDisciplineSheet extends StatelessWidget {
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final discipline = disciplines[index];
-                    final teacher =
-                        discipline.teacher.isEmpty
-                            ? 'Professor não informado'
-                            : discipline.teacher;
+                    final teacher = discipline.teacher.isEmpty
+                        ? 'Professor não informado'
+                        : discipline.teacher;
 
                     return Material(
                       color: colors.surfaceAlt,
@@ -658,42 +737,46 @@ class _DeleteDisciplineSheet extends StatelessWidget {
 
 class _SubjectsOverview extends StatelessWidget {
   final int total;
-  final double? averageGrade;
   final int gradeCount;
+  final int riskCount;
 
   const _SubjectsOverview({
     required this.total,
-    required this.averageGrade,
     required this.gradeCount,
+    required this.riskCount,
   });
 
   @override
   Widget build(BuildContext context) {
-    return IntrinsicHeight(
+    final colors = context.appColors;
+
+    return AppSurface.card(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      shadows: colors.subtleShadows,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: SummaryMetricTile(
+            child: _SubjectMetric(
               label: 'Disciplinas',
               value: '$total',
               icon: Icons.menu_book_outlined,
             ),
           ),
-          const SizedBox(width: 10),
+          _MetricDivider(color: colors.divider),
           Expanded(
-            child: SummaryMetricTile(
-              label: 'Média',
-              value: averageGrade?.toStringAsFixed(1) ?? '-',
-              icon: Icons.bar_chart_outlined,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: SummaryMetricTile(
+            child: _SubjectMetric(
               label: 'Notas',
               value: '$gradeCount',
               icon: Icons.fact_check_outlined,
+            ),
+          ),
+          _MetricDivider(color: colors.divider),
+          Expanded(
+            child: _SubjectMetric(
+              label: 'Em risco',
+              value: '$riskCount',
+              icon: Icons.warning_amber_rounded,
+              valueColor: riskCount > 0 ? colors.danger : colors.success,
             ),
           ),
         ],
@@ -702,53 +785,82 @@ class _SubjectsOverview extends StatelessWidget {
   }
 }
 
-class _SubjectStats {
-  final Map<String, double> _averagesByDisciplineId;
-  final double? overallAverage;
+class _SubjectMetric extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color? valueColor;
 
-  const _SubjectStats({
-    required Map<String, double> averagesByDisciplineId,
-    required this.overallAverage,
-  }) : _averagesByDisciplineId = averagesByDisciplineId;
+  const _SubjectMetric({
+    required this.label,
+    required this.value,
+    required this.icon,
+    this.valueColor,
+  });
 
-  factory _SubjectStats.from({
-    required List<Discipline> disciplines,
-    required List<Assessment> assessments,
-  }) {
-    final disciplineIds = disciplines
-        .map((discipline) => discipline.id)
-        .toSet();
-    final groupedGrades = <String, List<double>>{};
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
 
-    for (final assessment in assessments) {
-      final disciplineId = assessment.disciplineId;
-      if (disciplineId == null || !disciplineIds.contains(disciplineId)) {
-        continue;
-      }
-
-      groupedGrades.putIfAbsent(disciplineId, () => []).add(assessment.grade);
-    }
-
-    final averages = <String, double>{};
-    for (final entry in groupedGrades.entries) {
-      averages[entry.key] =
-          entry.value.fold<double>(0, (sum, grade) => sum + grade) /
-          entry.value.length;
-    }
-
-    final overallAverage = assessments.isEmpty
-        ? null
-        : assessments.fold<double>(0, (sum, item) => sum + item.grade) /
-              assessments.length;
-
-    return _SubjectStats(
-      averagesByDisciplineId: averages,
-      overallAverage: overallAverage,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            color: colors.primary.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: colors.primary, size: 18),
+        ),
+        const SizedBox(width: 9),
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: valueColor ?? colors.textDark,
+                  fontSize: 18,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w900,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: colors.textMedium,
+                  fontSize: 10.5,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w700,
+                  height: 1.1,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
+}
 
-  double? averageFor(String disciplineId) {
-    return _averagesByDisciplineId[disciplineId];
+class _MetricDivider extends StatelessWidget {
+  final Color color;
+
+  const _MetricDivider({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(width: 1, height: 38, color: color);
   }
 }
 
@@ -817,10 +929,7 @@ class _AcademicOverviewMenuButton extends StatelessWidget {
                     IconButton(
                       tooltip: 'Fechar',
                       onPressed: () => Navigator.of(sheetContext).pop(),
-                      icon: Icon(
-                        Icons.close,
-                        color: colors.textMuted,
-                      ),
+                      icon: Icon(Icons.close, color: colors.textMuted),
                     ),
                   ],
                 ),
@@ -834,7 +943,8 @@ class _AcademicOverviewMenuButton extends StatelessWidget {
                       Navigator.of(sheetContext).pop();
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => const AcademicOverviewPage(initialTab: 0),
+                          builder: (_) =>
+                              const AcademicOverviewPage(initialTab: 0),
                         ),
                       );
                     },
@@ -870,7 +980,7 @@ class _AcademicOverviewMenuButton extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 3),
                                 Text(
-                                  'Acompanhe o limite de faltas e notas das disciplinas',
+                                  'Acompanhe o limite de faltas e anotações das disciplinas',
                                   style: TextStyle(
                                     color: colors.textMuted,
                                     fontSize: 12,
@@ -881,10 +991,7 @@ class _AcademicOverviewMenuButton extends StatelessWidget {
                               ],
                             ),
                           ),
-                          Icon(
-                            Icons.chevron_right,
-                            color: colors.textMuted,
-                          ),
+                          Icon(Icons.chevron_right, color: colors.textMuted),
                         ],
                       ),
                     ),
@@ -911,19 +1018,15 @@ class _AcademicOverviewMenuButton extends StatelessWidget {
           onTap: () => _openAcademicOverviewSheet(context),
           borderRadius: BorderRadius.circular(AppRadius.md),
           child: Container(
-            width: 46,
-            height: 46,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: colors.primarySurface,
               borderRadius: BorderRadius.circular(AppRadius.md),
               border: Border.all(color: colors.outline),
               boxShadow: colors.subtleShadows,
             ),
-            child: Icon(
-              Icons.menu_rounded,
-              color: colors.primary,
-              size: 28,
-            ),
+            child: Icon(Icons.menu_rounded, color: colors.primary, size: 26),
           ),
         ),
       ),

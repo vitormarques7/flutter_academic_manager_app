@@ -17,6 +17,7 @@ void main() {
           'title': ' Prova 1 ',
           'dateLabel': '10/06/2026',
           'grade': 8.5,
+          'weight': 2.5,
           'createdAt': createdAt,
           'updatedAt': updatedAt,
         },
@@ -29,6 +30,7 @@ void main() {
       expect(assessment.title, 'Prova 1');
       expect(assessment.dateLabel, '10/06/2026');
       expect(assessment.grade, 8.5);
+      expect(assessment.weight, 2.5);
       expect(assessment.formattedGrade, '8.5');
       expect(assessment.createdAt, createdAt.toDate());
       expect(assessment.updatedAt, updatedAt.toDate());
@@ -44,6 +46,7 @@ void main() {
       expect(assessment.dateLabel, isEmpty);
       expect(assessment.displayDateLabel, 'Sem data');
       expect(assessment.grade, 0);
+      expect(assessment.weight, 1.0);
       expect(assessment.createdAt, isNull);
       expect(assessment.updatedAt, isNull);
     });
@@ -62,6 +65,25 @@ void main() {
       expect(low.grade, 0);
     });
 
+    test('fromMap defaults invalid weights to 1.0', () {
+      final invalidNegative = Assessment.fromMap(
+        id: 'assessment-1',
+        data: const {'weight': -1.5},
+      );
+      final invalidZero = Assessment.fromMap(
+        id: 'assessment-2',
+        data: const {'weight': 0.0},
+      );
+      final invalidString = Assessment.fromMap(
+        id: 'assessment-3',
+        data: const {'weight': 'invalid'},
+      );
+
+      expect(invalidNegative.weight, 1.0);
+      expect(invalidZero.weight, 1.0);
+      expect(invalidString.weight, 1.0);
+    });
+
     test('toFirestore can be reconstructed without semantic loss', () {
       final original = Assessment(
         id: 'assessment-1',
@@ -71,6 +93,7 @@ void main() {
         title: 'Lista',
         dateLabel: '12/06/2026',
         grade: 7.25,
+        weight: 3.0,
         createdAt: DateTime(2026, 6, 10, 8),
         updatedAt: DateTime(2026, 6, 10, 9),
       );
@@ -87,6 +110,7 @@ void main() {
       expect(reconstructed.title, original.title);
       expect(reconstructed.dateLabel, original.dateLabel);
       expect(reconstructed.grade, original.grade);
+      expect(reconstructed.weight, original.weight);
       expect(reconstructed.createdAt, original.createdAt);
       expect(reconstructed.updatedAt, original.updatedAt);
     });
@@ -100,6 +124,7 @@ void main() {
       title: ' Prova 1 ',
       dateLabel: ' 10/06/2026 ',
       grade: 11,
+      weight: 1.5,
     );
 
     test('toCreateMap serializes fields for a new assessment', () {
@@ -111,6 +136,7 @@ void main() {
       expect(map['title'], 'Prova 1');
       expect(map['dateLabel'], '10/06/2026');
       expect(map['grade'], 10);
+      expect(map['weight'], 1.5);
       expect(map['createdAt'], isA<FieldValue>());
       expect(map['updatedAt'], isA<FieldValue>());
     });
@@ -124,6 +150,7 @@ void main() {
       expect(map['title'], 'Prova 1');
       expect(map['dateLabel'], '10/06/2026');
       expect(map['grade'], 10);
+      expect(map['weight'], 1.5);
       expect(map['updatedAt'], isA<FieldValue>());
       expect(map.containsKey('createdAt'), isFalse);
     });

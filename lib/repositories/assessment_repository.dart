@@ -84,6 +84,17 @@ class AssessmentRepository {
     });
   }
 
+  Future<void> updateAssessment({
+    required String id,
+    required AssessmentInput input,
+  }) async {
+    final uid = _currentUserId;
+
+    await _guardFirestoreCall(() {
+      return _assessmentsCollection(uid).doc(id).update(input.toUpdateMap());
+    });
+  }
+
   Future<void> deleteAssessment(String id) {
     final uid = _currentUserId;
 

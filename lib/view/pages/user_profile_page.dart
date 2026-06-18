@@ -15,6 +15,32 @@ class UserProfilePage extends StatelessWidget {
   const UserProfilePage({super.key});
 
   Future<void> _onSignOut(BuildContext context) async {
+    final colors = context.appColors;
+    final shouldSignOut = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Sair da conta?'),
+          content: const Text(
+            'Você precisará entrar novamente para acessar seus dados.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: colors.danger),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Sair da conta'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldSignOut != true || !context.mounted) return;
+
     try {
       await AuthService().signOut();
       if (context.mounted) AppRoutes.toWelcomeClearingStack(context);
@@ -318,11 +344,7 @@ class _ProfileAvatar extends StatelessWidget {
           final colors = context.appColors;
           return CircleAvatar(
             backgroundColor: colors.primarySurface,
-            child: Icon(
-              Icons.person,
-              size: 54,
-              color: colors.primary,
-            ),
+            child: Icon(Icons.person, size: 54, color: colors.primary),
           );
         },
       ),

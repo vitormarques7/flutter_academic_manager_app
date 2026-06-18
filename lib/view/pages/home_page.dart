@@ -9,6 +9,7 @@ import '../../config/theme/app_theme_colors.dart';
 import '../../models/academic_task.dart';
 import '../../models/assessment.dart';
 import '../../models/discipline.dart';
+import '../../models/grade_summary.dart';
 import '../../models/schedule.dart';
 import '../../models/study_cycle.dart';
 import '../../models/subject_event.dart';
@@ -20,12 +21,12 @@ import '../../repositories/subject_event_repository.dart';
 import '../../repositories/task_repository.dart';
 import '../../repositories/user_profile_repository.dart';
 import 'subject_event_details_page.dart';
+import 'task_details_page.dart';
 import '../widgets/common/app_surface.dart';
 import '../widgets/common/empty_state_card.dart';
-import '../widgets/common/list_section_header.dart';
 import '../widgets/common/metadata_chip.dart';
 import '../widgets/common/page_header.dart';
-import '../widgets/common/summary_metric_tile.dart';
+import '../widgets/dialogs/task_dialog.dart';
 
 part 'home_study_cycle_sheet.dart';
 
@@ -194,91 +195,112 @@ class _HomeDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<Discipline>>(
-      stream: disciplineRepository.watchDisciplines(
-        studyCycleId: activeStudyCycleId,
-      ),
-      builder: (context, disciplineSnapshot) {
-        return StreamBuilder<List<AcademicTask>>(
-          stream: taskRepository.watchTasks(studyCycleId: activeStudyCycleId),
-          builder: (context, taskSnapshot) {
-            return StreamBuilder<List<Schedule>>(
-              stream: scheduleRepository.watchSchedules(
+    final studyCycleRepository = StudyCycleRepository();
+
+    return StreamBuilder<List<StudyCycle>>(
+      stream: studyCycleRepository.watchStudyCycles(),
+      builder: (context, studyCycleSnapshot) {
+        final studyCycles = studyCycleSnapshot.data ?? const [];
+        final activeCycle = studyCycles.firstWhere(
+          (c) => c.id == activeStudyCycleId,
+          orElse: () => StudyCycle(
+            id: activeStudyCycleId,
+            type: StudyCycleType.independent,
+            passingGrade: 7.0,
+          ),
+        );
+        final passingGrade = activeCycle.passingGrade;
+
+        return StreamBuilder<List<Discipline>>(
+          stream: disciplineRepository.watchDisciplines(
+            studyCycleId: activeStudyCycleId,
+          ),
+          builder: (context, disciplineSnapshot) {
+            return StreamBuilder<List<AcademicTask>>(
+              stream: taskRepository.watchTasks(
                 studyCycleId: activeStudyCycleId,
               ),
-              builder: (context, scheduleSnapshot) {
-                return StreamBuilder<List<SubjectEvent>>(
-                  stream: eventRepository.watchEvents(
+              builder: (context, taskSnapshot) {
+                return StreamBuilder<List<Schedule>>(
+                  stream: scheduleRepository.watchSchedules(
                     studyCycleId: activeStudyCycleId,
-                    upcomingOnly: true,
                   ),
-                  builder: (context, eventSnapshot) {
-                    return StreamBuilder<List<Assessment>>(
-                      stream: assessmentRepository.watchAssessments(
+                  builder: (context, scheduleSnapshot) {
+                    return StreamBuilder<List<SubjectEvent>>(
+                      stream: eventRepository.watchEvents(
                         studyCycleId: activeStudyCycleId,
+                        upcomingOnly: true,
                       ),
-                      builder: (context, assessmentSnapshot) {
-                        final isLoading =
-                            _isWaiting(disciplineSnapshot) ||
-                            _isWaiting(taskSnapshot) ||
-                            _isWaiting(scheduleSnapshot) ||
-                            _isWaiting(eventSnapshot) ||
-                            _isWaiting(assessmentSnapshot);
-                        if (isLoading) return const _HomeLoadingState();
+                      builder: (context, eventSnapshot) {
+                        return StreamBuilder<List<Assessment>>(
+                          stream: assessmentRepository.watchAssessments(
+                            studyCycleId: activeStudyCycleId,
+                          ),
+                          builder: (context, assessmentSnapshot) {
+                            final isLoading =
+                                (studyCycleSnapshot.connectionState ==
+                                        ConnectionState.waiting &&
+                                    !studyCycleSnapshot.hasData) ||
+                                _isWaiting(disciplineSnapshot) ||
+                                _isWaiting(taskSnapshot) ||
+                                _isWaiting(scheduleSnapshot) ||
+                                _isWaiting(eventSnapshot) ||
+                                _isWaiting(assessmentSnapshot);
+                            if (isLoading) return const _HomeLoadingState();
 
-                        final hasError =
-                            disciplineSnapshot.hasError ||
-                            taskSnapshot.hasError ||
-                            scheduleSnapshot.hasError ||
-                            eventSnapshot.hasError ||
-                            assessmentSnapshot.hasError;
-                        final tasks = _tasksForCycle(
-                          taskSnapshot.data ?? const [],
-                          activeStudyCycleId,
-                        );
-                        final dashboard = _HomeDashboardData.from(
-                          tasks: tasks,
-                          schedules: scheduleSnapshot.data ?? const [],
-                          events: eventSnapshot.data ?? const [],
-                          assessments: assessmentSnapshot.data ?? const [],
-                          disciplines: disciplineSnapshot.data ?? const [],
-                        );
+                            final hasError =
+                                studyCycleSnapshot.hasError ||
+                                disciplineSnapshot.hasError ||
+                                taskSnapshot.hasError ||
+                                scheduleSnapshot.hasError ||
+                                eventSnapshot.hasError ||
+                                assessmentSnapshot.hasError;
+                            final disciplines =
+                                disciplineSnapshot.data ?? const <Discipline>[];
+                            final tasks = _tasksForCycle(
+                              taskSnapshot.data ?? const [],
+                              activeStudyCycleId,
+                            );
+                            final dashboard = _HomeDashboardData.from(
+                              tasks: tasks,
+                              schedules: scheduleSnapshot.data ?? const [],
+                              events: eventSnapshot.data ?? const [],
+                              assessments: assessmentSnapshot.data ?? const [],
+                              disciplines: disciplines,
+                              passingGrade: passingGrade,
+                            );
+                            final taskSubjects =
+                                _taskDialogSubjectsFromDisciplines(disciplines);
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _StudyFocusCard(data: dashboard),
-                            const SizedBox(height: 18),
-                            _OverviewMetrics(data: dashboard),
-                            if (hasError) ...[
-                              const SizedBox(height: 14),
-                              const _HomeWarningPanel(),
-                            ],
-                            const SizedBox(height: 24),
-                            ListSectionHeader(
-                              label: 'PRÓXIMAS TAREFAS',
-                              count: dashboard.upcomingTasks.length,
-                            ),
-                            const SizedBox(height: 12),
-                            _UpcomingTasksCard(tasks: dashboard.upcomingTasks),
-                            const SizedBox(height: 24),
-                            ListSectionHeader(
-                              label: 'PRÓXIMOS EVENTOS',
-                              count: dashboard.upcomingEvents.length,
-                            ),
-                            const SizedBox(height: 12),
-                            _UpcomingEventsCard(
-                              events: dashboard.upcomingEvents,
-                              onDelete: _deleteEvent,
-                            ),
-                            const SizedBox(height: 24),
-                            ListSectionHeader(
-                              label: 'RADAR',
-                              count: dashboard.alerts.length,
-                            ),
-                            const SizedBox(height: 12),
-                            _AlertsCard(alerts: dashboard.alerts),
-                          ],
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _StudyFocusCard(data: dashboard),
+                                if (hasError) ...[
+                                  const SizedBox(height: 14),
+                                  const _HomeWarningPanel(),
+                                ],
+                                const SizedBox(height: 22),
+                                _HomeTimelinePanel(
+                                  tasks: dashboard.upcomingTasks,
+                                  subjects: taskSubjects,
+                                  activeStudyCycleId: activeStudyCycleId,
+                                  events: dashboard.upcomingEvents,
+                                  onDelete: _deleteEvent,
+                                ),
+                                if (dashboard.alerts.isNotEmpty) ...[
+                                  const SizedBox(height: 24),
+                                  _HomeInlineSectionHeader(
+                                    icon: Icons.radar_rounded,
+                                    label: 'Radar',
+                                    count: dashboard.alerts.length,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  _AlertsCard(alerts: dashboard.alerts),
+                                ],
+                              ],
+                            );
+                          },
                         );
                       },
                     );
@@ -309,6 +331,21 @@ class _HomeDashboard extends StatelessWidget {
 
   Future<void> _deleteEvent(SubjectEvent event) {
     return eventRepository.deleteEvent(event.id);
+  }
+
+  List<TaskDialogSubject> _taskDialogSubjectsFromDisciplines(
+    List<Discipline> disciplines,
+  ) {
+    return disciplines
+        .where((discipline) => discipline.name.trim().isNotEmpty)
+        .map(
+          (discipline) => TaskDialogSubject(
+            id: discipline.id,
+            name: discipline.name.trim(),
+          ),
+        )
+        .toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
 }
 
@@ -415,9 +452,22 @@ class _StudyFocusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final focusColor = data.focusColor(colors);
+    final focusTint = Color.alphaBlend(
+      focusColor.withValues(
+        alpha: Theme.of(context).brightness == Brightness.dark ? 0.12 : 0.035,
+      ),
+      colors.surface,
+    );
 
     return AppSurface.card(
       padding: const EdgeInsets.all(18),
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [focusTint, colors.surface],
+      ),
+      border: Border.all(color: focusColor.withValues(alpha: 0.12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -428,15 +478,11 @@ class _StudyFocusCard extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: colors.primary,
+                  color: focusColor,
                   borderRadius: BorderRadius.circular(AppRadius.md),
                   boxShadow: colors.subtleShadows,
                 ),
-                child: const Icon(
-                  Icons.event_note_rounded,
-                  color: Colors.white,
-                  size: 27,
-                ),
+                child: Icon(data.focusIcon, color: Colors.white, size: 27),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -473,16 +519,6 @@ class _StudyFocusCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-            child: LinearProgressIndicator(
-              value: data.taskProgress,
-              minHeight: 8,
-              backgroundColor: colors.primary.withValues(alpha: 0.18),
-              valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
-            ),
-          ),
           const SizedBox(height: 14),
           Wrap(
             spacing: 8,
@@ -491,20 +527,28 @@ class _StudyFocusCard extends StatelessWidget {
               MetadataChip(
                 icon: Icons.school_outlined,
                 label: data.nextClassLabel,
-                foregroundColor: colors.navActive,
-                backgroundColor: colors.primarySurface,
+                foregroundColor: data.nextClassColor(colors),
+                backgroundColor: data.nextClassBackground(colors),
+                maxWidth: 280,
               ),
               MetadataChip(
                 icon: Icons.event_available_outlined,
                 label: data.nextEventLabel,
-                foregroundColor: colors.event,
-                backgroundColor: colors.eventSurface,
+                foregroundColor: data.nextEventColor(colors),
+                backgroundColor: data.nextEventBackground(colors),
+                maxWidth: 240,
               ),
               MetadataChip(
-                icon: Icons.check_circle_outline,
-                label: data.progressLabel,
-                foregroundColor: colors.success,
-                backgroundColor: colors.successSurface,
+                icon: data.taskStatusIcon,
+                label: data.taskStatusLabel,
+                foregroundColor: data.taskStatusColor(colors),
+                backgroundColor: data.taskStatusBackground(colors),
+              ),
+              MetadataChip(
+                icon: data.gradeStatusIcon,
+                label: data.gradeStatusLabel,
+                foregroundColor: data.gradeStatusColor(colors),
+                backgroundColor: data.gradeStatusBackground(colors),
               ),
             ],
           ),
@@ -514,38 +558,166 @@ class _StudyFocusCard extends StatelessWidget {
   }
 }
 
-class _OverviewMetrics extends StatelessWidget {
-  final _HomeDashboardData data;
+class _HomeTimelinePanel extends StatelessWidget {
+  final List<_HomeTask> tasks;
+  final List<TaskDialogSubject> subjects;
+  final String activeStudyCycleId;
+  final List<_HomeEvent> events;
+  final Future<void> Function(SubjectEvent event) onDelete;
 
-  const _OverviewMetrics({required this.data});
+  const _HomeTimelinePanel({
+    required this.tasks,
+    required this.subjects,
+    required this.activeStudyCycleId,
+    required this.events,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    final colors = context.appColors;
+
+    return AppSurface.card(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      shadows: colors.subtleShadows,
+      border: Border.all(color: colors.outline.withValues(alpha: 0.72)),
+      child: Column(
         children: [
-          Expanded(
-            child: SummaryMetricTile(
-              label: 'Média',
-              value: data.averageLabel,
-              icon: Icons.bar_chart_outlined,
+          _HomeInlineSectionHeader(
+            icon: Icons.assignment_outlined,
+            label: 'Próximas tarefas',
+            count: tasks.length,
+          ),
+          if (tasks.isEmpty)
+            const _InlineEmptyState(
+              icon: Icons.task_alt_outlined,
+              message: 'Nenhuma tarefa pendente no seu ciclo atual.',
+            )
+          else
+            for (final entry in tasks.indexed) ...[
+              _TaskRow(
+                task: entry.$2,
+                subjects: subjects,
+                activeStudyCycleId: activeStudyCycleId,
+              ),
+              if (entry.$1 != tasks.length - 1)
+                const _HomeDivider(indent: 70, endIndent: 16),
+            ],
+          const _PanelSectionDivider(),
+          _HomeInlineSectionHeader(
+            icon: Icons.event_available_outlined,
+            label: 'Próximos eventos',
+            count: events.length,
+            accentColor: colors.event,
+          ),
+          if (events.isEmpty)
+            const _InlineEmptyState(
+              icon: Icons.event_available_outlined,
+              message: 'Nenhum evento futuro cadastrado.',
+            )
+          else
+            for (final entry in events.indexed) ...[
+              _EventRow(event: entry.$2, onDelete: onDelete),
+              if (entry.$1 != events.length - 1)
+                const _HomeDivider(indent: 70, endIndent: 16),
+            ],
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeInlineSectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final int? count;
+  final Color? accentColor;
+
+  const _HomeInlineSectionHeader({
+    required this.icon,
+    required this.label,
+    this.count,
+    this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final color = accentColor ?? colors.primary;
+    final count = this.count;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              color: colors.textDark,
+              fontSize: 14,
+              fontFamily: 'Roboto',
+              fontWeight: FontWeight.w900,
+              height: 1.2,
             ),
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: SummaryMetricTile(
-              label: 'Pendentes',
-              value: '${data.pendingTasks}',
-              icon: Icons.pending_actions_outlined,
+          const Spacer(),
+          if (count != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+              decoration: BoxDecoration(
+                color: colors.surfaceTint,
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                border: Border.all(color: colors.outline),
+              ),
+              child: Text(
+                '$count ${count == 1 ? 'item' : 'itens'}',
+                style: TextStyle(
+                  color: colors.textMuted,
+                  fontSize: 11,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                ),
+              ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InlineEmptyState extends StatelessWidget {
+  final IconData icon;
+  final String message;
+
+  const _InlineEmptyState({required this.icon, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+      child: Row(
+        children: [
+          _IconBadge(
+            icon: icon,
+            backgroundColor: colors.surfaceTint,
+            foregroundColor: colors.textSubtle,
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
-            child: SummaryMetricTile(
-              label: 'Eventos',
-              value: '${data.upcomingEvents.length}',
-              icon: Icons.event_note_outlined,
+            child: Text(
+              message,
+              style: TextStyle(
+                color: colors.textMuted,
+                fontSize: 13,
+                fontFamily: 'Roboto',
+                fontWeight: FontWeight.w700,
+                height: 1.32,
+              ),
             ),
           ),
         ],
@@ -554,38 +726,33 @@ class _OverviewMetrics extends StatelessWidget {
   }
 }
 
-class _UpcomingTasksCard extends StatelessWidget {
-  final List<_HomeTask> tasks;
-
-  const _UpcomingTasksCard({required this.tasks});
+class _PanelSectionDivider extends StatelessWidget {
+  const _PanelSectionDivider();
 
   @override
   Widget build(BuildContext context) {
-    if (tasks.isEmpty) {
-      return const EmptyStateCard(
-        icon: Icons.task_alt_outlined,
-        message: 'Nenhuma tarefa pendente no seu ciclo atual.',
-      );
-    }
+    final colors = context.appColors;
 
-    return AppSurface.card(
-      padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          for (final entry in tasks.indexed) ...[
-            _TaskRow(task: entry.$2),
-            if (entry.$1 != tasks.length - 1) const _HomeDivider(),
-          ],
-        ],
-      ),
+    return Divider(
+      height: 18,
+      thickness: 1,
+      color: colors.outline,
+      indent: 16,
+      endIndent: 16,
     );
   }
 }
 
 class _TaskRow extends StatelessWidget {
   final _HomeTask task;
+  final List<TaskDialogSubject> subjects;
+  final String activeStudyCycleId;
 
-  const _TaskRow({required this.task});
+  const _TaskRow({
+    required this.task,
+    required this.subjects,
+    required this.activeStudyCycleId,
+  });
 
   IconData get _typeIcon {
     return switch (task.type) {
@@ -605,7 +772,7 @@ class _TaskRow extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => Navigator.of(context).pushNamed(AppRoutes.tasks),
+        onTap: () => _openDetails(context),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
           child: Row(
@@ -661,40 +828,53 @@ class _TaskRow extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               _DateBadge(label: task.dueLabel, isUrgent: task.isUrgent),
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right, color: colors.textSubtle),
             ],
           ),
         ),
       ),
     );
   }
-}
 
-class _UpcomingEventsCard extends StatelessWidget {
-  final List<_HomeEvent> events;
-  final Future<void> Function(SubjectEvent event) onDelete;
-
-  const _UpcomingEventsCard({required this.events, required this.onDelete});
-
-  @override
-  Widget build(BuildContext context) {
-    if (events.isEmpty) {
-      return const EmptyStateCard(
-        icon: Icons.event_available_outlined,
-        message: 'Nenhum evento futuro cadastrado.',
-      );
-    }
-
-    return AppSurface.card(
-      padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          for (final entry in events.indexed) ...[
-            _EventRow(event: entry.$2, onDelete: onDelete),
-            if (entry.$1 != events.length - 1) const _HomeDivider(),
-          ],
-        ],
+  void _openDetails(BuildContext context) {
+    Navigator.of(context).push(
+      AppRoutes.detailRoute(
+        page: TaskDetailsPage(
+          task: task.source,
+          subjects: _subjectsForTask(subjects: subjects, task: task.source),
+          activeStudyCycleId: activeStudyCycleId,
+        ),
       ),
     );
+  }
+
+  List<TaskDialogSubject> _subjectsForTask({
+    required List<TaskDialogSubject> subjects,
+    required AcademicTask task,
+  }) {
+    final mergedSubjects = [...subjects];
+    final currentDisciplineId = task.disciplineId?.trim();
+    final currentSubject = task.subject.trim();
+
+    final hasCurrentDiscipline =
+        currentDisciplineId != null &&
+        currentDisciplineId.isNotEmpty &&
+        mergedSubjects.any((subject) => subject.id == currentDisciplineId);
+    final hasCurrentSubject =
+        currentSubject.isNotEmpty &&
+        mergedSubjects.any(
+          (subject) =>
+              subject.name.trim().toLowerCase() == currentSubject.toLowerCase(),
+        );
+
+    if (!hasCurrentDiscipline &&
+        !hasCurrentSubject &&
+        currentSubject.isNotEmpty) {
+      mergedSubjects.add(TaskDialogSubject(name: currentSubject));
+    }
+
+    return mergedSubjects;
   }
 }
 
@@ -798,21 +978,19 @@ class _AlertsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (alerts.isEmpty) {
-      return const EmptyStateCard(
-        icon: Icons.verified_outlined,
-        message: 'Sem alertas importantes agora.',
-      );
+      return const SizedBox.shrink();
     }
 
-    return AppSurface.card(
-      padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          for (final entry in alerts.indexed) ...[
-            _AlertRow(alert: entry.$2),
-            if (entry.$1 != alerts.length - 1) const _HomeDivider(),
-          ],
-        ],
+    return SizedBox(
+      height: 106,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
+        itemCount: alerts.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          return SizedBox(width: 268, child: _AlertRow(alert: alerts[index]));
+        },
       ),
     );
   }
@@ -836,9 +1014,19 @@ class _AlertRow extends StatelessWidget {
       _AlertLevel.danger => colors.dangerSurface,
       _AlertLevel.info => colors.primarySurface,
     };
+    final surfaceColor = Color.alphaBlend(
+      color.withValues(
+        alpha: Theme.of(context).brightness == Brightness.dark ? 0.12 : 0.06,
+      ),
+      colors.surface,
+    );
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+    return AppSurface(
+      padding: const EdgeInsets.all(13),
+      color: surfaceColor,
+      border: Border.all(color: color.withValues(alpha: 0.18)),
+      shadows: colors.subtleShadows,
+      borderRadius: AppRadius.md,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -854,11 +1042,11 @@ class _AlertRow extends StatelessWidget {
               children: [
                 Text(
                   alert.title,
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: colors.textDark,
-                    fontSize: 15,
+                    fontSize: 14,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w800,
                     height: 1.24,
@@ -1079,7 +1267,10 @@ class _DateBadge extends StatelessWidget {
 }
 
 class _HomeDivider extends StatelessWidget {
-  const _HomeDivider();
+  final double indent;
+  final double endIndent;
+
+  const _HomeDivider({this.indent = 14, this.endIndent = 14});
 
   @override
   Widget build(BuildContext context) {
@@ -1089,27 +1280,27 @@ class _HomeDivider extends StatelessWidget {
       height: 1,
       thickness: 1,
       color: colors.outline,
-      indent: 14,
-      endIndent: 14,
+      indent: indent,
+      endIndent: endIndent,
     );
   }
 }
 
 class _HomeDashboardData {
-  final double? averageGrade;
   final int pendingTasks;
-  final int completedTasks;
   final int totalTasks;
+  final int gradeRiskCount;
+  final int gradeAttentionCount;
   final List<_HomeTask> upcomingTasks;
   final List<_HomeEvent> upcomingEvents;
   final List<_HomeAlert> alerts;
   final _NextClass? nextClass;
 
   const _HomeDashboardData({
-    required this.averageGrade,
     required this.pendingTasks,
-    required this.completedTasks,
     required this.totalTasks,
+    required this.gradeRiskCount,
+    required this.gradeAttentionCount,
     required this.upcomingTasks,
     required this.upcomingEvents,
     required this.alerts,
@@ -1122,49 +1313,121 @@ class _HomeDashboardData {
     required List<SubjectEvent> events,
     required List<Assessment> assessments,
     required List<Discipline> disciplines,
+    required double passingGrade,
   }) {
     final pendingTasks = tasks.where((task) => !task.isChecked).toList();
-    final completedTasks = tasks.where((task) => task.isChecked).length;
     final sortedPendingTasks = pendingTasks.toList()
       ..sort(_compareTasksByDeadline);
     final upcomingEvents = events.toList()..sort(SubjectEvent.compareByDate);
-    final average = assessments.isEmpty
-        ? null
-        : assessments.fold<double>(0, (sum, item) => sum + item.grade) /
-              assessments.length;
+    final summary = GradeSummary.calculate(
+      disciplines: disciplines,
+      assessments: assessments,
+      passingGrade: passingGrade,
+    );
 
     final nextClass = _NextClass.fromSchedules(schedules);
     final homeTasks = sortedPendingTasks.take(3).map(_HomeTask.from).toList();
     final homeEvents = upcomingEvents.take(3).map(_HomeEvent.from).toList();
 
     return _HomeDashboardData(
-      averageGrade: average,
       pendingTasks: pendingTasks.length,
-      completedTasks: completedTasks,
       totalTasks: tasks.length,
+      gradeRiskCount: summary.countByStatus(GradeStatus.risk),
+      gradeAttentionCount: summary.countByStatus(GradeStatus.attention),
       upcomingTasks: homeTasks,
       upcomingEvents: homeEvents,
       alerts: _buildAlerts(
         pendingTasks: pendingTasks,
         schedules: schedules,
         events: upcomingEvents,
-        assessments: assessments,
         disciplines: disciplines,
+        passingGrade: passingGrade,
+        summary: summary,
       ),
       nextClass: nextClass,
     );
   }
 
-  String get averageLabel => averageGrade?.toStringAsFixed(1) ?? '-';
+  String get taskStatusLabel {
+    if (totalTasks == 0) return 'Sem tarefas';
+    if (pendingTasks == 0) return 'Tarefas em dia';
 
-  double get taskProgress {
-    if (totalTasks == 0) return 0;
-    return (completedTasks / totalTasks).clamp(0.0, 1.0);
+    return '$pendingTasks ${pendingTasks == 1 ? 'pendente' : 'pendentes'}';
   }
 
-  String get progressLabel {
-    if (totalTasks == 0) return 'Sem tarefas';
-    return '$completedTasks/$totalTasks concluídas';
+  IconData get taskStatusIcon {
+    if (totalTasks == 0) return Icons.playlist_add_check_outlined;
+    if (pendingTasks == 0) return Icons.check_circle_outline;
+
+    return Icons.pending_actions_outlined;
+  }
+
+  Color taskStatusColor(AppThemeColors colors) {
+    if (totalTasks == 0) return colors.textMedium;
+    if (pendingTasks == 0) return colors.success;
+
+    return colors.warning;
+  }
+
+  Color taskStatusBackground(AppThemeColors colors) {
+    if (totalTasks == 0) return colors.surfaceAlt;
+    if (pendingTasks == 0) return colors.successSurface;
+
+    return colors.warningSurface;
+  }
+
+  String get gradeStatusLabel {
+    if (gradeRiskCount > 0) {
+      return '$gradeRiskCount em risco';
+    }
+
+    return 'Notas em dia';
+  }
+
+  IconData get gradeStatusIcon {
+    if (gradeRiskCount > 0) return Icons.trending_up_rounded;
+
+    return Icons.fact_check_outlined;
+  }
+
+  Color gradeStatusColor(AppThemeColors colors) {
+    if (gradeRiskCount > 0) return colors.danger;
+
+    return colors.success;
+  }
+
+  Color gradeStatusBackground(AppThemeColors colors) {
+    if (gradeRiskCount > 0) return colors.dangerSurface;
+
+    return colors.successSurface;
+  }
+
+  IconData get focusIcon {
+    if (gradeRiskCount > 0) return Icons.trending_up_rounded;
+    if (gradeAttentionCount > 0) return Icons.fact_check_outlined;
+    final hasDangerAlert = alerts.any(
+      (alert) => alert.level == _AlertLevel.danger,
+    );
+    if (hasDangerAlert) return Icons.warning_amber_rounded;
+    if (upcomingTasks.any((task) => task.isDueToday)) {
+      return Icons.today_outlined;
+    }
+    if (nextClass != null) return Icons.school_outlined;
+    if (upcomingEvents.isNotEmpty) return Icons.event_available_outlined;
+    return Icons.check_circle_outline;
+  }
+
+  Color focusColor(AppThemeColors colors) {
+    if (gradeRiskCount > 0) return colors.danger;
+    if (gradeAttentionCount > 0) return colors.warning;
+    final hasDangerAlert = alerts.any(
+      (alert) => alert.level == _AlertLevel.danger,
+    );
+    if (hasDangerAlert) return colors.danger;
+    if (upcomingTasks.any((task) => task.isDueToday)) return colors.warning;
+    if (nextClass != null) return colors.navActive;
+    if (upcomingEvents.isNotEmpty) return colors.event;
+    return colors.success;
   }
 
   String get nextClassLabel {
@@ -1173,14 +1436,34 @@ class _HomeDashboardData {
     return '${next.title}: ${next.timeLabel}';
   }
 
+  Color nextClassColor(AppThemeColors colors) {
+    return nextClass == null ? colors.textMedium : colors.navActive;
+  }
+
+  Color nextClassBackground(AppThemeColors colors) {
+    return nextClass == null ? colors.surfaceAlt : colors.primarySurface;
+  }
+
   String get nextEventLabel {
     if (upcomingEvents.isEmpty) return 'Sem eventos';
     return upcomingEvents.first.shortLabel;
   }
 
+  Color nextEventColor(AppThemeColors colors) {
+    return upcomingEvents.isEmpty ? colors.textMedium : colors.event;
+  }
+
+  Color nextEventBackground(AppThemeColors colors) {
+    return upcomingEvents.isEmpty ? colors.surfaceAlt : colors.eventSurface;
+  }
+
   String get focusTitle {
-    final overdue = alerts.any((alert) => alert.level == _AlertLevel.danger);
-    if (overdue) return 'Há prazos pedindo atenção';
+    if (gradeRiskCount > 0) return 'Disciplina em risco';
+    if (gradeAttentionCount > 0) return 'Notas pedindo cuidado';
+    final hasDangerAlert = alerts.any(
+      (alert) => alert.level == _AlertLevel.danger,
+    );
+    if (hasDangerAlert) return 'Há pontos pedindo atenção';
     if (upcomingTasks.any((task) => task.isDueToday)) return 'Hoje tem tarefa';
     if (nextClass != null) return 'Próxima aula no radar';
     if (upcomingEvents.isNotEmpty) return 'Evento chegando';
@@ -1188,6 +1471,18 @@ class _HomeDashboardData {
   }
 
   String get focusSubtitle {
+    if (gradeRiskCount > 0) {
+      if (gradeRiskCount == 1) {
+        return 'Revise as notas da disciplina em risco.';
+      }
+
+      return 'Revise as notas das $gradeRiskCount disciplinas em risco.';
+    }
+
+    if (gradeAttentionCount > 0) {
+      return '$gradeAttentionCount ${gradeAttentionCount == 1 ? 'disciplina está' : 'disciplinas estão'} perto da média mínima.';
+    }
+
     if (pendingTasks == 0 && totalTasks > 0) {
       return 'Tudo concluído no ciclo atual. Belo ritmo.';
     }
@@ -1205,8 +1500,9 @@ class _HomeDashboardData {
     required List<AcademicTask> pendingTasks,
     required List<Schedule> schedules,
     required List<SubjectEvent> events,
-    required List<Assessment> assessments,
     required List<Discipline> disciplines,
+    required double passingGrade,
+    required GradeSummary summary,
   }) {
     final today = _dateOnly(DateTime.now());
     final overdueCount = pendingTasks.where((task) {
@@ -1235,7 +1531,6 @@ class _HomeDashboardData {
       );
     }
 
-    // Perigo de reprovação por faltas >= 80% do limite
     for (final discipline in disciplines) {
       final absences = discipline.absences;
       final maxAbsences = discipline.maxAbsences > 0
@@ -1244,11 +1539,60 @@ class _HomeDashboardData {
       if (absences >= maxAbsences * 0.8) {
         alerts.add(
           _HomeAlert(
-            title: 'Perigo de reprovação',
+            title: 'Atenção ao limite de faltas',
             description:
                 'Você tem $absences/$maxAbsences faltas em ${discipline.name}.',
             level: _AlertLevel.danger,
+            icon: Icons.trending_up_rounded,
+          ),
+        );
+      }
+    }
+
+    if (summary.totalGrades == 0) {
+      alerts.add(
+        const _HomeAlert(
+          title: 'Sem notas registradas',
+          description: 'Adicionar notas ajuda a acompanhar cada disciplina.',
+          level: _AlertLevel.info,
+          icon: Icons.fact_check_outlined,
+        ),
+      );
+    } else {
+      for (final discipline in disciplines) {
+        final disciplineSummary = summary.disciplineSummaries[discipline.id];
+        if (disciplineSummary == null ||
+            disciplineSummary.status != GradeStatus.risk) {
+          continue;
+        }
+
+        alerts.add(
+          _HomeAlert(
+            title: '${discipline.name} em risco',
+            description:
+                'Média ${disciplineSummary.average!.toStringAsFixed(1)} '
+                'abaixo do mínimo ${passingGrade.toStringAsFixed(1)}.',
+            level: _AlertLevel.danger,
             icon: Icons.warning_amber_rounded,
+          ),
+        );
+      }
+
+      for (final discipline in disciplines) {
+        final disciplineSummary = summary.disciplineSummaries[discipline.id];
+        if (disciplineSummary == null ||
+            disciplineSummary.status != GradeStatus.attention) {
+          continue;
+        }
+
+        alerts.add(
+          _HomeAlert(
+            title: '${discipline.name} em atenção',
+            description:
+                'Média ${disciplineSummary.average!.toStringAsFixed(1)} '
+                'perto do mínimo ${passingGrade.toStringAsFixed(1)}.',
+            level: _AlertLevel.warning,
+            icon: Icons.trending_up_rounded,
           ),
         );
       }
@@ -1269,7 +1613,7 @@ class _HomeDashboardData {
       alerts.add(
         _HomeAlert(
           title: '${soonEvent.type.label}: ${soonEvent.title}',
-          description: 'Marcado para ${soonEvent.displayDateLabel}.',
+          description: 'Marcado para ${soonEvent.displayDateTimeLabel}.',
           level: _AlertLevel.info,
           icon: Icons.event_available_outlined,
         ),
@@ -1282,16 +1626,6 @@ class _HomeDashboardData {
           description: 'Cadastre suas aulas para melhorar seu calendário.',
           level: _AlertLevel.info,
           icon: Icons.calendar_month_outlined,
-        ),
-      );
-    }
-    if (assessments.isEmpty) {
-      alerts.add(
-        const _HomeAlert(
-          title: 'Sem notas registradas',
-          description: 'Adicionar notas ajuda o painel a calcular sua média.',
-          level: _AlertLevel.info,
-          icon: Icons.fact_check_outlined,
         ),
       );
     }
@@ -1354,6 +1688,7 @@ class _NextClass {
 }
 
 class _HomeTask {
+  final AcademicTask source;
   final String title;
   final String subject;
   final String dueLabel;
@@ -1361,6 +1696,7 @@ class _HomeTask {
   final DateTime? deadline;
 
   const _HomeTask({
+    required this.source,
     required this.title,
     required this.subject,
     required this.dueLabel,
@@ -1372,6 +1708,7 @@ class _HomeTask {
     final deadline = _parseBrazilianDate(task.deadline);
 
     return _HomeTask(
+      source: task,
       title: task.title,
       subject: task.subject.isEmpty ? 'Sem disciplina' : task.subject,
       dueLabel: deadline == null ? task.deadlineLabel : _shortDate(deadline),
@@ -1416,9 +1753,11 @@ class _HomeEvent {
     return _HomeEvent(
       source: event,
       title: event.title,
-      dateLabel: event.displayDateLabel,
+      dateLabel: event.displayDateTimeLabel,
       subjectLabel: subject.isEmpty ? 'Sem disciplina' : subject,
-      shortLabel: '${event.type.label}: ${_shortDate(event.eventDate)}',
+      shortLabel: event.hasTimeRange
+          ? '${event.type.label}: ${_shortDate(event.eventDate)} ${event.timeRangeLabel}'
+          : '${event.type.label}: ${_shortDate(event.eventDate)}',
       icon: switch (event.type) {
         SubjectEventType.exam => Icons.edit_square,
         SubjectEventType.lecture => Icons.record_voice_over_outlined,

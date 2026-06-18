@@ -16,8 +16,10 @@ import '../../repositories/task_repository.dart';
 import '../../repositories/user_profile_repository.dart';
 import 'subject_details_page.dart';
 import 'subject_event_details_page.dart';
+import 'task_details_page.dart';
 import '../widgets/common/floating_add_button.dart';
 import '../widgets/dialogs/schedule_event_dialog.dart';
+import '../widgets/dialogs/task_dialog.dart';
 import '../widgets/schedules/course_schedule_view.dart';
 import '../widgets/schedules/month_calendar.dart';
 import '../widgets/schedules/schedule_header.dart';
@@ -286,6 +288,8 @@ class _SchedulePageState extends State<SchedulePage> {
           title: result.title,
           type: result.type,
           eventDate: result.eventDate,
+          startTimeMinutes: result.startTimeMinutes,
+          endTimeMinutes: result.endTimeMinutes,
           description: result.description,
         ),
       );
@@ -599,6 +603,7 @@ class _SchedulePageState extends State<SchedulePage> {
       title: event.title,
       subject: event.disciplineName,
       typeLabel: event.type.label,
+      timeRange: event.hasTimeRange ? event.timeRangeLabel : '',
       description: event.description,
       icon: _eventIcon(event.type),
       accentColor: color,
@@ -655,8 +660,63 @@ class _SchedulePageState extends State<SchedulePage> {
     );
   }
 
+  void _openTaskDetails(AcademicTask task, List<Discipline> disciplines) {
+    Navigator.of(context).push(
+      AppRoutes.detailRoute(
+        page: TaskDetailsPage(
+          task: task,
+          subjects: _taskSubjectsFromDisciplines(
+            disciplines: disciplines,
+            task: task,
+          ),
+          activeStudyCycleId: task.studyCycleId,
+        ),
+      ),
+    );
+  }
+
   Future<void> _deleteEvent(SubjectEvent event) {
     return _eventRepository.deleteEvent(event.id);
+  }
+
+  List<TaskDialogSubject> _taskSubjectsFromDisciplines({
+    required List<Discipline> disciplines,
+    required AcademicTask task,
+  }) {
+    final subjects = disciplines
+        .where((discipline) => discipline.name.trim().isNotEmpty)
+        .map(
+          (discipline) => TaskDialogSubject(
+            id: discipline.id,
+            name: discipline.name.trim(),
+          ),
+        )
+        .toList();
+
+    final currentDisciplineId = task.disciplineId?.trim();
+    final currentSubject = task.subject.trim();
+    final hasCurrentDiscipline =
+        currentDisciplineId != null &&
+        currentDisciplineId.isNotEmpty &&
+        subjects.any((subject) => subject.id == currentDisciplineId);
+    final hasCurrentSubject =
+        currentSubject.isNotEmpty &&
+        subjects.any(
+          (subject) =>
+              subject.name.trim().toLowerCase() == currentSubject.toLowerCase(),
+        );
+
+    if (!hasCurrentDiscipline &&
+        !hasCurrentSubject &&
+        currentSubject.isNotEmpty) {
+      subjects.add(TaskDialogSubject(name: currentSubject));
+    }
+
+    subjects.sort(
+      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    );
+
+    return subjects;
   }
 
   Discipline? _findDisciplineForSchedule(
@@ -934,7 +994,7 @@ class _SchedulePageState extends State<SchedulePage> {
         accentColor: color,
         iconColor: color,
         iconBackground: color.withValues(alpha: 0.12),
-        onTap: () => _toggleTaskChecked(task),
+        onTap: () => _openTaskDetails(task, disciplines),
       );
     }).toList();
   }
@@ -948,17 +1008,6 @@ class _SchedulePageState extends State<SchedulePage> {
       'Pesquisa' => Icons.search_outlined,
       _ => Icons.assignment_outlined,
     };
-  }
-
-  Future<void> _toggleTaskChecked(AcademicTask task) async {
-    try {
-      await _taskRepository.updateCompletion(
-        id: task.id,
-        isChecked: !task.isChecked,
-      );
-    } catch (_) {
-      _showError('Não foi possível atualizar o status da tarefa.');
-    }
   }
 
   DateTime? _parseBrazilianDate(String value) {

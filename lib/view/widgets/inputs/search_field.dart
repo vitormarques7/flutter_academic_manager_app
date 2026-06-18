@@ -8,12 +8,14 @@ class SearchField extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
   final ValueChanged<String>? onChanged;
+  final double height;
 
   const SearchField({
     super.key,
     required this.controller,
     this.hint = 'Pesquise por disciplina',
     this.onChanged,
+    this.height = 52,
   });
 
   @override
@@ -28,7 +30,7 @@ class SearchField extends StatelessWidget {
           ? const Color(0x66000000)
           : const Color(0x10111827),
       child: Container(
-        height: 52,
+        height: height,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(color: colors.outline),
@@ -57,7 +59,7 @@ class SearchField extends StatelessWidget {
             ),
             prefixIconConstraints: const BoxConstraints(
               minWidth: 50,
-              minHeight: 52,
+              minHeight: 48,
             ),
             filled: false,
             border: InputBorder.none,

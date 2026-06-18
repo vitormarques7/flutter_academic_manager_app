@@ -5,6 +5,16 @@ import '../../models/subject_note.dart';
 import '../../repositories/subject_note_repository.dart';
 import 'subject_details_page.dart';
 
+Color _darkModeDetailsAccent(BuildContext context, Color accentColor) {
+  if (Theme.of(context).brightness != Brightness.dark) return accentColor;
+
+  final hsl = HSLColor.fromColor(accentColor);
+  final lightness = hsl.lightness > 0.48 ? 0.48 : hsl.lightness;
+  final saturation = hsl.saturation > 0.72 ? 0.72 : hsl.saturation;
+
+  return hsl.withLightness(lightness).withSaturation(saturation).toColor();
+}
+
 class SubjectNoteDetailsPage extends StatefulWidget {
   final SubjectNote note;
   final Color accentColor;
@@ -154,6 +164,7 @@ class _SubjectNoteDetailsPageState extends State<SubjectNoteDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final accentColor = _darkModeDetailsAccent(context, widget.accentColor);
     final disciplineLabel = _currentNote.disciplineName.isEmpty
         ? 'Sem disciplina'
         : _currentNote.disciplineName;
@@ -161,7 +172,7 @@ class _SubjectNoteDetailsPageState extends State<SubjectNoteDetailsPage> {
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: widget.accentColor,
+        backgroundColor: accentColor,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(
@@ -198,7 +209,7 @@ class _SubjectNoteDetailsPageState extends State<SubjectNoteDetailsPage> {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: widget.accentColor,
+                  color: accentColor,
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(32),
                     bottomRight: Radius.circular(32),
@@ -298,7 +309,7 @@ class _SubjectNoteDetailsPageState extends State<SubjectNoteDetailsPage> {
                               children: [
                                 Icon(
                                   Icons.notes_rounded,
-                                  color: widget.accentColor,
+                                  color: accentColor,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
@@ -321,7 +332,7 @@ class _SubjectNoteDetailsPageState extends State<SubjectNoteDetailsPage> {
                                   Container(
                                     width: 4,
                                     decoration: BoxDecoration(
-                                      color: widget.accentColor,
+                                      color: accentColor,
                                       borderRadius: BorderRadius.circular(2),
                                     ),
                                   ),
@@ -391,7 +402,7 @@ class _SubjectNoteDetailsPageState extends State<SubjectNoteDetailsPage> {
                               children: [
                                 Icon(
                                   Icons.info_outline_rounded,
-                                  color: widget.accentColor,
+                                  color: accentColor,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
@@ -411,7 +422,7 @@ class _SubjectNoteDetailsPageState extends State<SubjectNoteDetailsPage> {
                               icon: Icons.menu_book_rounded,
                               title: 'Disciplina',
                               value: disciplineLabel,
-                              iconColor: widget.accentColor,
+                              iconColor: accentColor,
                             ),
                           ],
                         ),

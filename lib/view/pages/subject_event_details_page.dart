@@ -5,6 +5,16 @@ import '../../models/subject_event.dart';
 import '../../repositories/subject_event_repository.dart';
 import 'subject_details_page.dart';
 
+Color _darkModeDetailsAccent(BuildContext context, Color accentColor) {
+  if (Theme.of(context).brightness != Brightness.dark) return accentColor;
+
+  final hsl = HSLColor.fromColor(accentColor);
+  final lightness = hsl.lightness > 0.48 ? 0.48 : hsl.lightness;
+  final saturation = hsl.saturation > 0.72 ? 0.72 : hsl.saturation;
+
+  return hsl.withLightness(lightness).withSaturation(saturation).toColor();
+}
+
 class SubjectEventDetailsPage extends StatefulWidget {
   final SubjectEvent event;
   final Color accentColor;
@@ -112,6 +122,8 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
         title: result.title,
         type: result.type,
         eventDate: result.eventDate,
+        startTimeMinutes: result.startTimeMinutes,
+        endTimeMinutes: result.endTimeMinutes,
         description: result.description,
       );
 
@@ -132,6 +144,8 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
           title: result.title,
           type: result.type,
           eventDate: result.eventDate,
+          startTimeMinutes: result.startTimeMinutes,
+          endTimeMinutes: result.endTimeMinutes,
           description: result.description,
           createdAt: _currentEvent.createdAt,
           updatedAt: DateTime.now(),
@@ -162,6 +176,7 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final accentColor = _darkModeDetailsAccent(context, widget.accentColor);
     final disciplineLabel = _currentEvent.disciplineName.isEmpty
         ? 'Sem disciplina'
         : _currentEvent.disciplineName;
@@ -169,7 +184,7 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: widget.accentColor,
+        backgroundColor: accentColor,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(
@@ -206,7 +221,7 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: widget.accentColor,
+                  color: accentColor,
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(32),
                     bottomRight: Radius.circular(32),
@@ -263,7 +278,7 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
                             child: Text(
                               'Pendente',
                               style: TextStyle(
-                                color: widget.accentColor,
+                                color: accentColor,
                                 fontSize: 11,
                                 fontFamily: 'Roboto',
                                 fontWeight: FontWeight.w800,
@@ -323,7 +338,7 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
                               children: [
                                 Icon(
                                   Icons.description_outlined,
-                                  color: widget.accentColor,
+                                  color: accentColor,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
@@ -371,7 +386,7 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
                               children: [
                                 Icon(
                                   Icons.info_outline_rounded,
-                                  color: widget.accentColor,
+                                  color: accentColor,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
@@ -391,21 +406,28 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
                               icon: Icons.calendar_today_rounded,
                               title: 'Data',
                               value: _currentEvent.displayDateLabel,
-                              iconColor: widget.accentColor,
+                              iconColor: accentColor,
+                            ),
+                            Divider(height: 24, color: colors.divider),
+                            _DetailRow(
+                              icon: Icons.schedule_rounded,
+                              title: 'Horário',
+                              value: _currentEvent.timeRangeLabel,
+                              iconColor: accentColor,
                             ),
                             Divider(height: 24, color: colors.divider),
                             _DetailRow(
                               icon: _eventIcon,
                               title: 'Tipo de Evento',
                               value: _currentEvent.type.label,
-                              iconColor: widget.accentColor,
+                              iconColor: accentColor,
                             ),
                             Divider(height: 24, color: colors.divider),
                             _DetailRow(
                               icon: Icons.menu_book_rounded,
                               title: 'Disciplina',
                               value: disciplineLabel,
-                              iconColor: widget.accentColor,
+                              iconColor: accentColor,
                             ),
                           ],
                         ),

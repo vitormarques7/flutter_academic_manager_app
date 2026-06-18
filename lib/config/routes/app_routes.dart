@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:academic_manager_app/view/pages/auth_gate_page.dart';
 import 'package:academic_manager_app/view/pages/login_page.dart';
@@ -78,9 +81,21 @@ class AppRoutes {
 
   static Route<T> detailRoute<T>({required Widget page}) {
     return PageRouteBuilder<T>(
-      transitionDuration: Duration.zero,
-      reverseTransitionDuration: Duration.zero,
+      transitionDuration: const Duration(milliseconds: 300),
+      reverseTransitionDuration: const Duration(milliseconds: 260),
       pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+
+        return _SplitVerticalRouteTransition(
+          animation: curvedAnimation,
+          child: child,
+        );
+      },
     );
   }
 
@@ -159,5 +174,100 @@ class AppRoutes {
       slideRoute(page: const WelcomePage(), begin: const Offset(-1, 0)),
       (_) => false,
     );
+  }
+}
+
+class _SplitVerticalRouteTransition extends SingleChildRenderObjectWidget {
+  final Animation<double> animation;
+
+  const _SplitVerticalRouteTransition({
+    required this.animation,
+    required super.child,
+  });
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return _RenderSplitVerticalRouteTransition(animation);
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderSplitVerticalRouteTransition renderObject,
+  ) {
+    renderObject.animation = animation;
+  }
+}
+
+class _RenderSplitVerticalRouteTransition extends RenderProxyBox {
+  _RenderSplitVerticalRouteTransition(Animation<double> animation)
+    : _animation = animation;
+
+  Animation<double> _animation;
+
+  Animation<double> get animation => _animation;
+
+  set animation(Animation<double> value) {
+    if (_animation == value) return;
+
+    if (attached) _animation.removeListener(markNeedsPaint);
+    _animation = value;
+    if (attached) _animation.addListener(markNeedsPaint);
+    markNeedsPaint();
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _animation.addListener(markNeedsPaint);
+  }
+
+  @override
+  void detach() {
+    _animation.removeListener(markNeedsPaint);
+    super.detach();
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final child = this.child;
+    if (child == null) return;
+
+    final progress = animation.value.clamp(0.0, 1.0);
+    if (progress >= 0.999) {
+      context.paintChild(child, offset);
+      return;
+    }
+
+    final opacity = (progress * 255).round().clamp(0, 255);
+    if (opacity == 0) return;
+
+    context.pushOpacity(offset, opacity, (context, offset) {
+      final splitY = size.height / 2;
+      final travelDistance = math.min(size.height * 0.16, 96.0);
+      final topOffset = Offset(0, -travelDistance * (1 - progress));
+      final bottomOffset = Offset(0, travelDistance * (1 - progress));
+
+      context.canvas.save();
+      context.canvas.translate(topOffset.dx, topOffset.dy);
+      context.canvas.clipRect(
+        Rect.fromLTWH(offset.dx, offset.dy, size.width, splitY),
+      );
+      context.paintChild(child, offset);
+      context.canvas.restore();
+
+      context.canvas.save();
+      context.canvas.translate(bottomOffset.dx, bottomOffset.dy);
+      context.canvas.clipRect(
+        Rect.fromLTWH(
+          offset.dx,
+          offset.dy + splitY,
+          size.width,
+          size.height - splitY,
+        ),
+      );
+      context.paintChild(child, offset);
+      context.canvas.restore();
+    });
   }
 }

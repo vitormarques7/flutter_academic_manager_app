@@ -8,6 +8,7 @@ class Assessment {
   final String title;
   final String dateLabel;
   final double grade;
+  final double weight;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -19,6 +20,7 @@ class Assessment {
     required this.title,
     required this.dateLabel,
     required this.grade,
+    this.weight = 1.0,
     this.createdAt,
     this.updatedAt,
   });
@@ -41,6 +43,7 @@ class Assessment {
       title: _readString(data['title']) ?? '',
       dateLabel: _readString(data['dateLabel']) ?? '',
       grade: _readGrade(data['grade']),
+      weight: _readWeight(data['weight']),
       createdAt: _readTimestamp(data['createdAt']),
       updatedAt: _readTimestamp(data['updatedAt']),
     );
@@ -54,6 +57,7 @@ class Assessment {
       'title': title,
       'dateLabel': dateLabel,
       'grade': grade,
+      'weight': weight,
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
       if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
     };
@@ -119,6 +123,12 @@ class Assessment {
     return value.clamp(0, 10).toDouble();
   }
 
+  static double _readWeight(Object? value) {
+    if (value is! num || value <= 0) return 1.0;
+
+    return value.toDouble();
+  }
+
   static DateTime? _readTimestamp(Object? value) {
     if (value is Timestamp) return value.toDate();
     return null;
@@ -132,6 +142,7 @@ class AssessmentInput {
   final String title;
   final String dateLabel;
   final double grade;
+  final double weight;
 
   const AssessmentInput({
     this.studyCycleId,
@@ -140,6 +151,7 @@ class AssessmentInput {
     required this.title,
     required this.dateLabel,
     required this.grade,
+    this.weight = 1.0,
   });
 
   Map<String, dynamic> toCreateMap() {
@@ -157,6 +169,7 @@ class AssessmentInput {
       'title': title.trim(),
       'dateLabel': dateLabel.trim(),
       'grade': grade.clamp(0, 10).toDouble(),
+      'weight': weight > 0 ? weight : 1.0,
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }

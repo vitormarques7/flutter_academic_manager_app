@@ -181,7 +181,9 @@ class _ScheduleClassRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: classInfo.iconBackground,
                   borderRadius: BorderRadius.circular(9),
-                  border: Border.all(color: colors.outline.withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: colors.outline.withValues(alpha: 0.2),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: classInfo.iconColor.withValues(alpha: 0.15),
@@ -246,9 +248,12 @@ class _ScheduleEventRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final subtitle = eventInfo.subject.isEmpty
-        ? eventInfo.typeLabel
-        : '${eventInfo.typeLabel} • ${eventInfo.subject}';
+    final subtitleParts = [
+      eventInfo.typeLabel,
+      if (eventInfo.subject.isNotEmpty) eventInfo.subject,
+      if (eventInfo.timeRange.isNotEmpty) eventInfo.timeRange,
+    ];
+    final subtitle = subtitleParts.join(' • ');
 
     return Material(
       color: Colors.transparent,
@@ -275,7 +280,9 @@ class _ScheduleEventRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: eventInfo.iconBackground,
                   borderRadius: BorderRadius.circular(9),
-                  border: Border.all(color: colors.outline.withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: colors.outline.withValues(alpha: 0.2),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: eventInfo.iconColor.withValues(alpha: 0.15),
@@ -372,7 +379,9 @@ class _ScheduleTaskRow extends StatelessWidget {
                 width: 5,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: taskInfo.isChecked ? colors.success : taskInfo.accentColor,
+                  color: taskInfo.isChecked
+                      ? colors.success
+                      : taskInfo.accentColor,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -385,19 +394,28 @@ class _ScheduleTaskRow extends StatelessWidget {
                       ? colors.successSurface
                       : taskInfo.iconBackground,
                   borderRadius: BorderRadius.circular(9),
-                  border: Border.all(color: colors.outline.withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: colors.outline.withValues(alpha: 0.2),
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: (taskInfo.isChecked ? colors.success : taskInfo.iconColor)
-                          .withValues(alpha: 0.15),
+                      color:
+                          (taskInfo.isChecked
+                                  ? colors.success
+                                  : taskInfo.iconColor)
+                              .withValues(alpha: 0.15),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
                   ],
                 ),
                 child: Icon(
-                  taskInfo.isChecked ? Icons.check_circle_outline_rounded : taskInfo.icon,
-                  color: taskInfo.isChecked ? colors.success : taskInfo.iconColor,
+                  taskInfo.isChecked
+                      ? Icons.check_circle_outline_rounded
+                      : taskInfo.icon,
+                  color: taskInfo.isChecked
+                      ? colors.success
+                      : taskInfo.iconColor,
                   size: 25,
                 ),
               ),

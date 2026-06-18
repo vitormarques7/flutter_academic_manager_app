@@ -7,12 +7,14 @@ class SummaryMetricTile extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
+  final Color? valueColor;
 
   const SummaryMetricTile({
     super.key,
     required this.label,
     required this.value,
     required this.icon,
+    this.valueColor,
   });
 
   @override
@@ -41,7 +43,7 @@ class SummaryMetricTile extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: colors.textDark,
+              color: valueColor ?? colors.textDark,
               fontSize: 20,
               fontFamily: 'Roboto',
               fontWeight: FontWeight.w800,

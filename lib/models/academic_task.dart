@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+const Object _copyWithSentinel = Object();
+
 class AcademicTask {
   final String id;
   final String title;
@@ -62,6 +64,44 @@ class AcademicTask {
   }
 
   String get deadlineLabel => deadline.isEmpty ? 'Sem prazo' : deadline;
+
+  AcademicTask copyWith({
+    String? id,
+    String? title,
+    Object? disciplineId = _copyWithSentinel,
+    String? subject,
+    String? deadline,
+    String? visualPriority,
+    String? description,
+    bool? isChecked,
+    String? userId,
+    Object? studyCycleId = _copyWithSentinel,
+    Object? createdAt = _copyWithSentinel,
+    Object? updatedAt = _copyWithSentinel,
+  }) {
+    return AcademicTask(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      disciplineId: identical(disciplineId, _copyWithSentinel)
+          ? this.disciplineId
+          : disciplineId as String?,
+      subject: subject ?? this.subject,
+      deadline: deadline ?? this.deadline,
+      visualPriority: visualPriority ?? this.visualPriority,
+      description: description ?? this.description,
+      isChecked: isChecked ?? this.isChecked,
+      userId: userId ?? this.userId,
+      studyCycleId: identical(studyCycleId, _copyWithSentinel)
+          ? this.studyCycleId
+          : studyCycleId as String?,
+      createdAt: identical(createdAt, _copyWithSentinel)
+          ? this.createdAt
+          : createdAt as DateTime?,
+      updatedAt: identical(updatedAt, _copyWithSentinel)
+          ? this.updatedAt
+          : updatedAt as DateTime?,
+    );
+  }
 
   static DateTime? _readTimestamp(Object? value) {
     if (value is Timestamp) return value.toDate();

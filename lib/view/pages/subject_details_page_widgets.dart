@@ -130,6 +130,8 @@ class _SubjectSummaryCard extends StatelessWidget {
   final int gradeCount;
   final int pendingTaskCount;
   final Color accentColor;
+  final double passingGrade;
+  final double totalWeights;
 
   const _SubjectSummaryCard({
     required this.name,
@@ -139,6 +141,8 @@ class _SubjectSummaryCard extends StatelessWidget {
     required this.gradeCount,
     required this.pendingTaskCount,
     required this.accentColor,
+    required this.passingGrade,
+    required this.totalWeights,
   });
 
   @override
@@ -233,11 +237,23 @@ class _SubjectSummaryCard extends StatelessWidget {
                           maxWidth: 150,
                         ),
                         MetadataChip(
+                          icon: Icons.bookmark_added_outlined,
+                          label: 'Mín: ${passingGrade.toStringAsFixed(1)}',
+                          iconSize: 15,
+                          maxWidth: 160,
+                        ),
+                        MetadataChip(
                           icon: Icons.fact_check_outlined,
                           label:
                               '$gradeCount ${gradeCount == 1 ? 'nota' : 'notas'}',
                           iconSize: 15,
                           maxWidth: 180,
+                        ),
+                        MetadataChip(
+                          icon: Icons.scale_outlined,
+                          label: 'Peso: ${totalWeights.toStringAsFixed(1)}',
+                          iconSize: 15,
+                          maxWidth: 160,
                         ),
                         MetadataChip(
                           icon: Icons.pending_actions_outlined,
@@ -252,7 +268,7 @@ class _SubjectSummaryCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              _AverageRing(average: average),
+              _AverageRing(average: average, passingGrade: passingGrade),
             ],
           ),
         ],
@@ -263,14 +279,15 @@ class _SubjectSummaryCard extends StatelessWidget {
 
 class _AverageRing extends StatelessWidget {
   final double? average;
+  final double passingGrade;
 
-  const _AverageRing({required this.average});
+  const _AverageRing({required this.average, required this.passingGrade});
 
   Color _statusColor(AppThemeColors colors) {
     if (average == null) return colors.textMuted;
-    if (average! >= 7) return colors.success;
-    if (average! >= 5) return colors.warning;
-    return colors.danger;
+    if (average! < passingGrade) return colors.danger;
+    if (average! < passingGrade + 0.5) return colors.warning;
+    return colors.success;
   }
 
   @override
@@ -522,7 +539,7 @@ class _SubjectEventRow extends StatelessWidget {
                       children: [
                         MetadataChip(
                           icon: Icons.calendar_today_outlined,
-                          label: event.displayDateLabel,
+                          label: event.displayDateTimeLabel,
                           foregroundColor: accentColor,
                           backgroundColor: accentColor.withValues(alpha: 0.08),
                           iconSize: 13,
@@ -530,7 +547,7 @@ class _SubjectEventRow extends StatelessWidget {
                             horizontal: 8,
                             vertical: 5,
                           ),
-                          maxWidth: 150,
+                          maxWidth: 190,
                         ),
                         MetadataChip(
                           icon: _typeIcon,
@@ -581,16 +598,20 @@ class _AssessmentsPanel extends StatelessWidget {
   final bool isLoading;
   final bool hasError;
   final Color accentColor;
+  final double passingGrade;
   final VoidCallback onAdd;
   final ValueChanged<Assessment> onDelete;
+  final ValueChanged<Assessment> onEdit;
 
   const _AssessmentsPanel({
     required this.assessments,
     required this.isLoading,
     required this.hasError,
     required this.accentColor,
+    required this.passingGrade,
     required this.onAdd,
     required this.onDelete,
+    required this.onEdit,
   });
 
   @override
@@ -616,6 +637,11 @@ class _AssessmentsPanel extends StatelessWidget {
       );
     }
 
+    final totalWeights = assessments.fold<double>(
+      0,
+      (sum, a) => sum + a.weight,
+    );
+
     return _PanelCard(
       child: Column(
         children: [
@@ -623,6 +649,9 @@ class _AssessmentsPanel extends StatelessWidget {
             _AssessmentRow(
               assessment: entry.$2,
               accentColor: accentColor,
+              totalWeights: totalWeights,
+              passingGrade: passingGrade,
+              onTap: () => onEdit(entry.$2),
               onDelete: () => onDelete(entry.$2),
             ),
             if (entry.$1 != assessments.length - 1) const _PanelDivider(),
@@ -636,63 +665,124 @@ class _AssessmentsPanel extends StatelessWidget {
 class _AssessmentRow extends StatelessWidget {
   final Assessment assessment;
   final Color accentColor;
+  final double totalWeights;
+  final double passingGrade;
+  final VoidCallback onTap;
   final VoidCallback onDelete;
 
   const _AssessmentRow({
     required this.assessment,
     required this.accentColor,
+    required this.totalWeights,
+    required this.passingGrade,
+    required this.onTap,
     required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final contribution = totalWeights > 0
+        ? (assessment.grade * assessment.weight) / totalWeights
+        : 0.0;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
-      child: Row(
-        children: [
-          _IconTile(icon: Icons.description_outlined, color: accentColor),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  assessment.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: colors.textDark,
-                    fontSize: 15,
-                    fontFamily: 'Roboto',
-                    fontWeight: FontWeight.w800,
-                  ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+          child: Row(
+            children: [
+              _IconTile(icon: Icons.description_outlined, color: accentColor),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      assessment.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colors.textDark,
+                        fontSize: 15,
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 2,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          assessment.displayDateLabel,
+                          style: TextStyle(
+                            color: colors.textMuted,
+                            fontSize: 12,
+                            fontFamily: 'Roboto',
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                        Text(
+                          'Peso: ${assessment.weight.toStringAsFixed(1)}',
+                          style: TextStyle(
+                            color: colors.textMedium,
+                            fontSize: 12,
+                            fontFamily: 'Roboto',
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                        Text(
+                          'Contrib.: ${contribution.toStringAsFixed(1)}',
+                          style: TextStyle(
+                            color: colors.textMedium,
+                            fontSize: 12,
+                            fontFamily: 'Roboto',
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  assessment.displayDateLabel,
-                  style: TextStyle(
-                    color: colors.textMuted,
-                    fontSize: 12,
-                    fontFamily: 'Roboto',
-                    fontWeight: FontWeight.w700,
-                  ),
+              ),
+              const SizedBox(width: 8),
+              _GradeBadge(
+                label: assessment.formattedGrade,
+                grade: assessment.grade,
+                passingGrade: passingGrade,
+              ),
+              IconButton(
+                tooltip: 'Excluir nota',
+                onPressed: onDelete,
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: Color(0xFF9A2828),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          _GradeBadge(
-            label: assessment.formattedGrade,
-            grade: assessment.grade,
-          ),
-          IconButton(
-            tooltip: 'Excluir nota',
-            onPressed: onDelete,
-            icon: const Icon(Icons.delete_outline, color: Color(0xFF9A2828)),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -703,14 +793,14 @@ class _RelatedTasksPanel extends StatelessWidget {
   final bool isLoading;
   final bool hasError;
   final Color accentColor;
-  final VoidCallback onOpenTasks;
+  final ValueChanged<AcademicTask> onOpen;
 
   const _RelatedTasksPanel({
     required this.tasks,
     required this.isLoading,
     required this.hasError,
     required this.accentColor,
-    required this.onOpenTasks,
+    required this.onOpen,
   });
 
   @override
@@ -743,7 +833,7 @@ class _RelatedTasksPanel extends StatelessWidget {
             _TaskRow(
               task: entry.$2,
               accentColor: accentColor,
-              onTap: onOpenTasks,
+              onTap: () => onOpen(entry.$2),
             ),
             if (entry.$1 != tasks.length - 1) const _PanelDivider(),
           ],
@@ -1083,17 +1173,24 @@ class _IconTile extends StatelessWidget {
 class _GradeBadge extends StatelessWidget {
   final String label;
   final double grade;
+  final double passingGrade;
 
-  const _GradeBadge({required this.label, required this.grade});
+  const _GradeBadge({
+    required this.label,
+    required this.grade,
+    required this.passingGrade,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final badgeColor = grade >= 7
-        ? colors.success
-        : grade >= 5
-        ? colors.warning
-        : colors.danger;
+    final status = GradeSummary.statusForAverage(grade, passingGrade);
+    final badgeColor = switch (status) {
+      GradeStatus.noGrades => colors.textMuted,
+      GradeStatus.approved => colors.success,
+      GradeStatus.attention => colors.warning,
+      GradeStatus.risk => colors.danger,
+    };
 
     return Container(
       width: 54,

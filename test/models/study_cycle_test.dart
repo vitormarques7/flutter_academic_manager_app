@@ -38,6 +38,7 @@ void main() {
           'period': 6,
           'schoolYear': 2026,
           'goal': ' Passar em V&V ',
+          'passingGrade': 8.5,
           'createdAt': createdAt,
           'updatedAt': updatedAt,
         },
@@ -49,6 +50,7 @@ void main() {
       expect(cycle.period, 6);
       expect(cycle.schoolYear, 2026);
       expect(cycle.goal, 'Passar em V&V');
+      expect(cycle.passingGrade, 8.5);
       expect(cycle.createdAt, createdAt.toDate());
       expect(cycle.updatedAt, updatedAt.toDate());
     });
@@ -61,6 +63,7 @@ void main() {
       expect(cycle.period, isNull);
       expect(cycle.schoolYear, isNull);
       expect(cycle.goal, isNull);
+      expect(cycle.passingGrade, 7.0);
       expect(cycle.createdAt, isNull);
       expect(cycle.updatedAt, isNull);
     });
@@ -73,6 +76,7 @@ void main() {
           'period': 0,
           'schoolYear': -1,
           'goal': '',
+          'passingGrade': -2.5,
           'createdAt': 'invalid',
           'updatedAt': 'invalid',
         },
@@ -82,6 +86,7 @@ void main() {
       expect(cycle.period, isNull);
       expect(cycle.schoolYear, isNull);
       expect(cycle.goal, isNull);
+      expect(cycle.passingGrade, 7.0);
       expect(cycle.createdAt, isNull);
       expect(cycle.updatedAt, isNull);
     });
@@ -91,6 +96,7 @@ void main() {
         id: 'cycle-1',
         type: StudyCycleType.highSchool,
         schoolYear: 2,
+        passingGrade: 6.0,
         createdAt: DateTime(2026, 6, 8, 10),
         updatedAt: DateTime(2026, 6, 8, 11),
       );
@@ -106,6 +112,7 @@ void main() {
       expect(reconstructed.period, original.period);
       expect(reconstructed.schoolYear, original.schoolYear);
       expect(reconstructed.goal, original.goal);
+      expect(reconstructed.passingGrade, original.passingGrade);
       expect(reconstructed.createdAt, original.createdAt);
       expect(reconstructed.updatedAt, original.updatedAt);
     });
@@ -149,6 +156,7 @@ void main() {
         period: 6,
         schoolYear: 0,
         goal: ' ',
+        passingGrade: 7.5,
       );
 
       final map = input.toCreateMap();
@@ -158,6 +166,7 @@ void main() {
       expect(map['period'], 6);
       expect(map['schoolYear'], isNull);
       expect(map['goal'], isNull);
+      expect(map['passingGrade'], 7.5);
       expect(map['createdAt'], isA<FieldValue>());
       expect(map['updatedAt'], isA<FieldValue>());
     });
@@ -166,6 +175,7 @@ void main() {
       const input = StudyCycleInput(
         type: StudyCycleType.independent,
         goal: 'Concurso publico',
+        passingGrade: 8.0,
       );
 
       final map = input.toUpdateMap();
@@ -175,6 +185,7 @@ void main() {
       expect(map['period'], isNull);
       expect(map['schoolYear'], isNull);
       expect(map['goal'], 'Concurso publico');
+      expect(map['passingGrade'], 8.0);
       expect(map['updatedAt'], isA<FieldValue>());
       expect(map.containsKey('createdAt'), isFalse);
     });

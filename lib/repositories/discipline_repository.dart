@@ -30,6 +30,10 @@ class DisciplineRepository {
     return _firestore.collection('users').doc(uid).collection('schedules');
   }
 
+  CollectionReference<Map<String, dynamic>> _assessmentsCollection(String uid) {
+    return _firestore.collection('users').doc(uid).collection('assessments');
+  }
+
   Query<Map<String, dynamic>> _disciplinesQuery(
     String uid, {
     String? studyCycleId,
@@ -97,7 +101,7 @@ class DisciplineRepository {
     });
   }
 
-  Future<void> deleteDisciplineWithSchedules(Discipline discipline) {
+  Future<void> deleteDisciplineWithRelatedData(Discipline discipline) {
     final uid = _currentUserId;
 
     return _guardFirestoreCall(() async {
@@ -110,7 +114,13 @@ class DisciplineRepository {
           : _schedulesCollection(
               uid,
             ).where('studyCycleId', isEqualTo: normalizedStudyCycleId);
+      final assessmentsQuery = normalizedStudyCycleId == null
+          ? _assessmentsCollection(uid)
+          : _assessmentsCollection(
+              uid,
+            ).where('studyCycleId', isEqualTo: normalizedStudyCycleId);
       final schedulesSnapshot = await schedulesQuery.get();
+      final assessmentsSnapshot = await assessmentsQuery.get();
       final referencesToDelete = <DocumentReference<Map<String, dynamic>>>[
         _disciplinesCollection(uid).doc(discipline.id),
       ];
@@ -134,6 +144,25 @@ class DisciplineRepository {
         }
       }
 
+      for (final assessmentDocument in assessmentsSnapshot.docs) {
+        final assessmentData = assessmentDocument.data();
+        final assessmentDisciplineId = _normalizeString(
+          assessmentData['disciplineId'],
+        );
+        final assessmentDisciplineName = _normalizeString(
+          assessmentData['disciplineName'],
+        )?.toLowerCase();
+        final belongsToDiscipline =
+            assessmentDisciplineId == discipline.id ||
+            (assessmentDisciplineId == null &&
+                normalizedDisciplineName != null &&
+                assessmentDisciplineName == normalizedDisciplineName);
+
+        if (belongsToDiscipline) {
+          referencesToDelete.add(assessmentDocument.reference);
+        }
+      }
+
       for (var index = 0; index < referencesToDelete.length; index += 500) {
         final batch = _firestore.batch();
         final chunk = referencesToDelete.skip(index).take(500);
@@ -145,6 +174,10 @@ class DisciplineRepository {
         await batch.commit();
       }
     });
+  }
+
+  Future<void> deleteDisciplineWithSchedules(Discipline discipline) {
+    return deleteDisciplineWithRelatedData(discipline);
   }
 
   Future<void> updateAbsences(String disciplineId, int absences) {

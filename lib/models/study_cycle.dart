@@ -26,6 +26,7 @@ class StudyCycle {
   final int? period;
   final int? schoolYear;
   final String? goal;
+  final double passingGrade;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -36,6 +37,7 @@ class StudyCycle {
     this.period,
     this.schoolYear,
     this.goal,
+    this.passingGrade = 7.0,
     this.createdAt,
     this.updatedAt,
   });
@@ -57,6 +59,7 @@ class StudyCycle {
       period: _readPositiveInt(data['period']),
       schoolYear: _readPositiveInt(data['schoolYear']),
       goal: _readString(data['goal']),
+      passingGrade: _readPassingGrade(data['passingGrade']),
       createdAt: _readTimestamp(data['createdAt']),
       updatedAt: _readTimestamp(data['updatedAt']),
     );
@@ -69,6 +72,7 @@ class StudyCycle {
       'period': period,
       'schoolYear': schoolYear,
       'goal': goal,
+      'passingGrade': passingGrade,
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
       if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
     };
@@ -100,6 +104,11 @@ class StudyCycle {
     return value;
   }
 
+  static double _readPassingGrade(Object? value) {
+    if (value is! num || value <= 0) return 7.0;
+    return value.toDouble();
+  }
+
   static DateTime? _readTimestamp(Object? value) {
     if (value is Timestamp) return value.toDate();
     return null;
@@ -112,6 +121,7 @@ class StudyCycleInput {
   final int? period;
   final int? schoolYear;
   final String? goal;
+  final double passingGrade;
 
   const StudyCycleInput({
     required this.type,
@@ -119,6 +129,7 @@ class StudyCycleInput {
     this.period,
     this.schoolYear,
     this.goal,
+    this.passingGrade = 7.0,
   });
 
   Map<String, dynamic> toCreateMap() {
@@ -132,6 +143,7 @@ class StudyCycleInput {
       'period': _normalizePositiveInt(period),
       'schoolYear': _normalizePositiveInt(schoolYear),
       'goal': _normalizeString(goal),
+      'passingGrade': passingGrade > 0 ? passingGrade : 7.0,
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }

@@ -29,6 +29,8 @@ void main() {
           'title': ' Prova final ',
           'type': 'Prova',
           'eventDate': eventDate,
+          'startTimeMinutes': 14 * 60,
+          'endTimeMinutes': 16 * 60,
           'description': ' Sala 203. ',
           'createdAt': createdAt,
           'updatedAt': updatedAt,
@@ -42,7 +44,12 @@ void main() {
       expect(event.title, 'Prova final');
       expect(event.type, SubjectEventType.exam);
       expect(event.eventDate, DateTime(2026, 6, 30));
+      expect(event.startTimeMinutes, 14 * 60);
+      expect(event.endTimeMinutes, 16 * 60);
+      expect(event.hasTimeRange, isTrue);
       expect(event.displayDateLabel, '30/06/2026');
+      expect(event.timeRangeLabel, '14:00 - 16:00');
+      expect(event.displayDateTimeLabel, '30/06/2026 • 14:00 - 16:00');
       expect(event.description, 'Sala 203.');
       expect(event.createdAt, createdAt.toDate());
       expect(event.updatedAt, updatedAt.toDate());
@@ -56,6 +63,10 @@ void main() {
       expect(event.disciplineName, isEmpty);
       expect(event.title, isEmpty);
       expect(event.type, SubjectEventType.other);
+      expect(event.startTimeMinutes, isNull);
+      expect(event.endTimeMinutes, isNull);
+      expect(event.hasTimeRange, isFalse);
+      expect(event.timeRangeLabel, 'Sem horário');
       expect(event.description, isEmpty);
       expect(event.createdAt, isNull);
       expect(event.updatedAt, isNull);
@@ -70,6 +81,8 @@ void main() {
         title: 'Palestra convidada',
         type: SubjectEventType.lecture,
         eventDate: DateTime(2026, 7, 2),
+        startTimeMinutes: 19 * 60,
+        endTimeMinutes: 20 * 60 + 30,
         description: 'Auditório principal.',
         createdAt: DateTime(2026, 6, 11, 8),
         updatedAt: DateTime(2026, 6, 11, 9),
@@ -87,6 +100,8 @@ void main() {
       expect(reconstructed.title, original.title);
       expect(reconstructed.type, original.type);
       expect(reconstructed.eventDate, original.eventDate);
+      expect(reconstructed.startTimeMinutes, original.startTimeMinutes);
+      expect(reconstructed.endTimeMinutes, original.endTimeMinutes);
       expect(reconstructed.description, original.description);
       expect(reconstructed.createdAt, original.createdAt);
       expect(reconstructed.updatedAt, original.updatedAt);
@@ -100,6 +115,8 @@ void main() {
           title: 'Workshop',
           type: SubjectEventType.other,
           eventDate: DateTime(2026, 7, 2),
+          startTimeMinutes: 10 * 60,
+          endTimeMinutes: 11 * 60,
           description: '',
         ),
         SubjectEvent(
@@ -110,9 +127,27 @@ void main() {
           eventDate: DateTime(2026, 7),
           description: '',
         ),
+        SubjectEvent(
+          id: 'c',
+          disciplineName: 'Testes',
+          title: 'Banca',
+          type: SubjectEventType.seminar,
+          eventDate: DateTime(2026, 7, 2),
+          startTimeMinutes: 8 * 60,
+          endTimeMinutes: 9 * 60,
+          description: '',
+        ),
+        SubjectEvent(
+          id: 'd',
+          disciplineName: 'Testes',
+          title: 'Aula aberta',
+          type: SubjectEventType.lecture,
+          eventDate: DateTime(2026, 7, 2),
+          description: '',
+        ),
       ]..sort(SubjectEvent.compareByDate);
 
-      expect(events.map((event) => event.id), ['a', 'b']);
+      expect(events.map((event) => event.id), ['a', 'c', 'b', 'd']);
     });
   });
 
@@ -124,6 +159,8 @@ void main() {
       title: ' Prova final ',
       type: SubjectEventType.exam,
       eventDate: DateTime(2026, 6, 30, 14),
+      startTimeMinutes: 14 * 60,
+      endTimeMinutes: 16 * 60,
       description: ' Sala 203. ',
     );
 
@@ -136,6 +173,8 @@ void main() {
       expect(map['title'], 'Prova final');
       expect(map['type'], 'Prova');
       expect((map['eventDate'] as Timestamp).toDate(), DateTime(2026, 6, 30));
+      expect(map['startTimeMinutes'], 14 * 60);
+      expect(map['endTimeMinutes'], 16 * 60);
       expect(map['description'], 'Sala 203.');
       expect(map['createdAt'], isA<FieldValue>());
       expect(map['updatedAt'], isA<FieldValue>());
@@ -150,9 +189,35 @@ void main() {
       expect(map['title'], 'Prova final');
       expect(map['type'], 'Prova');
       expect((map['eventDate'] as Timestamp).toDate(), DateTime(2026, 6, 30));
+      expect(map['startTimeMinutes'], 14 * 60);
+      expect(map['endTimeMinutes'], 16 * 60);
       expect(map['description'], 'Sala 203.');
       expect(map['updatedAt'], isA<FieldValue>());
       expect(map.containsKey('createdAt'), isFalse);
+    });
+
+    test('toCreateMap omits time fields when no range is provided', () {
+      final map = SubjectEventInput(
+        disciplineName: 'Testes IV',
+        title: 'Palestra',
+        type: SubjectEventType.lecture,
+        eventDate: DateTime(2026, 6, 30),
+      ).toCreateMap();
+
+      expect(map.containsKey('startTimeMinutes'), isFalse);
+      expect(map.containsKey('endTimeMinutes'), isFalse);
+    });
+
+    test('toUpdateMap deletes time fields when no range is provided', () {
+      final map = SubjectEventInput(
+        disciplineName: 'Testes IV',
+        title: 'Palestra',
+        type: SubjectEventType.lecture,
+        eventDate: DateTime(2026, 6, 30),
+      ).toUpdateMap();
+
+      expect(map['startTimeMinutes'], isA<FieldValue>());
+      expect(map['endTimeMinutes'], isA<FieldValue>());
     });
   });
 }

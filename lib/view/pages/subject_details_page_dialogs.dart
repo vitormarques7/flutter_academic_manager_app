@@ -4,16 +4,20 @@ class _AssessmentDialogResult {
   final String title;
   final String dateLabel;
   final double grade;
+  final double weight;
 
   const _AssessmentDialogResult({
     required this.title,
     required this.dateLabel,
     required this.grade,
+    required this.weight,
   });
 }
 
 class _AssessmentDialog extends StatefulWidget {
-  const _AssessmentDialog();
+  final Assessment? initialAssessment;
+
+  const _AssessmentDialog({this.initialAssessment});
 
   @override
   State<_AssessmentDialog> createState() => _AssessmentDialogState();
@@ -24,12 +28,28 @@ class _AssessmentDialogState extends State<_AssessmentDialog> {
   final _titleController = TextEditingController();
   final _dateController = TextEditingController();
   final _gradeController = TextEditingController();
+  final _weightController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final initialAssessment = widget.initialAssessment;
+    if (initialAssessment != null) {
+      _titleController.text = initialAssessment.title;
+      _dateController.text = initialAssessment.dateLabel;
+      _gradeController.text = initialAssessment.grade.toString();
+      _weightController.text = initialAssessment.weight.toString();
+    } else {
+      _weightController.text = '1.0';
+    }
+  }
 
   @override
   void dispose() {
     _titleController.dispose();
     _dateController.dispose();
     _gradeController.dispose();
+    _weightController.dispose();
     super.dispose();
   }
 
@@ -41,6 +61,7 @@ class _AssessmentDialogState extends State<_AssessmentDialog> {
         title: _titleController.text.trim(),
         dateLabel: _dateController.text.trim(),
         grade: _parseGrade(_gradeController.text),
+        weight: double.tryParse(_weightController.text.trim().replaceAll(',', '.')) ?? 1.0,
       ),
     );
   }
@@ -57,6 +78,14 @@ class _AssessmentDialogState extends State<_AssessmentDialog> {
     if (grade == null) return 'Informe uma nota.';
     if (grade < 0 || grade > 10) return 'Use uma nota entre 0 e 10.';
 
+    return null;
+  }
+
+  String? _validateWeight(String? value) {
+    final normalized = value?.trim().replaceAll(',', '.') ?? '';
+    if (normalized.isEmpty) return 'Informe o peso.';
+    final parsed = double.tryParse(normalized);
+    if (parsed == null || parsed <= 0) return 'O peso deve ser maior que 0.';
     return null;
   }
 
@@ -105,7 +134,7 @@ class _AssessmentDialogState extends State<_AssessmentDialog> {
                     children: [
                       Expanded(
                         child: Text(
-                          'Nova nota',
+                          widget.initialAssessment != null ? 'Editar nota' : 'Nova nota',
                           style: TextStyle(
                             color: colors.primary,
                             fontSize: 24,
@@ -119,7 +148,7 @@ class _AssessmentDialogState extends State<_AssessmentDialog> {
                         onPressed: () => Navigator.of(context).maybePop(),
                         icon: Icon(
                           Icons.close,
-                          color: colors.textMedium,
+                          color: colors.textMuted,
                           size: 30,
                         ),
                       ),
@@ -172,6 +201,23 @@ class _AssessmentDialogState extends State<_AssessmentDialog> {
                           ],
                           decoration: _inputDecoration(hintText: 'Ex: 8.5'),
                           validator: _validateGrade,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _DialogField(
+                        label: 'Peso',
+                        child: TextFormField(
+                          controller: _weightController,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[0-9,.]'),
+                            ),
+                          ],
+                          decoration: _inputDecoration(hintText: 'Ex: 1.0'),
+                          validator: _validateWeight,
                         ),
                       ),
                       const SizedBox(height: 22),
@@ -233,12 +279,16 @@ class SubjectEventDialogResult {
   final String title;
   final SubjectEventType type;
   final DateTime eventDate;
+  final int? startTimeMinutes;
+  final int? endTimeMinutes;
   final String description;
 
   const SubjectEventDialogResult({
     required this.title,
     required this.type,
     required this.eventDate,
+    this.startTimeMinutes,
+    this.endTimeMinutes,
     required this.description,
   });
 }
@@ -258,15 +308,26 @@ class _SubjectEventDialogState extends State<SubjectEventDialog> {
   final _dateController = TextEditingController();
   final _descriptionController = TextEditingController();
   SubjectEventType _selectedType = SubjectEventType.exam;
+  bool _hasTimeRange = false;
+  TimeOfDay _startTime = const TimeOfDay(hour: 8, minute: 0);
+  TimeOfDay _endTime = const TimeOfDay(hour: 9, minute: 0);
+  String? _timeErrorMessage;
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialEvent != null) {
-      _titleController.text = widget.initialEvent!.title;
-      _dateController.text = widget.initialEvent!.displayDateLabel;
-      _descriptionController.text = widget.initialEvent!.description;
-      _selectedType = widget.initialEvent!.type;
+    final initialEvent = widget.initialEvent;
+    if (initialEvent != null) {
+      _titleController.text = initialEvent.title;
+      _dateController.text = initialEvent.displayDateLabel;
+      _descriptionController.text = initialEvent.description;
+      _selectedType = initialEvent.type;
+
+      if (initialEvent.hasTimeRange) {
+        _hasTimeRange = true;
+        _startTime = timeOfDayFromMinutes(initialEvent.startTimeMinutes!);
+        _endTime = timeOfDayFromMinutes(initialEvent.endTimeMinutes!);
+      }
     }
   }
 
@@ -280,12 +341,19 @@ class _SubjectEventDialogState extends State<SubjectEventDialog> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    final timeRangeError = _validateTimeRange();
+    if (timeRangeError != null) {
+      setState(() => _timeErrorMessage = timeRangeError);
+      return;
+    }
 
     Navigator.of(context).pop(
       SubjectEventDialogResult(
         title: _titleController.text.trim(),
         type: _selectedType,
         eventDate: parseBrazilianDate(_dateController.text)!,
+        startTimeMinutes: _hasTimeRange ? timeOfDayToMinutes(_startTime) : null,
+        endTimeMinutes: _hasTimeRange ? timeOfDayToMinutes(_endTime) : null,
         description: _descriptionController.text.trim(),
       ),
     );
@@ -302,6 +370,37 @@ class _SubjectEventDialogState extends State<SubjectEventDialog> {
     }
 
     return null;
+  }
+
+  String? _validateTimeRange() {
+    if (!_hasTimeRange) return null;
+
+    final startMinutes = timeOfDayToMinutes(_startTime);
+    final endMinutes = timeOfDayToMinutes(_endTime);
+
+    if (endMinutes <= startMinutes) {
+      return 'O horário final deve ser depois do inicial.';
+    }
+
+    return null;
+  }
+
+  Future<void> _pickTime({required bool isStartTime}) async {
+    final selectedTime = await showAppTimePicker(
+      context: context,
+      initialTime: isStartTime ? _startTime : _endTime,
+    );
+
+    if (selectedTime == null || !mounted) return;
+
+    setState(() {
+      if (isStartTime) {
+        _startTime = selectedTime;
+      } else {
+        _endTime = selectedTime;
+      }
+      _timeErrorMessage = null;
+    });
   }
 
   @override
@@ -339,7 +438,9 @@ class _SubjectEventDialogState extends State<SubjectEventDialog> {
                       children: [
                         Expanded(
                           child: Text(
-                            widget.initialEvent != null ? 'Editar evento' : 'Novo evento',
+                            widget.initialEvent != null
+                                ? 'Editar evento'
+                                : 'Novo evento',
                             style: TextStyle(
                               color: colors.primary,
                               fontSize: 24,
@@ -416,6 +517,24 @@ class _SubjectEventDialogState extends State<SubjectEventDialog> {
                             firstDate: DateTime.now(),
                             helpText: 'Escolher data do evento',
                             validator: _validateDate,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _DialogField(
+                          label: 'Horário',
+                          child: OptionalTimeRangeField(
+                            hasTimeRange: _hasTimeRange,
+                            startTime: _startTime,
+                            endTime: _endTime,
+                            errorText: _timeErrorMessage,
+                            onHasTimeRangeChanged: (value) {
+                              setState(() {
+                                _hasTimeRange = value;
+                                _timeErrorMessage = null;
+                              });
+                            },
+                            onStartTap: () => _pickTime(isStartTime: true),
+                            onEndTap: () => _pickTime(isStartTime: false),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -576,7 +695,9 @@ class _SubjectNoteDialogState extends State<SubjectNoteDialog> {
                       children: [
                         Expanded(
                           child: Text(
-                            widget.initialNote != null ? 'Editar anotação' : 'Nova anotação',
+                            widget.initialNote != null
+                                ? 'Editar anotação'
+                                : 'Nova anotação',
                             style: TextStyle(
                               color: colors.primary,
                               fontSize: 24,

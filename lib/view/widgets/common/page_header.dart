@@ -6,8 +6,14 @@ import '../../../config/theme/app_theme_colors.dart';
 class PageHeader extends StatelessWidget {
   final String title;
   final Widget? trailing;
+  final double avatarSize;
 
-  const PageHeader({super.key, required this.title, this.trailing});
+  const PageHeader({
+    super.key,
+    required this.title,
+    this.trailing,
+    this.avatarSize = 58,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -16,8 +22,8 @@ class PageHeader extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 58,
-          height: 58,
+          width: avatarSize,
+          height: avatarSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             boxShadow: colors.subtleShadows,

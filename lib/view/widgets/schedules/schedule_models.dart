@@ -33,6 +33,7 @@ class ScheduleEventInfo {
   final String title;
   final String subject;
   final String typeLabel;
+  final String timeRange;
   final String description;
   final IconData icon;
   final Color accentColor;
@@ -44,6 +45,7 @@ class ScheduleEventInfo {
     required this.title,
     required this.subject,
     required this.typeLabel,
+    this.timeRange = '',
     required this.description,
     required this.icon,
     required this.accentColor,

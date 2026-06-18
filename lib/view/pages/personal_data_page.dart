@@ -787,6 +787,7 @@ class _StudyCycleManagementSheetState
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _courseController;
   late final TextEditingController _goalController;
+  late final TextEditingController _passingGradeController;
   late _StudyCycleManagementMode _mode;
   late int _period;
   late int _schoolYear;
@@ -807,6 +808,9 @@ class _StudyCycleManagementSheetState
       text: _activeCycle.courseName ?? '',
     );
     _goalController = TextEditingController(text: _activeCycle.goal ?? '');
+    _passingGradeController = TextEditingController(
+      text: _activeCycle.passingGrade.toStringAsFixed(1),
+    );
     _period = _activeCycle.period ?? 0;
     _schoolYear = _activeCycle.schoolYear ?? 1;
   }
@@ -815,25 +819,35 @@ class _StudyCycleManagementSheetState
   void dispose() {
     _courseController.dispose();
     _goalController.dispose();
+    _passingGradeController.dispose();
     super.dispose();
   }
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
+    final passingGrade =
+        double.tryParse(
+          _passingGradeController.text.trim().replaceAll(',', '.'),
+        ) ??
+        7.0;
+
     final input = switch (_activeCycle.type) {
       StudyCycleType.university => StudyCycleInput(
         type: StudyCycleType.university,
         courseName: _courseController.text,
         period: _period == 0 ? null : _period,
+        passingGrade: passingGrade,
       ),
       StudyCycleType.highSchool => StudyCycleInput(
         type: StudyCycleType.highSchool,
         schoolYear: _schoolYear,
+        passingGrade: passingGrade,
       ),
       StudyCycleType.independent => StudyCycleInput(
         type: StudyCycleType.independent,
         goal: _goalController.text,
+        passingGrade: passingGrade,
       ),
     };
 
@@ -1002,6 +1016,26 @@ class _StudyCycleManagementSheetState
               ),
             ],
           },
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _passingGradeController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: _sheetInputDecoration(
+              context,
+              label: 'Média mínima para aprovação',
+              icon: Icons.star_border_rounded,
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Informe a média mínima.';
+              }
+              final parsed = double.tryParse(value.trim().replaceAll(',', '.'));
+              if (parsed == null || parsed < 0 || parsed > 10) {
+                return 'Informe um valor entre 0 e 10.';
+              }
+              return null;
+            },
+          ),
           const SizedBox(height: 18),
           Row(
             children: [
