@@ -1,10 +1,13 @@
 import 'package:academic_manager_app/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_theme_extension.dart';
 import '../../models/academic_subject.dart';
 import '../../models/academic_task.dart';
 import '../../repositories/subject_repository.dart';
 import '../../repositories/task_repository.dart';
+import '../shell/main_shell_scope.dart';
+import '../widgets/common/empty_state_card.dart';
 import '../widgets/common/page_header.dart';
 
 class HomePage extends StatelessWidget {
@@ -43,14 +46,34 @@ class HomePage extends StatelessWidget {
                     return const _HomeOverviewLoading();
                   }
 
+                  if (snapshot.hasError) {
+                    return const EmptyStateCard(
+                      icon: Icons.cloud_off_outlined,
+                      title: 'Não foi possível carregar o desempenho',
+                      subtitle: 'Verifique sua conexão e tente novamente.',
+                    );
+                  }
+
                   final subjects = snapshot.data ?? [];
                   final overallAverage = _overallAverage(subjects);
                   final overallFrequency = _overallFrequency(subjects);
 
+                  if (subjects.isEmpty) {
+                    return EmptyStateCard(
+                      icon: Icons.school_outlined,
+                      title: 'Sem disciplinas ainda',
+                      subtitle:
+                          'Cadastre suas disciplinas para acompanhar média e frequência.',
+                      actionLabel: 'Ir para Disciplinas',
+                      onAction: () =>
+                          MainShellScope.maybeOf(context)?.selectTab(1),
+                    );
+                  }
+
                   return Column(
                     children: [
                       _PerformanceCard(
-                        title: 'CARD DE DESEMPENHO',
+                        title: 'Desempenho',
                         subtitle: 'Média geral',
                         value: _formatOverallAverage(
                           overallAverage,
@@ -59,7 +82,7 @@ class HomePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       _FrequencyCard(
-                        title: 'CARD DE FREQUÊNCIA',
+                        title: 'Frequência',
                         subtitle: 'Percentual total',
                         percent: overallFrequency,
                         percentLabel: _formatOverallFrequencyLabel(
@@ -80,6 +103,14 @@ class HomePage extends StatelessWidget {
                   if (snapshot.connectionState == ConnectionState.waiting &&
                       !snapshot.hasData) {
                     return const _HomeTasksLoading();
+                  }
+
+                  if (snapshot.hasError) {
+                    return const EmptyStateCard(
+                      icon: Icons.cloud_off_outlined,
+                      title: 'Não foi possível carregar as tarefas',
+                      subtitle: 'Verifique sua conexão e tente novamente.',
+                    );
                   }
 
                   final tasks = snapshot.data ?? [];
@@ -242,8 +273,12 @@ class _UpcomingTasksCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (tasks.isEmpty) {
-      return const _HomeCardBase(
-        child: _HomeEmptyMessage(message: 'Nenhuma tarefa pendente.'),
+      return EmptyStateCard(
+        icon: Icons.event_available_outlined,
+        title: 'Nenhuma tarefa pendente',
+        subtitle: 'Suas próximas entregas aparecerão aqui.',
+        actionLabel: 'Criar tarefa',
+        onAction: () => MainShellScope.maybeOf(context)?.selectTab(2),
       );
     }
 
@@ -271,8 +306,10 @@ class _AlertsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (tasks.isEmpty) {
-      return const _HomeCardBase(
-        child: _HomeEmptyMessage(message: 'Nenhum alerta no momento.'),
+      return const EmptyStateCard(
+        icon: Icons.notifications_none_outlined,
+        title: 'Nenhum alerta no momento',
+        subtitle: 'Provas e prazos importantes aparecerão aqui.',
       );
     }
 
@@ -289,39 +326,18 @@ class _AlertsCard extends StatelessWidget {
   }
 }
 
-class _HomeEmptyMessage extends StatelessWidget {
-  final String message;
-
-  const _HomeEmptyMessage({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      child: Text(
-        message,
-        style: const TextStyle(
-          color: Color(0xFF464552),
-          fontSize: 15,
-          fontFamily: 'Inter',
-          fontWeight: FontWeight.w500,
-          height: 1.47,
-        ),
-      ),
-    );
-  }
-}
-
 class _SectionTitle extends StatelessWidget {
   final String title;
   const _SectionTitle({required this.title});
 
   @override
   Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
     return Text(
       title,
-      style: const TextStyle(
-        color: Color(0xFF191820),
+      style: TextStyle(
+        color: appTheme.textPrimary,
         fontSize: 15,
         fontFamily: 'Inter',
         fontWeight: FontWeight.w600,
@@ -337,16 +353,18 @@ class _HomeCardBase extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF0FB),
+        color: appTheme.card,
         borderRadius: BorderRadius.circular(15),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x66587DBD),
+            color: appTheme.shadow,
             blurRadius: 4,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -368,6 +386,8 @@ class _PerformanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
     return _HomeCardBase(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -380,8 +400,8 @@ class _PerformanceCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Color(0xFF191820),
+                  style: TextStyle(
+                    color: appTheme.textPrimary,
                     fontSize: 16,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w600,
@@ -393,8 +413,8 @@ class _PerformanceCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               subtitle,
-              style: const TextStyle(
-                color: Color(0xFF191820),
+              style: TextStyle(
+                color: appTheme.textPrimary,
                 fontSize: 14,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w500,
@@ -405,8 +425,8 @@ class _PerformanceCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               value,
-              style: const TextStyle(
-                color: Color(0xFF191820),
+              style: TextStyle(
+                color: appTheme.textPrimary,
                 fontSize: 36,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w600,
@@ -436,6 +456,8 @@ class _FrequencyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
     return _HomeCardBase(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -452,8 +474,8 @@ class _FrequencyCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Color(0xFF191820),
+                  style: TextStyle(
+                    color: appTheme.textPrimary,
                     fontSize: 16,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w600,
@@ -465,8 +487,8 @@ class _FrequencyCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               subtitle,
-              style: const TextStyle(
-                color: Color(0xFF191820),
+              style: TextStyle(
+                color: appTheme.textPrimary,
                 fontSize: 14,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w500,
@@ -478,8 +500,8 @@ class _FrequencyCard extends StatelessWidget {
               children: [
                 Text(
                   percentLabel,
-                  style: const TextStyle(
-                    color: Color(0xFF191820),
+                  style: TextStyle(
+                    color: appTheme.textPrimary,
                     fontSize: 36,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w600,
@@ -517,6 +539,8 @@ class _TaskRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -539,8 +563,8 @@ class _TaskRow extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
-                color: Color(0xFF191820),
+              style: TextStyle(
+                color: appTheme.textPrimary,
                 fontSize: 16,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w500,
@@ -551,8 +575,8 @@ class _TaskRow extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             date,
-            style: const TextStyle(
-              color: Color(0xFF191820),
+            style: TextStyle(
+              color: appTheme.textSecondary,
               fontSize: 15,
               fontFamily: 'Inter',
               fontWeight: FontWeight.w500,
@@ -572,6 +596,8 @@ class _AlertRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -594,8 +620,8 @@ class _AlertRow extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
-                color: Color(0xFF191820),
+              style: TextStyle(
+                color: appTheme.textPrimary,
                 fontSize: 16,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w500,
@@ -614,10 +640,10 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(
+    return Divider(
       height: 1,
       thickness: 1,
-      color: Color(0x4C514EB6),
+      color: AppColors.primary.withValues(alpha: 0.3),
       indent: 16,
       endIndent: 16,
     );

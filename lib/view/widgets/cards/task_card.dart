@@ -1,5 +1,7 @@
-// Card de tarefa com checkbox, título, disciplina e prazo.
 import 'package:flutter/material.dart';
+
+import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_theme_extension.dart';
 
 class TaskCard extends StatelessWidget {
   final String title;
@@ -21,6 +23,8 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -29,13 +33,13 @@ class TaskCard extends StatelessWidget {
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: const Color(0xFFEFF0FB),
+            color: appTheme.card,
             borderRadius: BorderRadius.circular(15),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                color: Color(0x66587DBD),
+                color: appTheme.shadow,
                 blurRadius: 4,
-                offset: Offset(0, 4),
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -43,49 +47,53 @@ class TaskCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Checkbox
               Container(
                 width: 44,
                 height: 44,
                 decoration: ShapeDecoration(
-                  color: const Color(0xFFF8F9FF),
+                  color: appTheme.surface,
                   shape: RoundedRectangleBorder(
-                    side: const BorderSide(width: 1, color: Color(0x4C514EB6)),
+                    side: BorderSide(
+                      width: 1,
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                    ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
                 child: Checkbox(
                   value: isChecked,
                   onChanged: onChanged,
-                  activeColor: const Color(0xFF514EB6),
+                  activeColor: AppColors.primary,
+                  checkColor: Colors.white,
                   side: BorderSide.none,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
               ),
-
               const SizedBox(width: 12),
-
-              // Título e disciplina
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: Color(0xFF191820),
+                      style: TextStyle(
+                        color: appTheme.textPrimary,
                         fontSize: 16,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w700,
                         height: 1.38,
+                        decoration: isChecked
+                            ? TextDecoration.lineThrough
+                            : TextDecoration.none,
+                        decorationColor: appTheme.textMuted,
                       ),
                     ),
                     Text(
                       'Disciplina: $subject',
-                      style: const TextStyle(
-                        color: Color(0xFF191820),
+                      style: TextStyle(
+                        color: appTheme.textSecondary,
                         fontSize: 14,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
@@ -96,22 +104,19 @@ class TaskCard extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(width: 8),
-
-              // Prazo com ícone de relógio
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.access_time,
-                    color: Color(0xFF191820),
+                    color: appTheme.textSecondary,
                     size: 18,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     'Prazo: $deadline',
-                    style: const TextStyle(
-                      color: Color(0xFF191820),
+                    style: TextStyle(
+                      color: appTheme.textSecondary,
                       fontSize: 14,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,

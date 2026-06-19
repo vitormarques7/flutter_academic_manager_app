@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_text_styles.dart';
+import '../../../config/theme/app_theme_extension.dart';
 
 class AppBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -38,11 +39,12 @@ class AppBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final appTheme = context.appTheme;
 
     return Material(
-      color: AppColors.background,
+      color: appTheme.navBackground,
       elevation: 10,
-      shadowColor: AppColors.shadowPrimary,
+      shadowColor: appTheme.shadow,
       child: SafeArea(
         top: false,
         child: Padding(
@@ -88,7 +90,8 @@ class _AnimatedNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? AppColors.navActive : AppColors.navInactive;
+    final appTheme = context.appTheme;
+    final color = isSelected ? AppColors.navActive : appTheme.navInactive;
 
     return Semantics(
       button: true,

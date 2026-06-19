@@ -1,5 +1,7 @@
-// Campo de busca com ícone de lupa e placeholder roxo translúcido.
 import 'package:flutter/material.dart';
+
+import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_theme_extension.dart';
 
 class SearchField extends StatelessWidget {
   final TextEditingController controller;
@@ -15,40 +17,42 @@ class SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
     return Container(
       height: 49,
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF0FB),
+        color: appTheme.card,
         borderRadius: BorderRadius.circular(15),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x66587DBD),
+            color: appTheme.shadow,
             blurRadius: 4,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
-        style: const TextStyle(
-          color: Color(0xFF191820),
+        style: TextStyle(
+          color: appTheme.textPrimary,
           fontSize: 15,
           fontFamily: 'Inter',
           fontWeight: FontWeight.w600,
         ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(
-            color: Color(0x7F514EB6),
+          hintStyle: TextStyle(
+            color: AppColors.primary.withValues(alpha: 0.5),
             fontSize: 15,
             fontFamily: 'Inter',
             fontWeight: FontWeight.w600,
             height: 1.47,
           ),
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.search,
-            color: Color(0x7F514EB6),
+            color: AppColors.primary.withValues(alpha: 0.5),
             size: 22,
           ),
           filled: false,

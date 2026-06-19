@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_theme_extension.dart';
 import '../common/hero_form_sheet.dart';
 
 class TaskDialogResult {
@@ -131,9 +132,6 @@ class _TaskDialogState extends State<TaskDialog> {
       title: _isEditing ? 'Editar Tarefa' : 'Nova Tarefa',
       subtitle: 'Organize suas entregas e prazos',
       badge: _selectedVisualPriority,
-      onBack: () {
-        if (!_isSaving) Navigator.of(context).maybePop();
-      },
       onSave: _save,
       isSaving: _isSaving,
       formContent: Form(
@@ -146,7 +144,7 @@ class _TaskDialogState extends State<TaskDialog> {
               child: TextFormField(
                 controller: _titleController,
                 textInputAction: TextInputAction.next,
-                decoration: heroFormInputDecoration(
+                decoration: heroFormInputDecoration(context,
                   hintText: 'Ex: Entrega de Trabalho de IA',
                 ),
                 enabled: !_isSaving,
@@ -163,12 +161,12 @@ class _TaskDialogState extends State<TaskDialog> {
               label: 'DISCIPLINA',
               child: DropdownButtonFormField<String>(
                 initialValue: _selectedSubject,
-                icon: const Icon(
+                icon: Icon(
                   Icons.keyboard_arrow_down,
-                  color: Color(0xFF6B7280),
+                  color: context.appTheme.textMuted,
                   size: 28,
                 ),
-                decoration: heroFormInputDecoration(),
+                decoration: heroFormInputDecoration(context),
                 hint: const Text('Selecione a disciplina'),
                 items: widget.subjects
                     .map(
@@ -201,7 +199,7 @@ class _TaskDialogState extends State<TaskDialog> {
                   FilteringTextInputFormatter.digitsOnly,
                   _DateInputFormatter(),
                 ],
-                decoration: heroFormInputDecoration(hintText: 'dd/mm/yyyy'),
+                decoration: heroFormInputDecoration(context, hintText: 'dd/mm/yyyy'),
                 enabled: !_isSaving,
                 validator: _validateDeadline,
               ),
@@ -287,6 +285,8 @@ class _PriorityOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -296,24 +296,32 @@ class _PriorityOption extends StatelessWidget {
           height: 56,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFEDEAF7) : const Color(0xFFF5F6FA),
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.15)
+                : appTheme.inputFill,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? AppColors.primary : const Color(0xFFE8EAF2),
+              color: isSelected ? AppColors.primary : appTheme.inputBorder,
             ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: const Color(0xFF464552), size: 26),
+              Icon(
+                icon,
+                color: isSelected ? AppColors.primary : appTheme.textSecondary,
+                size: 26,
+              ),
               const SizedBox(width: 10),
               Flexible(
                 child: Text(
                   label,
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF464552),
+                  style: TextStyle(
+                    color: isSelected
+                        ? appTheme.textPrimary
+                        : appTheme.textSecondary,
                     fontSize: 16,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w400,

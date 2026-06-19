@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../config/theme/app_theme_extension.dart';
 import 'task_card.dart';
 
 class SwipeableTaskCard extends StatelessWidget {
@@ -28,20 +29,26 @@ class SwipeableTaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final taskCard = TaskCard(
+      title: title,
+      subject: subject,
+      deadline: deadline,
+      isChecked: isChecked,
+      onChanged: onChanged,
+      onTap: onTap,
+    );
+
+    if (isChecked) {
+      return taskCard;
+    }
+
     return Dismissible(
       key: ValueKey(dismissKey),
       direction: DismissDirection.endToStart,
       confirmDismiss: (_) => onConfirmDelete(),
       onDismissed: (_) => onDismissed(),
       background: const _TaskDeleteBackground(),
-      child: TaskCard(
-        title: title,
-        subject: subject,
-        deadline: deadline,
-        isChecked: isChecked,
-        onChanged: onChanged,
-        onTap: onTap,
-      ),
+      child: taskCard,
     );
   }
 }
@@ -57,11 +64,11 @@ class _TaskDeleteBackground extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFF8989),
         borderRadius: BorderRadius.circular(15),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x66587DBD),
+            color: context.appTheme.shadow,
             blurRadius: 4,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),

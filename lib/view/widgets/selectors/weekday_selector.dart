@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_theme_extension.dart';
 import '../../../config/theme/app_text_styles.dart';
 
 class WeekdaySelector extends StatelessWidget {
@@ -32,18 +32,22 @@ class WeekdaySelector extends StatelessWidget {
               height: 34,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF7B79BF) : Colors.white,
+                color: isSelected
+                    ? const Color(0xFF7B79BF)
+                    : context.appTheme.inputFill,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: isSelected
                       ? const Color(0xFF7B79BF)
-                      : AppColors.textMuted,
+                      : context.appTheme.inputBorder,
                 ),
               ),
               child: Text(
                 options[index],
                 style: AppTextStyles.bodyRegular.copyWith(
-                  color: Colors.black,
+                  color: isSelected
+                      ? Colors.white
+                      : context.appTheme.textPrimary,
                   fontSize: 12,
                   height: 1,
                 ),

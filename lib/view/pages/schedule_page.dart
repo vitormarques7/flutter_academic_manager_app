@@ -7,6 +7,8 @@ import '../../models/academic_subject.dart';
 import '../../models/academic_task.dart';
 import '../../repositories/subject_repository.dart';
 import '../../repositories/task_repository.dart';
+import '../../config/theme/app_theme_extension.dart';
+import '../widgets/common/empty_state_card.dart';
 import '../widgets/common/page_header.dart';
 
 class SchedulePage extends StatefulWidget {
@@ -34,86 +36,105 @@ class _SchedulePageState extends State<SchedulePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: StreamBuilder<List<AcademicSubject>>(
-          stream: _subjectRepository.watchSubjects(),
-          builder: (context, subjectsSnapshot) {
-            return StreamBuilder<List<AcademicTask>>(
-              stream: _taskRepository.watchTasks(),
-              builder: (context, tasksSnapshot) {
-                final isLoading =
-                    (subjectsSnapshot.connectionState ==
-                            ConnectionState.waiting &&
-                        !subjectsSnapshot.hasData) ||
-                    (tasksSnapshot.connectionState ==
-                            ConnectionState.waiting &&
-                        !tasksSnapshot.hasData);
+    return SafeArea(
+      child: StreamBuilder<List<AcademicSubject>>(
+        stream: _subjectRepository.watchSubjects(),
+        builder: (context, subjectsSnapshot) {
+          return StreamBuilder<List<AcademicTask>>(
+            stream: _taskRepository.watchTasks(),
+            builder: (context, tasksSnapshot) {
+              final isLoading =
+                  (subjectsSnapshot.connectionState ==
+                          ConnectionState.waiting &&
+                      !subjectsSnapshot.hasData) ||
+                  (tasksSnapshot.connectionState == ConnectionState.waiting &&
+                      !tasksSnapshot.hasData);
 
-                final subjects = subjectsSnapshot.data ?? [];
-                final tasks = tasksSnapshot.data ?? [];
-                final selectedActivities = _activitiesForDay(
-                  _selectedDay,
-                  subjects: subjects,
-                  tasks: tasks,
-                );
+              final subjects = subjectsSnapshot.data ?? [];
+              final tasks = tasksSnapshot.data ?? [];
+              final selectedActivities = _activitiesForDay(
+                _selectedDay,
+                subjects: subjects,
+                tasks: tasks,
+              );
 
+              if (subjectsSnapshot.hasError || tasksSnapshot.hasError) {
                 return ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(
-                    context,
-                  ).copyWith(overscroll: false),
+                  behavior: ScrollConfiguration.of(context)
+                      .copyWith(overscroll: false),
                   child: SingleChildScrollView(
                     physics: const ClampingScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-                    child: Column(
+                    child: const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const PageHeader(title: 'Seu Horário'),
-                        const SizedBox(height: 24),
-                        if (isLoading)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 48),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          )
-                        else ...[
-                          _CalendarCard(
-                            focusedDay: _focusedDay,
-                            selectedDay: _selectedDay,
-                            calendarFormat: _calendarFormat,
-                            subjects: subjects,
-                            tasks: tasks,
-                            onDaySelected: (selectedDay, focusedDay) {
-                              setState(() {
-                                _selectedDay = _dateOnly(selectedDay);
-                                _focusedDay = focusedDay;
-                              });
-                            },
-                            onPageChanged: (focusedDay) {
-                              setState(() => _focusedDay = focusedDay);
-                            },
-                            onFormatChanged: (format) {
-                              setState(() => _calendarFormat = format);
-                            },
-                          ),
-                          const SizedBox(height: 24),
-                          _DayActivitiesSection(
-                            selectedDay: _selectedDay,
-                            activities: selectedActivities,
-                          ),
-                        ],
+                        PageHeader(title: 'Seu Horário'),
+                        SizedBox(height: 24),
+                        EmptyStateCard(
+                          icon: Icons.cloud_off_outlined,
+                          title: 'Erro ao carregar o horário',
+                          subtitle:
+                              'Não foi possível carregar suas aulas e tarefas agora.',
+                        ),
                       ],
                     ),
                   ),
                 );
-              },
-            );
-          },
-        ),
+              }
+
+              return ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context)
+                    .copyWith(overscroll: false),
+                child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const PageHeader(title: 'Seu Horário'),
+                      const SizedBox(height: 24),
+                      if (isLoading)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 48),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        )
+                      else ...[
+                        _CalendarCard(
+                          focusedDay: _focusedDay,
+                          selectedDay: _selectedDay,
+                          calendarFormat: _calendarFormat,
+                          subjects: subjects,
+                          tasks: tasks,
+                          onDaySelected: (selectedDay, focusedDay) {
+                            setState(() {
+                              _selectedDay = _dateOnly(selectedDay);
+                              _focusedDay = focusedDay;
+                            });
+                          },
+                          onPageChanged: (focusedDay) {
+                            setState(() => _focusedDay = focusedDay);
+                          },
+                          onFormatChanged: (format) {
+                            setState(() => _calendarFormat = format);
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        _DayActivitiesSection(
+                          selectedDay: _selectedDay,
+                          activities: selectedActivities,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -127,11 +148,13 @@ class ScheduleActivity {
   final String title;
   final String subtitle;
   final IconData icon;
+  final bool isCompleted;
 
   const ScheduleActivity({
     required this.title,
     required this.subtitle,
     required this.icon,
+    this.isCompleted = false,
   });
 }
 
@@ -150,12 +173,17 @@ List<ScheduleActivity> _activitiesForDay(
     activities.add(
       ScheduleActivity(
         title: task.title,
-        subtitle: task.subject.isEmpty
-            ? 'Tarefa'
-            : 'Tarefa · ${task.subject}',
-        icon: task.visualPriority == 'Prova'
-            ? Icons.edit_square
-            : Icons.assignment_outlined,
+        subtitle: task.isChecked
+            ? 'Concluída · ${task.subject.isEmpty ? 'Tarefa' : task.subject}'
+            : task.subject.isEmpty
+                ? 'Tarefa'
+                : 'Tarefa · ${task.subject}',
+        icon: task.isChecked
+            ? Icons.check_circle_outline
+            : task.visualPriority == 'Prova'
+                ? Icons.edit_square
+                : Icons.assignment_outlined,
+        isCompleted: task.isChecked,
       ),
     );
   }
@@ -230,18 +258,20 @@ class _CalendarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: appTheme.surface,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: const Color(0xFFE2E4F0)),
-        boxShadow: const [
+        border: Border.all(color: appTheme.inputBorder),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x66587DBD),
+            color: appTheme.shadow,
             blurRadius: 4,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -270,40 +300,42 @@ class _CalendarCard extends StatelessWidget {
           formatButtonVisible: true,
           titleCentered: false,
           formatButtonDecoration: BoxDecoration(
-            color: const Color(0xFFFFE8CC),
+            color: appTheme.badgeBackground,
             borderRadius: BorderRadius.circular(16),
           ),
-          formatButtonTextStyle: const TextStyle(
-            color: Color(0xFF191820),
+          formatButtonTextStyle: TextStyle(
+            color: appTheme.textPrimary,
             fontSize: 13,
             fontFamily: 'Inter',
             fontWeight: FontWeight.w600,
           ),
-          titleTextStyle: const TextStyle(
-            color: Color(0xFF191820),
+          titleTextStyle: TextStyle(
+            color: appTheme.textPrimary,
             fontSize: 18,
             fontFamily: 'Inter',
             fontWeight: FontWeight.w600,
           ),
-          leftChevronIcon: const Icon(
+          leftChevronIcon: Icon(
             Icons.chevron_left,
-            color: Color(0xFF191820),
+            color: appTheme.textPrimary,
           ),
-          rightChevronIcon: const Icon(
+          rightChevronIcon: Icon(
             Icons.chevron_right,
-            color: Color(0xFF191820),
+            color: appTheme.textPrimary,
           ),
         ),
         daysOfWeekStyle: DaysOfWeekStyle(
-          weekdayStyle: _calendarLabelStyle(color: const Color(0xFF656565)),
+          weekdayStyle: _calendarLabelStyle(
+            color: appTheme.textMuted,
+          ),
           weekendStyle: _calendarLabelStyle(color: AppColors.primary),
         ),
         calendarStyle: CalendarStyle(
           outsideDaysVisible: true,
           cellMargin: const EdgeInsets.all(6),
-          defaultTextStyle: _dayTextStyle(),
+          defaultTextStyle: _dayTextStyle(color: appTheme.textPrimary),
           weekendTextStyle: _dayTextStyle(color: AppColors.primary),
-          outsideTextStyle: _dayTextStyle(color: const Color(0xFFB0B0B0)),
+          outsideTextStyle: _dayTextStyle(color: appTheme.textMuted),
           selectedTextStyle: _dayTextStyle(color: Colors.white),
           todayTextStyle: _dayTextStyle(color: AppColors.primary),
           selectedDecoration: const BoxDecoration(
@@ -315,7 +347,7 @@ class _CalendarCard extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           markerDecoration: const BoxDecoration(
-            color: Color(0xFF191820),
+            color: AppColors.primary,
             shape: BoxShape.circle,
           ),
           markersAlignment: Alignment.bottomCenter,
@@ -336,7 +368,7 @@ class _CalendarCard extends StatelessWidget {
     );
   }
 
-  static TextStyle _dayTextStyle({Color color = const Color(0xFF191820)}) {
+  static TextStyle _dayTextStyle({required Color color}) {
     return TextStyle(
       color: color,
       fontSize: 15,
@@ -357,6 +389,7 @@ class _DayActivitiesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
     final dayLabel = _selectedDayLabel(selectedDay);
 
     return Column(
@@ -364,8 +397,8 @@ class _DayActivitiesSection extends StatelessWidget {
       children: [
         Text(
           dayLabel,
-          style: const TextStyle(
-            color: Color(0xFF191820),
+          style: TextStyle(
+            color: appTheme.textPrimary,
             fontSize: 16,
             fontFamily: 'Inter',
             fontWeight: FontWeight.w600,
@@ -387,6 +420,7 @@ class _DayActivitiesSection extends StatelessWidget {
                 title: activity.title,
                 subtitle: activity.subtitle,
                 icon: activity.icon,
+                isCompleted: activity.isCompleted,
               ),
             ),
           ),
@@ -409,67 +443,101 @@ class _ActivityCard extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final bool isPlaceholder;
+  final bool isCompleted;
 
   const _ActivityCard({
     required this.title,
     required this.subtitle,
     required this.icon,
     this.isPlaceholder = false,
+    this.isCompleted = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isPlaceholder
-              ? const Color(0xFFD7D9E5)
-              : const Color(0xFF191820),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: isPlaceholder ? const Color(0xFF8B8B97) : AppColors.primary,
-            size: 22,
+    final appTheme = context.appTheme;
+
+    return Opacity(
+      opacity: isCompleted ? 0.72 : 1,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isCompleted
+              ? appTheme.inputFill
+              : appTheme.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isCompleted
+                ? AppColors.primary.withValues(alpha: 0.35)
+                : appTheme.inputBorder,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: isPlaceholder
-                        ? const Color(0xFF656565)
-                        : const Color(0xFF191820),
-                    fontSize: 15,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (subtitle.isNotEmpty) ...[
-                  const SizedBox(height: 2),
+          boxShadow: [
+            BoxShadow(
+              color: appTheme.shadow,
+              blurRadius: 4,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isPlaceholder
+                  ? appTheme.textMuted
+                  : isCompleted
+                      ? AppColors.primary.withValues(alpha: 0.7)
+                      : AppColors.primary,
+              size: 22,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: Color(0xFF656565),
-                      fontSize: 13,
+                    title,
+                    style: TextStyle(
+                      color: isPlaceholder
+                          ? appTheme.textMuted
+                          : appTheme.textPrimary,
+                      fontSize: 15,
                       fontFamily: 'Inter',
-                      fontWeight: FontWeight.w400,
+                      fontWeight: FontWeight.w600,
+                      decoration: isCompleted
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
+                      decorationColor: appTheme.textMuted,
                     ),
                   ),
+                  if (subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: isCompleted
+                            ? AppColors.primary.withValues(alpha: 0.85)
+                            : appTheme.textMuted,
+                        fontSize: 13,
+                        fontFamily: 'Inter',
+                        fontWeight: isCompleted
+                            ? FontWeight.w600
+                            : FontWeight.w400,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+            if (isCompleted)
+              Icon(
+                Icons.check_circle,
+                color: AppColors.primary.withValues(alpha: 0.85),
+                size: 20,
+              ),
+          ],
+        ),
       ),
     );
   }

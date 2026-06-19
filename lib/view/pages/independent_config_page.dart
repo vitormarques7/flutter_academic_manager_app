@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
 import '../../models/academic_subject.dart';
+import '../../models/user_profile.dart';
 import '../../repositories/subject_repository.dart';
+import '../../repositories/user_profile_repository.dart';
 import '../widgets/buttons/cancel_button.dart';
 import '../widgets/buttons/primary_button.dart';
 import '../widgets/common/section_label.dart';
@@ -22,6 +24,7 @@ class _IndependentConfigPageState extends State<IndependentConfigPage> {
   final formKey = GlobalKey<FormState>();
   final _disciplineSetupKey = GlobalKey<DisciplineSetupListState>();
   final _subjectRepository = SubjectRepository();
+  final _profileRepository = UserProfileRepository();
 
   final goalController = TextEditingController();
 
@@ -55,6 +58,14 @@ class _IndependentConfigPageState extends State<IndependentConfigPage> {
               .toList(),
         );
       }
+
+      await _profileRepository.saveProfile(
+        UserProfileInput(
+          goal: goalController.text.trim(),
+          studentType: 'independente',
+          onboardingCompleted: true,
+        ),
+      );
 
       if (mounted) {
         AppRoutes.toHome(context);

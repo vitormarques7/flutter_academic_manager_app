@@ -1,5 +1,6 @@
-// Card de disciplina com nome, professor, barra de frequência e média atual.
 import 'package:flutter/material.dart';
+
+import '../../../config/theme/app_theme_extension.dart';
 
 class SubjectCard extends StatelessWidget {
   final String name;
@@ -19,18 +20,20 @@ class SubjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xFFEFF0FB),
+          color: appTheme.card,
           borderRadius: BorderRadius.circular(15),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: Color(0x66587DBD),
+              color: appTheme.shadow,
               blurRadius: 4,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -46,8 +49,8 @@ class SubjectCard extends StatelessWidget {
                     children: [
                       Text(
                         name,
-                        style: const TextStyle(
-                          color: Color(0xFF191820),
+                        style: TextStyle(
+                          color: appTheme.textPrimary,
                           fontSize: 16,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w700,
@@ -57,8 +60,8 @@ class SubjectCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         teacher,
-                        style: const TextStyle(
-                          color: Color(0xFF191820),
+                        style: TextStyle(
+                          color: appTheme.textPrimary,
                           fontSize: 14,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -69,10 +72,10 @@ class SubjectCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Frequência',
                     style: TextStyle(
-                      color: Color(0xFF191820),
+                      color: appTheme.textPrimary,
                       fontSize: 14,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
@@ -99,10 +102,10 @@ class SubjectCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Text(
+                Text(
                   'Média atual',
                   style: TextStyle(
-                    color: Color(0xFF191820),
+                    color: appTheme.textPrimary,
                     fontSize: 14,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w500,
@@ -112,8 +115,8 @@ class SubjectCard extends StatelessWidget {
                 ),
                 Text(
                   average.toStringAsFixed(1),
-                  style: const TextStyle(
-                    color: Color(0xFF191820),
+                  style: TextStyle(
+                    color: appTheme.textPrimary,
                     fontSize: 48,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w600,

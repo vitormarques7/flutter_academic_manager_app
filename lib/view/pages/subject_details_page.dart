@@ -1,22 +1,31 @@
 import 'package:flutter/material.dart';
+
 import '../../config/routes/app_routes.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
+import '../../config/theme/app_theme_extension.dart';
+import '../../models/academic_subject.dart';
+import '../../models/academic_task.dart';
+import '../../repositories/task_repository.dart';
 import '../widgets/common/app_bottom_nav_bar.dart';
+import '../widgets/common/empty_state_card.dart';
 
 class SubjectDetailsPage extends StatelessWidget {
-  final String name;
-  final String teacher;
-  final double average;
-  final int workload;
+  final AcademicSubject subject;
 
-  const SubjectDetailsPage({
-    super.key,
-    required this.name,
-    required this.teacher,
-    required this.average,
-    required this.workload,
-  });
+  const SubjectDetailsPage({super.key, required this.subject});
+
+  static final _taskRepository = TaskRepository();
+
+  static const _weekdayLabels = [
+    'Domingo',
+    'Segunda',
+    'Terça',
+    'Quarta',
+    'Quinta',
+    'Sexta',
+    'Sábado',
+  ];
 
   void _onBottomNavTap(BuildContext context, int index) {
     if (index == 1) {
@@ -36,8 +45,10 @@ class SubjectDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: appTheme.background,
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 1,
         onTap: (index) => _onBottomNavTap(context, index),
@@ -55,25 +66,61 @@ class SubjectDetailsPage extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(24, 37, 24, 34),
                 sliver: SliverList.list(
                   children: [
-                    _SubjectSummaryCard(
-                      name: name,
-                      teacher: teacher,
-                      average: average,
-                      workload: workload,
-                    ),
+                    _SubjectSummaryCard(subject: subject),
                     const SizedBox(height: 36),
-                    const _SectionTitle(label: 'Avaliações'),
-                    const SizedBox(height: 28),
-                    const _EmptyActionCard(
-                      actionLabel: 'Avaliações',
-                      buttonWidth: 210,
-                    ),
+                    const _SectionTitle(label: 'Horário'),
+                    const SizedBox(height: 16),
+                    _ScheduleSection(subject: subject),
                     const SizedBox(height: 36),
                     const _SectionTitle(label: 'Tarefas relacionadas'),
-                    const SizedBox(height: 28),
-                    const _EmptyActionCard(
-                      actionLabel: 'Tarefas',
-                      buttonWidth: 210,
+                    const SizedBox(height: 16),
+                    StreamBuilder<List<AcademicTask>>(
+                      stream: _taskRepository.watchTasks(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                                ConnectionState.waiting &&
+                            !snapshot.hasData) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 24),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          );
+                        }
+
+                        if (snapshot.hasError) {
+                          return const EmptyStateCard(
+                            icon: Icons.cloud_off_outlined,
+                            title: 'Erro ao carregar tarefas',
+                            subtitle:
+                                'Não foi possível carregar as tarefas desta disciplina.',
+                          );
+                        }
+
+                        final relatedTasks = (snapshot.data ?? [])
+                            .where((task) => task.subject == subject.name)
+                            .toList();
+
+                        if (relatedTasks.isEmpty) {
+                          return const EmptyStateCard(
+                            icon: Icons.assignment_outlined,
+                            title: 'Nenhuma tarefa vinculada',
+                            subtitle:
+                                'As tarefas criadas para esta disciplina aparecerão aqui.',
+                          );
+                        }
+
+                        return Column(
+                          children: relatedTasks.map((task) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _RelatedTaskTile(task: task),
+                            );
+                          }).toList(),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -81,6 +128,188 @@ class SubjectDetailsPage extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  static String _weekdayLabel(int index) {
+    if (index < 0 || index >= _weekdayLabels.length) {
+      return 'Dia não informado';
+    }
+    return _weekdayLabels[index];
+  }
+}
+
+class _ScheduleSection extends StatelessWidget {
+  final AcademicSubject subject;
+
+  const _ScheduleSection({required this.subject});
+
+  @override
+  Widget build(BuildContext context) {
+    if (subject.schedule.isEmpty) {
+      return const EmptyStateCard(
+        icon: Icons.schedule_outlined,
+        title: 'Sem horário cadastrado',
+        subtitle: 'Edite a disciplina para adicionar dias e horários de aula.',
+      );
+    }
+
+    return Column(
+      children: subject.schedule.map((entry) {
+        final weekdayIndex = entry['weekdayIndex'] as int? ?? 0;
+        final startTime = entry['startTime'] as String? ?? '';
+        final endTime = entry['endTime'] as String? ?? '';
+        final timeLabel = startTime.isEmpty && endTime.isEmpty
+            ? 'Horário não informado'
+            : '$startTime${endTime.isEmpty ? '' : ' - $endTime'}';
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _ScheduleEntryTile(
+            weekday: SubjectDetailsPage._weekdayLabel(weekdayIndex),
+            timeLabel: timeLabel,
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _RelatedTaskTile extends StatelessWidget {
+  final AcademicTask task;
+
+  const _RelatedTaskTile({required this.task});
+
+  @override
+  Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: appTheme.card,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: appTheme.shadow,
+            blurRadius: 4,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            task.visualPriority == 'Prova'
+                ? Icons.edit_square
+                : Icons.assignment_outlined,
+            color: task.isChecked
+                ? AppColors.primary.withValues(alpha: 0.7)
+                : AppColors.primary,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  task.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.headline3.copyWith(
+                    color: appTheme.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    decoration: task.isChecked
+                        ? TextDecoration.lineThrough
+                        : TextDecoration.none,
+                    decorationColor: appTheme.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  task.isChecked ? 'Concluída · ${task.deadlineLabel}' : task.deadlineLabel,
+                  style: AppTextStyles.bodyRegular.copyWith(
+                    color: task.isChecked
+                        ? AppColors.primary.withValues(alpha: 0.85)
+                        : appTheme.textSecondary,
+                    fontSize: 14,
+                    fontWeight:
+                        task.isChecked ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (task.isChecked)
+            Icon(
+              Icons.check_circle,
+              color: AppColors.primary.withValues(alpha: 0.85),
+              size: 22,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScheduleEntryTile extends StatelessWidget {
+  final String weekday;
+  final String timeLabel;
+
+  const _ScheduleEntryTile({
+    required this.weekday,
+    required this.timeLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: appTheme.card,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: appTheme.shadow,
+            blurRadius: 4,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.schedule, color: AppColors.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  weekday,
+                  style: AppTextStyles.headline3.copyWith(
+                    color: appTheme.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  timeLabel,
+                  style: AppTextStyles.bodyRegular.copyWith(
+                    color: appTheme.textSecondary,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -109,19 +338,23 @@ class _DetailsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
     return Container(
       height: 62,
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFFE4E4FF), width: 1)),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: appTheme.inputBorder, width: 1),
+        ),
       ),
       child: Row(
         children: [
           const SizedBox(width: 13),
           IconButton(
             onPressed: () => Navigator.of(context).maybePop(),
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios_new_rounded,
-              color: AppColors.textDark,
+              color: appTheme.textPrimary,
               size: 32,
             ),
             padding: EdgeInsets.zero,
@@ -132,6 +365,7 @@ class _DetailsHeader extends StatelessWidget {
             'Detalhes da disciplina',
             textAlign: TextAlign.center,
             style: AppTextStyles.headline3.copyWith(
+              color: appTheme.textPrimary,
               fontWeight: FontWeight.w600,
               height: 0.92,
               letterSpacing: 0,
@@ -144,31 +378,25 @@ class _DetailsHeader extends StatelessWidget {
 }
 
 class _SubjectSummaryCard extends StatelessWidget {
-  final String name;
-  final String teacher;
-  final double average;
-  final int workload;
+  final AcademicSubject subject;
 
-  const _SubjectSummaryCard({
-    required this.name,
-    required this.teacher,
-    required this.average,
-    required this.workload,
-  });
+  const _SubjectSummaryCard({required this.subject});
 
   @override
   Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
     return Container(
       width: double.infinity,
       height: 133,
       decoration: ShapeDecoration(
-        color: const Color(0xFFEFF0FB),
+        color: appTheme.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        shadows: const [
+        shadows: [
           BoxShadow(
-            color: Color(0x66587DBD),
+            color: appTheme.shadow,
             blurRadius: 4,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -180,10 +408,11 @@ class _SubjectSummaryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  subject.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.headline3.copyWith(
+                    color: appTheme.textPrimary,
                     fontWeight: FontWeight.w600,
                     height: 0.92,
                     letterSpacing: 0,
@@ -191,30 +420,30 @@ class _SubjectSummaryCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  teacher,
+                  subject.teacher,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.bodyRegular.copyWith(
-                    color: AppColors.textDark,
+                    color: appTheme.textSecondary,
                     letterSpacing: -1,
                   ),
                 ),
                 const Spacer(),
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.access_time,
-                      color: AppColors.textDark,
+                      color: appTheme.textSecondary,
                       size: 24,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Carga horária: ${workload}h',
+                        'Carga horária: ${subject.workload}h',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.bodyRegular.copyWith(
-                          color: AppColors.textDark,
+                          color: appTheme.textSecondary,
                           letterSpacing: -1,
                         ),
                       ),
@@ -235,15 +464,15 @@ class _SubjectSummaryCard extends StatelessWidget {
                   'Média geral',
                   maxLines: 1,
                   style: AppTextStyles.bodyRegular.copyWith(
-                    color: AppColors.textDark,
+                    color: appTheme.textSecondary,
                     letterSpacing: -1,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  average.toStringAsFixed(1),
-                  style: const TextStyle(
-                    color: AppColors.textDark,
+                  subject.average.toStringAsFixed(1),
+                  style: TextStyle(
+                    color: appTheme.textPrimary,
                     fontSize: 40,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w500,
@@ -267,115 +496,16 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appTheme = context.appTheme;
+
     return Text(
       label,
-      style: const TextStyle(
-        color: AppColors.textDark,
+      style: TextStyle(
+        color: appTheme.textPrimary,
         fontSize: 20,
         fontFamily: 'Inter',
         fontWeight: FontWeight.w700,
         height: 1.1,
-      ),
-    );
-  }
-}
-
-class _EmptyActionCard extends StatelessWidget {
-  final String actionLabel;
-  final double buttonWidth;
-
-  const _EmptyActionCard({
-    required this.actionLabel,
-    required this.buttonWidth,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 262,
-      decoration: ShapeDecoration(
-        color: const Color(0xFFEFF0FB),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        shadows: const [
-          BoxShadow(
-            color: Color(0x66587DBD),
-            blurRadius: 4,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          const Positioned(left: 17, right: 17, top: 71, child: _CardDivider()),
-          const Positioned(
-            left: 17,
-            right: 17,
-            top: 148,
-            child: _CardDivider(),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 20,
-            child: Center(
-              child: _AddEntryButton(label: actionLabel, width: buttonWidth),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CardDivider extends StatelessWidget {
-  const _CardDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Divider(height: 1, thickness: 1, color: Color(0x4C514EB6));
-  }
-}
-
-class _AddEntryButton extends StatelessWidget {
-  final String label;
-  final double width;
-
-  const _AddEntryButton({required this.label, required this.width});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: 44,
-      decoration: ShapeDecoration(
-        color: AppColors.primary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        shadows: const [
-          BoxShadow(
-            color: Color(0x7F514EB6),
-            blurRadius: 4,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.add, color: AppColors.background, size: 28),
-          const SizedBox(width: 2),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.background,
-              fontSize: 20,
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w700,
-              height: 1.1,
-            ),
-          ),
-        ],
       ),
     );
   }

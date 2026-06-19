@@ -200,7 +200,6 @@ class _SubjectDialogState extends State<SubjectDialog> {
       title: 'Nova Disciplina',
       subtitle: 'Organize sua grade acadêmica',
       badge: 'Cadastro',
-      onBack: () => Navigator.of(context).maybePop(),
       onSave: _save,
       formContent: Form(
         key: _formKey,
@@ -212,7 +211,7 @@ class _SubjectDialogState extends State<SubjectDialog> {
               child: TextFormField(
                 controller: _nameController,
                 textInputAction: TextInputAction.next,
-                decoration: heroFormInputDecoration(hintText: 'Ex: Programação'),
+                decoration: heroFormInputDecoration(context,hintText: 'Ex: Programação'),
                 validator: (value) {
                   if ((value?.trim() ?? '').isEmpty) {
                     return 'Informe o nome da disciplina.';
@@ -227,7 +226,7 @@ class _SubjectDialogState extends State<SubjectDialog> {
               child: TextFormField(
                 controller: _teacherController,
                 textInputAction: TextInputAction.next,
-                decoration: heroFormInputDecoration(hintText: 'Ex: Prof. Alguém'),
+                decoration: heroFormInputDecoration(context,hintText: 'Ex: Prof. Alguém'),
               ),
             ),
             const SizedBox(height: 20),
@@ -237,7 +236,7 @@ class _SubjectDialogState extends State<SubjectDialog> {
                 controller: _workloadController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: heroFormInputDecoration(hintText: 'Ex: 60'),
+                decoration: heroFormInputDecoration(context,hintText: 'Ex: 60'),
                 validator: _validateWorkload,
               ),
             ),

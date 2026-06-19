@@ -3,12 +3,15 @@ import '../../models/academic_task.dart';
 import '../../repositories/subject_repository.dart';
 import '../../repositories/task_repository.dart';
 import '../../config/theme/app_colors.dart';
+import '../../config/theme/app_theme_extension.dart';
 import '../widgets/common/page_header.dart';
 import '../widgets/common/section_label.dart';
 import '../widgets/selectors/task_filter_chip.dart';
 import '../widgets/cards/swipeable_task_card.dart';
+import '../widgets/common/empty_state_card.dart';
 import '../widgets/common/floating_add_button.dart';
 import '../widgets/common/hero_form_sheet.dart';
+import '../shell/main_shell_scope.dart';
 import '../widgets/dialogs/task_dialog.dart';
 
 class TasksPage extends StatefulWidget {
@@ -49,6 +52,32 @@ class _TasksPageState extends State<TasksPage> {
     }
 
     if (!mounted) return;
+
+    if (subjects.isEmpty) {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Cadastre uma disciplina'),
+          content: const Text(
+            'Para criar uma tarefa, você precisa ter ao menos uma disciplina cadastrada.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                MainShellScope.maybeOf(context)?.selectTab(1);
+              },
+              child: const Text('Ir para Disciplinas'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
 
     await showHeroFormDialog<void>(
       context: context,
@@ -136,19 +165,28 @@ class _TasksPageState extends State<TasksPage> {
   }
 
   void _onFilterTap() {
-    // TODO: implementar dropdown de filtro (Todas, Pendentes, Concluídas)
+    final appTheme = context.appTheme;
+
     showModalBottomSheet(
       context: context,
-      builder: (_) => Column(
+      backgroundColor: appTheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => Column(
         mainAxisSize: MainAxisSize.min,
         children: ['Todas', 'Pendentes', 'Concluídas'].map((option) {
           return ListTile(
-            title: Text(option),
+            title: Text(
+              option,
+              style: TextStyle(color: appTheme.textPrimary),
+            ),
             selected: _selectedFilter == option,
-            selectedColor: const Color(0xFF514EB6),
+            selectedColor: AppColors.primary,
+            iconColor: AppColors.primary,
             onTap: () {
               setState(() => _selectedFilter = option);
-              Navigator.pop(context);
+              Navigator.pop(sheetContext);
             },
           );
         }).toList(),
@@ -158,17 +196,18 @@ class _TasksPageState extends State<TasksPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            ScrollConfiguration(
+    return SafeArea(
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ScrollConfiguration(
               behavior: ScrollConfiguration.of(
                 context,
               ).copyWith(overscroll: false),
               child: SingleChildScrollView(
-                physics: const ClampingScrollPhysics(),
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: ClampingScrollPhysics(),
+                ),
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,17 +241,34 @@ class _TasksPageState extends State<TasksPage> {
                         }
 
                         if (snapshot.hasError) {
-                          return const _TasksStateMessage(
-                            message:
+                          return const EmptyStateCard(
+                            icon: Icons.cloud_off_outlined,
+                            title: 'Erro ao carregar tarefas',
+                            subtitle:
                                 'Não foi possível carregar suas tarefas agora.',
                           );
                         }
 
-                        final tasks = _filterTasks(snapshot.data ?? []);
+                        final allTasks = snapshot.data ?? [];
+                        final tasks = _filterTasks(allTasks);
+                        final hasActiveFilter = _selectedFilter != 'Todas';
 
                         if (tasks.isEmpty) {
-                          return const _TasksStateMessage(
-                            message: 'Nenhuma tarefa encontrada.',
+                          return EmptyStateCard(
+                            icon: hasActiveFilter
+                                ? Icons.filter_alt_off_outlined
+                                : Icons.assignment_outlined,
+                            title: hasActiveFilter
+                                ? 'Nenhuma tarefa neste filtro'
+                                : 'Nenhuma tarefa cadastrada',
+                            subtitle: hasActiveFilter
+                                ? 'Altere o filtro acima para ver outras tarefas.'
+                                : 'Toque no botão + para criar sua primeira tarefa.',
+                            actionLabel:
+                                hasActiveFilter ? null : 'Criar tarefa',
+                            onAction: hasActiveFilter
+                                ? null
+                                : () => _openTaskDialog(),
                           );
                         }
 
@@ -228,10 +284,17 @@ class _TasksPageState extends State<TasksPage> {
                                 isChecked: task.isChecked,
                                 onConfirmDelete: () => _confirmDeleteTask(task),
                                 onDismissed: () => _deleteTask(task),
-                                onChanged: (value) {
-                                  _updateTaskCompletion(task, value ?? false);
-                                },
-                                onTap: () => _openTaskDialog(task: task),
+                                onChanged: task.isChecked
+                                    ? null
+                                    : (value) {
+                                        _updateTaskCompletion(
+                                          task,
+                                          value ?? false,
+                                        );
+                                      },
+                                onTap: task.isChecked
+                                    ? null
+                                    : () => _openTaskDialog(task: task),
                               ),
                             );
                           }).toList(),
@@ -242,40 +305,13 @@ class _TasksPageState extends State<TasksPage> {
                 ),
               ),
             ),
-
-            // Botão flutuante
-            Positioned(
-              right: 24,
-              bottom: 16,
-              child: FloatingAddButton(onTap: () => _openTaskDialog()),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TasksStateMessage extends StatelessWidget {
-  final String message;
-
-  const _TasksStateMessage({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 32),
-      child: Center(
-        child: Text(
-          message,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Color(0xFF464552),
-            fontSize: 16,
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w500,
           ),
-        ),
+          Positioned(
+            right: 24,
+            bottom: 16,
+            child: FloatingAddButton(onTap: () => _openTaskDialog()),
+          ),
+        ],
       ),
     );
   }

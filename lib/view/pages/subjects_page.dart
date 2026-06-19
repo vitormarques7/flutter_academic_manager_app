@@ -6,6 +6,7 @@ import 'subject_details_page.dart';
 import '../widgets/common/page_header.dart';
 import '../widgets/common/section_label.dart';
 import '../widgets/inputs/search_field.dart';
+import '../widgets/common/empty_state_card.dart';
 import '../widgets/common/floating_add_button.dart';
 import '../widgets/common/hero_form_sheet.dart';
 import '../widgets/cards/swipeable_subject_card.dart';
@@ -167,18 +168,30 @@ class _SubjectsPageState extends State<SubjectsPage> {
                         }
 
                         if (snapshot.hasError) {
-                          return const _SubjectsStateMessage(
-                            message:
+                          return const EmptyStateCard(
+                            icon: Icons.cloud_off_outlined,
+                            title: 'Erro ao carregar disciplinas',
+                            subtitle:
                                 'Não foi possível carregar suas disciplinas agora.',
                           );
                         }
 
-                        final subjects = _filterSubjects(snapshot.data ?? []);
+                        final allSubjects = snapshot.data ?? [];
+                        final subjects = _filterSubjects(allSubjects);
+                        final isSearching =
+                            _searchController.text.trim().isNotEmpty;
 
                         if (subjects.isEmpty) {
-                          return const _SubjectsStateMessage(
-                            message:
-                                'Nenhuma disciplina cadastrada. Adicione uma no cadastro ou pelo botão +.',
+                          return EmptyStateCard(
+                            icon: isSearching
+                                ? Icons.search_off_outlined
+                                : Icons.menu_book_outlined,
+                            title: isSearching
+                                ? 'Nenhum resultado encontrado'
+                                : 'Nenhuma disciplina cadastrada',
+                            subtitle: isSearching
+                                ? 'Tente buscar por outro nome ou professor.'
+                                : 'Toque no botão + para adicionar sua primeira disciplina.',
                           );
                         }
 
@@ -199,10 +212,7 @@ class _SubjectsPageState extends State<SubjectsPage> {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
                                       builder: (_) => SubjectDetailsPage(
-                                        name: subject.name,
-                                        teacher: subject.teacher,
-                                        average: subject.average,
-                                        workload: subject.workload,
+                                        subject: subject,
                                       ),
                                     ),
                                   );
@@ -225,31 +235,6 @@ class _SubjectsPageState extends State<SubjectsPage> {
             child: FloatingAddButton(onTap: _openSubjectDialog),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SubjectsStateMessage extends StatelessWidget {
-  final String message;
-
-  const _SubjectsStateMessage({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 32),
-      child: Center(
-        child: Text(
-          message,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Color(0xFF464552),
-            fontSize: 16,
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w500,
-          ),
-        ),
       ),
     );
   }

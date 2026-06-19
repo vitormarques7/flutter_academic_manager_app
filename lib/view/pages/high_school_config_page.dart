@@ -4,7 +4,9 @@ import '../../config/routes/app_routes.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
 import '../../models/academic_subject.dart';
+import '../../models/user_profile.dart';
 import '../../repositories/subject_repository.dart';
+import '../../repositories/user_profile_repository.dart';
 import '../widgets/buttons/cancel_button.dart';
 import '../widgets/buttons/primary_button.dart';
 import '../widgets/common/section_label.dart';
@@ -22,6 +24,9 @@ class _HighSchoolConfigPageState extends State<HighSchoolConfigPage> {
   final formKey = GlobalKey<FormState>();
   final _disciplineSetupKey = GlobalKey<DisciplineSetupListState>();
   final _subjectRepository = SubjectRepository();
+  final _profileRepository = UserProfileRepository();
+
+  static const _seriesOptions = ['1º Ano', '2º Ano', '3º Ano', '4º Ano'];
 
   int _selectedSeriesIndex = 0;
   bool isLoading = false;
@@ -48,6 +53,14 @@ class _HighSchoolConfigPageState extends State<HighSchoolConfigPage> {
               .toList(),
         );
       }
+
+      await _profileRepository.saveProfile(
+        UserProfileInput(
+          periodLabel: _seriesOptions[_selectedSeriesIndex],
+          studentType: 'ensino_medio',
+          onboardingCompleted: true,
+        ),
+      );
 
       if (mounted) {
         AppRoutes.toHome(context);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../config/routes/app_routes.dart';
 import '../../../config/theme/app_colors.dart';
 import '../../../config/theme/app_text_styles.dart';
+import '../../../config/theme/app_theme_extension.dart';
 
 class PageHeader extends StatelessWidget {
   final String title;
@@ -36,7 +37,12 @@ class PageHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 16),
-        Text(title, style: AppTextStyles.headline2),
+        Text(
+          title,
+          style: AppTextStyles.headline2.copyWith(
+            color: context.appTheme.textPrimary,
+          ),
+        ),
       ],
     );
   }

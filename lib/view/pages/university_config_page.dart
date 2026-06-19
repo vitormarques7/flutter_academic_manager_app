@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
 import '../../models/academic_subject.dart';
+import '../../models/user_profile.dart';
 import '../../repositories/subject_repository.dart';
+import '../../repositories/user_profile_repository.dart';
 import '../widgets/buttons/cancel_button.dart';
 import '../widgets/buttons/primary_button.dart';
 import '../widgets/common/section_label.dart';
@@ -22,6 +24,7 @@ class _UniversityConfigPageState extends State<UniversityConfigPage> {
   final formKey = GlobalKey<FormState>();
   final _disciplineSetupKey = GlobalKey<DisciplineSetupListState>();
   final _subjectRepository = SubjectRepository();
+  final _profileRepository = UserProfileRepository();
 
   final courseController = TextEditingController();
 
@@ -56,6 +59,19 @@ class _UniversityConfigPageState extends State<UniversityConfigPage> {
               .toList(),
         );
       }
+
+      final periodLabel = selectedPeriod == null || selectedPeriod == 0
+          ? null
+          : '$selectedPeriodº período';
+
+      await _profileRepository.saveProfile(
+        UserProfileInput(
+          course: courseController.text.trim(),
+          periodLabel: periodLabel,
+          studentType: 'universitario',
+          onboardingCompleted: true,
+        ),
+      );
 
       if (mounted) {
         AppRoutes.toHome(context);
