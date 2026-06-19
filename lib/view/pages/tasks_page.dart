@@ -637,11 +637,8 @@ class _TasksOverview extends StatelessWidget {
     required int completed,
   }) {
     if (total == 0) return 'Crie sua primeira tarefa para montar seu radar.';
-    if (pending == 0) {
-      return '$completed de $total ${_plural(total, 'tarefa', 'tarefas')} concluídas.';
-    }
 
-    return '$completed concluídas de $total ${_plural(total, 'tarefa', 'tarefas')} no total.';
+    return '$completed ${_plural(completed, 'tarefa concluída', 'tarefas concluídas')} de $pending ${_plural(pending, 'tarefa pendente', 'tarefas pendentes')}.';
   }
 
   Color _radarColor(AppThemeColors colors, int pending) {
