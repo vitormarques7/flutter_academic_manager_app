@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum SubjectEventType {
   exam('Prova'),
+  revision('Revisão'),
   lecture('Palestra'),
   seminar('Seminário'),
   deadline('Entrega'),
@@ -34,6 +35,7 @@ class SubjectEvent {
   final DateTime eventDate;
   final int? startTimeMinutes;
   final int? endTimeMinutes;
+  final List<String> topicIds;
   final String description;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -48,6 +50,7 @@ class SubjectEvent {
     required this.eventDate,
     this.startTimeMinutes,
     this.endTimeMinutes,
+    this.topicIds = const [],
     required this.description,
     this.createdAt,
     this.updatedAt,
@@ -80,6 +83,7 @@ class SubjectEvent {
       eventDate: _readDate(data['eventDate']) ?? _dateOnly(DateTime.now()),
       startTimeMinutes: hasValidTimeRange ? startTimeMinutes : null,
       endTimeMinutes: hasValidTimeRange ? endTimeMinutes : null,
+      topicIds: _readStringList(data['topicIds']),
       description: _readString(data['description']) ?? '',
       createdAt: _readTimestamp(data['createdAt']),
       updatedAt: _readTimestamp(data['updatedAt']),
@@ -98,6 +102,7 @@ class SubjectEvent {
         'startTimeMinutes': startTimeMinutes,
         'endTimeMinutes': endTimeMinutes,
       },
+      'topicIds': topicIds,
       'description': description,
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
       if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
@@ -166,6 +171,19 @@ class SubjectEvent {
     return trimmed.isEmpty ? null : trimmed;
   }
 
+  static List<String> _readStringList(Object? value) {
+    if (value is! Iterable) return const [];
+
+    final result = value
+        .whereType<String>()
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toSet()
+        .toList();
+
+    return List.unmodifiable(result);
+  }
+
   static DateTime? _readDate(Object? value) {
     if (value is Timestamp) return _dateOnly(value.toDate());
     if (value is DateTime) return _dateOnly(value);
@@ -206,6 +224,7 @@ class SubjectEventInput {
   final DateTime eventDate;
   final int? startTimeMinutes;
   final int? endTimeMinutes;
+  final List<String> topicIds;
   final String description;
 
   const SubjectEventInput({
@@ -217,6 +236,7 @@ class SubjectEventInput {
     required this.eventDate,
     this.startTimeMinutes,
     this.endTimeMinutes,
+    this.topicIds = const [],
     this.description = '',
   });
 
@@ -256,6 +276,7 @@ class SubjectEventInput {
         'startTimeMinutes': FieldValue.delete(),
         'endTimeMinutes': FieldValue.delete(),
       },
+      'topicIds': SubjectEvent._readStringList(topicIds),
       'description': description.trim(),
       'updatedAt': FieldValue.serverTimestamp(),
     };

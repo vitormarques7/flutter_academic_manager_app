@@ -7,11 +7,17 @@ import '../../models/assessment.dart';
 import '../../models/discipline.dart';
 import '../../models/grade_summary.dart';
 import '../../models/study_cycle.dart';
+import '../../models/study_session.dart';
+import '../../models/study_topic.dart';
 import '../../models/schedule.dart';
+import '../../models/subject_event.dart';
 import '../../repositories/assessment_repository.dart';
 import '../../repositories/discipline_repository.dart';
 import '../../repositories/schedule_repository.dart';
 import '../../repositories/study_cycle_repository.dart';
+import '../../repositories/study_session_repository.dart';
+import '../../repositories/study_topic_repository.dart';
+import '../../repositories/subject_event_repository.dart';
 import '../../repositories/user_profile_repository.dart';
 import 'subject_details_page.dart';
 import 'academic_overview_page.dart';
@@ -21,6 +27,7 @@ import '../widgets/cards/subject_card.dart';
 import '../widgets/dialogs/subject_dialog.dart';
 import '../widgets/common/empty_state_card.dart';
 import '../widgets/common/list_section_header.dart';
+import '../widgets/inputs/discipline_setup_list.dart';
 
 class SubjectsPage extends StatefulWidget {
   const SubjectsPage({super.key});
@@ -35,6 +42,11 @@ class _SubjectsPageState extends State<SubjectsPage> {
   final DisciplineRepository _disciplineRepository = DisciplineRepository();
   final ScheduleRepository _scheduleRepository = ScheduleRepository();
   final StudyCycleRepository _studyCycleRepository = StudyCycleRepository();
+  final StudySessionRepository _studySessionRepository =
+      StudySessionRepository();
+  final StudyTopicRepository _studyTopicRepository = StudyTopicRepository();
+  final SubjectEventRepository _subjectEventRepository =
+      SubjectEventRepository();
   final UserProfileRepository _userProfileRepository = UserProfileRepository();
   late Future<String?> _activeStudyCycleIdFuture;
 
@@ -61,6 +73,13 @@ class _SubjectsPageState extends State<SubjectsPage> {
     final activeStudyCycleId = await _activeStudyCycleIdFuture;
     if (activeStudyCycleId == null) {
       _showError('Configure um ciclo de estudos antes de criar disciplinas.');
+      return;
+    }
+
+    final activeCycle = await _loadActiveCycle(activeStudyCycleId);
+    if (activeCycle == null) return;
+    if (activeCycle.type == StudyCycleType.independent) {
+      await _openIndependentSubjectDialog(activeStudyCycleId);
       return;
     }
 
@@ -121,6 +140,69 @@ class _SubjectsPageState extends State<SubjectsPage> {
     } on DisciplineRepositoryException catch (error) {
       _showError(error.message);
     } on ScheduleRepositoryException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Não foi possível salvar a disciplina. Tente novamente.');
+    }
+  }
+
+  Future<StudyCycle?> _loadActiveCycle(String activeStudyCycleId) async {
+    try {
+      final studyCycles = await _studyCycleRepository.fetchStudyCycles();
+      for (final studyCycle in studyCycles) {
+        if (studyCycle.id == activeStudyCycleId) return studyCycle;
+      }
+    } on StudyCycleRepositoryException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Não foi possível carregar seu ciclo de estudos.');
+    }
+
+    return null;
+  }
+
+  Future<void> _openIndependentSubjectDialog(String activeStudyCycleId) async {
+    if (!mounted) return;
+
+    final result = await showDialog<IndependentDisciplineDialogResult>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.28),
+      builder: (_) => const IndependentDisciplineDialog(),
+    );
+
+    if (result == null || !mounted) return;
+
+    try {
+      final disciplineId = await _disciplineRepository.createDiscipline(
+        DisciplineInput(
+          name: result.name,
+          teacher: '',
+          workload: 0,
+          maxAbsences: 12,
+          colorValue: Schedule.colorValueForDisciplineName(result.name),
+          studyCycleId: activeStudyCycleId,
+        ),
+      );
+
+      for (final entry in result.topics.asMap().entries) {
+        final topicTitle = entry.value.trim();
+        if (topicTitle.isEmpty) continue;
+
+        await _studyTopicRepository.createTopic(
+          StudyTopicInput(
+            studyCycleId: activeStudyCycleId,
+            disciplineId: disciplineId,
+            disciplineName: result.name,
+            title: topicTitle,
+            position: entry.key,
+          ),
+        );
+      }
+
+      _showSuccess('Disciplina salva com sucesso.');
+    } on DisciplineRepositoryException catch (error) {
+      _showError(error.message);
+    } on StudyTopicRepositoryException catch (error) {
       _showError(error.message);
     } catch (_) {
       _showError('Não foi possível salvar a disciplina. Tente novamente.');
@@ -269,6 +351,184 @@ class _SubjectsPageState extends State<SubjectsPage> {
     );
   }
 
+  Widget _buildIndependentSubjectsSection({
+    required String? studyCycleId,
+    required List<Discipline> allDisciplines,
+    required List<Discipline> disciplines,
+  }) {
+    return StreamBuilder<List<StudySession>>(
+      stream: _studySessionRepository.watchSessions(studyCycleId: studyCycleId),
+      builder: (context, sessionSnapshot) {
+        final sessions = sessionSnapshot.data ?? const <StudySession>[];
+
+        return StreamBuilder<List<StudyTopic>>(
+          stream: _studyTopicRepository.watchTopics(studyCycleId: studyCycleId),
+          builder: (context, topicSnapshot) {
+            final topics = topicSnapshot.data ?? const <StudyTopic>[];
+
+            return StreamBuilder<List<SubjectEvent>>(
+              stream: _subjectEventRepository.watchEvents(
+                studyCycleId: studyCycleId,
+                upcomingOnly: true,
+              ),
+              builder: (context, eventSnapshot) {
+                final revisions = (eventSnapshot.data ?? const <SubjectEvent>[])
+                    .where((event) => event.type == SubjectEventType.revision)
+                    .toList();
+                final seenTopics = topics
+                    .where((topic) => topic.status == StudyTopicStatus.seen)
+                    .length;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _IndependentSubjectsOverview(
+                      total: allDisciplines.length,
+                      hoursLabel: _formatStudyDuration(
+                        StudySession.totalMinutes(sessions),
+                      ),
+                      topicProgress: '$seenTopics/${topics.length}',
+                      revisionCount: revisions.length,
+                    ),
+                    const SizedBox(height: 16),
+                    SearchField(
+                      controller: _searchController,
+                      hint: 'Pesquise por disciplina',
+                      height: 48,
+                    ),
+                    const SizedBox(height: 16),
+                    ListSectionHeader(
+                      label: 'MINHAS DISCIPLINAS',
+                      count: disciplines.length,
+                      trailing: _EditSubjectsButton(
+                        onSelected: _handleEditAction,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (disciplines.isEmpty)
+                      EmptyStateCard(
+                        message: allDisciplines.isEmpty
+                            ? 'Nenhuma disciplina criada ainda.'
+                            : 'Nenhuma disciplina encontrada.',
+                        icon: allDisciplines.isEmpty
+                            ? Icons.menu_book_outlined
+                            : Icons.search_off_outlined,
+                      )
+                    else
+                      ...disciplines.map((discipline) {
+                        final disciplineSessions = sessions
+                            .where(
+                              (session) => _belongsToDiscipline(
+                                entityDisciplineId: session.disciplineId,
+                                entityDisciplineName: session.disciplineName,
+                                discipline: discipline,
+                              ),
+                            )
+                            .toList();
+                        final disciplineTopics = topics
+                            .where(
+                              (topic) => _belongsToDiscipline(
+                                entityDisciplineId: topic.disciplineId,
+                                entityDisciplineName: topic.disciplineName,
+                                discipline: discipline,
+                              ),
+                            )
+                            .toList();
+                        final disciplineRevisions = revisions
+                            .where(
+                              (event) => _belongsToDiscipline(
+                                entityDisciplineId: event.disciplineId,
+                                entityDisciplineName: event.disciplineName,
+                                discipline: discipline,
+                              ),
+                            )
+                            .toList();
+                        final seen = disciplineTopics
+                            .where(
+                              (topic) => topic.status == StudyTopicStatus.seen,
+                            )
+                            .length;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _IndependentSubjectCard(
+                            name: discipline.name,
+                            hoursLabel: _formatStudyDuration(
+                              StudySession.totalMinutes(disciplineSessions),
+                            ),
+                            topicProgress: '$seen/${disciplineTopics.length}',
+                            nextRevisionLabel: disciplineRevisions.isEmpty
+                                ? 'Sem revisão marcada'
+                                : disciplineRevisions.first.displayDateLabel,
+                            accentColor: Color(discipline.colorValue),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => SubjectDetailsPage(
+                                    disciplineId: discipline.id,
+                                    studyCycleId: discipline.studyCycleId,
+                                    name: discipline.name,
+                                    teacher: '',
+                                    average: null,
+                                    workload: 0,
+                                    colorValue: discipline.colorValue,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      }),
+                    if (sessionSnapshot.hasError ||
+                        topicSnapshot.hasError ||
+                        eventSnapshot.hasError) ...[
+                      const SizedBox(height: 4),
+                      const EmptyStateCard(
+                        icon: Icons.info_outline_rounded,
+                        message:
+                            'Alguns dados de estudo não puderam carregar agora.',
+                      ),
+                    ],
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  bool _belongsToDiscipline({
+    required String? entityDisciplineId,
+    required String entityDisciplineName,
+    required Discipline discipline,
+  }) {
+    final normalizedId = entityDisciplineId?.trim();
+    if (normalizedId != null && normalizedId.isNotEmpty) {
+      return normalizedId == discipline.id;
+    }
+
+    return _normalizedText(entityDisciplineName) ==
+        _normalizedText(discipline.name);
+  }
+
+  String _normalizedText(String value) {
+    return value.trim().toLowerCase();
+  }
+
+  String _formatStudyDuration(int minutes) {
+    if (minutes <= 0) return '0h';
+
+    final hours = minutes ~/ 60;
+    final remainingMinutes = minutes % 60;
+
+    if (hours == 0) return '${remainingMinutes}min';
+    if (remainingMinutes == 0) return '${hours}h';
+
+    return '${hours}h ${remainingMinutes}min';
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -351,6 +611,15 @@ class _SubjectsPageState extends State<SubjectsPage> {
                                 final disciplines = _filterDisciplines(
                                   allDisciplines,
                                 );
+
+                                if (activeCycle.type ==
+                                    StudyCycleType.independent) {
+                                  return _buildIndependentSubjectsSection(
+                                    studyCycleId: activeStudyCycleId,
+                                    allDisciplines: allDisciplines,
+                                    disciplines: disciplines,
+                                  );
+                                }
 
                                 return StreamBuilder<List<Assessment>>(
                                   stream: _assessmentRepository
@@ -785,6 +1054,221 @@ class _SubjectsOverview extends StatelessWidget {
   }
 }
 
+class _IndependentSubjectsOverview extends StatelessWidget {
+  final int total;
+  final String hoursLabel;
+  final String topicProgress;
+  final int revisionCount;
+
+  const _IndependentSubjectsOverview({
+    required this.total,
+    required this.hoursLabel,
+    required this.topicProgress,
+    required this.revisionCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return AppSurface.card(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      shadows: colors.subtleShadows,
+      child: Row(
+        children: [
+          Expanded(
+            child: _SubjectMetric(
+              label: 'Disciplinas',
+              value: '$total',
+              icon: Icons.menu_book_outlined,
+            ),
+          ),
+          _MetricDivider(color: colors.divider),
+          Expanded(
+            child: _SubjectMetric(
+              label: 'Horas',
+              value: hoursLabel,
+              icon: Icons.timer_outlined,
+            ),
+          ),
+          _MetricDivider(color: colors.divider),
+          Expanded(
+            child: _SubjectMetric(
+              label: 'Assuntos',
+              value: topicProgress,
+              icon: Icons.checklist_rtl_outlined,
+            ),
+          ),
+          _MetricDivider(color: colors.divider),
+          Expanded(
+            child: _SubjectMetric(
+              label: 'Revisões',
+              value: '$revisionCount',
+              icon: Icons.event_repeat_outlined,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IndependentSubjectCard extends StatelessWidget {
+  final String name;
+  final String hoursLabel;
+  final String topicProgress;
+  final String nextRevisionLabel;
+  final Color accentColor;
+  final VoidCallback? onTap;
+
+  const _IndependentSubjectCard({
+    required this.name,
+    required this.hoursLabel,
+    required this.topicProgress,
+    required this.nextRevisionLabel,
+    required this.accentColor,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: AppSurface.card(
+          padding: EdgeInsets.zero,
+          clipBehavior: Clip.antiAlias,
+          shadows: colors.subtleShadows,
+          child: Stack(
+            children: [
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 5,
+                child: ColoredBox(color: accentColor),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(17, 14, 14, 14),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: accentColor.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.auto_stories_outlined,
+                        color: accentColor,
+                        size: 23,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: colors.textDark,
+                              fontSize: 16,
+                              fontFamily: 'Roboto',
+                              fontWeight: FontWeight.w900,
+                              height: 1.14,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _IndependentSubjectChip(
+                                icon: Icons.timer_outlined,
+                                label: hoursLabel,
+                                color: accentColor,
+                              ),
+                              _IndependentSubjectChip(
+                                icon: Icons.checklist_rtl_outlined,
+                                label: '$topicProgress vistos',
+                                color: colors.success,
+                              ),
+                              _IndependentSubjectChip(
+                                icon: Icons.event_repeat_outlined,
+                                label: nextRevisionLabel,
+                                color: colors.event,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(Icons.chevron_right, color: colors.textMuted),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _IndependentSubjectChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _IndependentSubjectChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 14),
+          const SizedBox(width: 5),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 160),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontFamily: 'Roboto',
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SubjectMetric extends StatelessWidget {
   final String label;
   final String value;
@@ -970,7 +1454,7 @@ class _AcademicOverviewMenuButton extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Visão Geral de Frequência e Anotações',
+                                  'Visão Geral de Progresso e Anotações',
                                   style: TextStyle(
                                     color: colors.textDark,
                                     fontSize: 15,
@@ -980,7 +1464,7 @@ class _AcademicOverviewMenuButton extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 3),
                                 Text(
-                                  'Acompanhe o limite de faltas e anotações das disciplinas',
+                                  'Acompanhe estudos, faltas e anotações das disciplinas',
                                   style: TextStyle(
                                     color: colors.textMuted,
                                     fontSize: 12,

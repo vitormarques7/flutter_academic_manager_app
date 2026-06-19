@@ -4,8 +4,16 @@ import '../../config/routes/app_routes.dart';
 import '../../config/theme/app_theme_colors.dart';
 import '../../config/theme/app_design_tokens.dart';
 import '../../models/discipline.dart';
+import '../../models/study_cycle.dart';
+import '../../models/study_session.dart';
+import '../../models/study_topic.dart';
+import '../../models/subject_event.dart';
 import '../../models/subject_note.dart';
 import '../../repositories/discipline_repository.dart';
+import '../../repositories/study_cycle_repository.dart';
+import '../../repositories/study_session_repository.dart';
+import '../../repositories/study_topic_repository.dart';
+import '../../repositories/subject_event_repository.dart';
 import '../../repositories/subject_note_repository.dart';
 import '../../repositories/user_profile_repository.dart';
 import '../widgets/common/app_surface.dart';
@@ -29,6 +37,11 @@ class _AcademicOverviewPageState extends State<AcademicOverviewPage>
   final UserProfileRepository _userProfileRepository = UserProfileRepository();
   final DisciplineRepository _disciplineRepository = DisciplineRepository();
   final SubjectNoteRepository _noteRepository = SubjectNoteRepository();
+  final StudyCycleRepository _studyCycleRepository = StudyCycleRepository();
+  final StudySessionRepository _studySessionRepository =
+      StudySessionRepository();
+  final StudyTopicRepository _studyTopicRepository = StudyTopicRepository();
+  final SubjectEventRepository _eventRepository = SubjectEventRepository();
   late Future<String?> _activeStudyCycleIdFuture;
 
   @override
@@ -104,7 +117,7 @@ class _AcademicOverviewPageState extends State<AcademicOverviewPage>
                 fontSize: 14,
               ),
               tabs: const [
-                Tab(text: 'Faltas e Presenças'),
+                Tab(text: 'Progresso'),
                 Tab(text: 'Anotações'),
               ],
             ),
@@ -127,19 +140,39 @@ class _AcademicOverviewPageState extends State<AcademicOverviewPage>
 
           final activeStudyCycleId = activeCycleSnapshot.data;
 
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _AttendanceTab(
-                studyCycleId: activeStudyCycleId,
-                disciplineRepository: _disciplineRepository,
-              ),
-              _NotesTab(
-                studyCycleId: activeStudyCycleId,
-                disciplineRepository: _disciplineRepository,
-                noteRepository: _noteRepository,
-              ),
-            ],
+          return StreamBuilder<List<StudyCycle>>(
+            stream: _studyCycleRepository.watchStudyCycles(),
+            builder: (context, studyCycleSnapshot) {
+              final studyCycles = studyCycleSnapshot.data ?? const [];
+              final activeCycle = studyCycles.where((cycle) {
+                return cycle.id == activeStudyCycleId;
+              }).firstOrNull;
+              final isIndependent =
+                  activeCycle?.type == StudyCycleType.independent;
+
+              return TabBarView(
+                controller: _tabController,
+                children: [
+                  if (isIndependent)
+                    _IndependentProgressTab(
+                      studyCycleId: activeStudyCycleId,
+                      sessionRepository: _studySessionRepository,
+                      topicRepository: _studyTopicRepository,
+                      eventRepository: _eventRepository,
+                    )
+                  else
+                    _AttendanceTab(
+                      studyCycleId: activeStudyCycleId,
+                      disciplineRepository: _disciplineRepository,
+                    ),
+                  _NotesTab(
+                    studyCycleId: activeStudyCycleId,
+                    disciplineRepository: _disciplineRepository,
+                    noteRepository: _noteRepository,
+                  ),
+                ],
+              );
+            },
           );
         },
       ),
@@ -393,6 +426,254 @@ class _AttendanceTab extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _IndependentProgressTab extends StatelessWidget {
+  final String? studyCycleId;
+  final StudySessionRepository sessionRepository;
+  final StudyTopicRepository topicRepository;
+  final SubjectEventRepository eventRepository;
+
+  const _IndependentProgressTab({
+    required this.studyCycleId,
+    required this.sessionRepository,
+    required this.topicRepository,
+    required this.eventRepository,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<StudySession>>(
+      stream: sessionRepository.watchSessions(studyCycleId: studyCycleId),
+      builder: (context, sessionSnapshot) {
+        return StreamBuilder<List<StudyTopic>>(
+          stream: topicRepository.watchTopics(studyCycleId: studyCycleId),
+          builder: (context, topicSnapshot) {
+            return StreamBuilder<List<SubjectEvent>>(
+              stream: eventRepository.watchEvents(
+                studyCycleId: studyCycleId,
+                upcomingOnly: true,
+              ),
+              builder: (context, eventSnapshot) {
+                if ((sessionSnapshot.connectionState ==
+                            ConnectionState.waiting &&
+                        !sessionSnapshot.hasData) ||
+                    (topicSnapshot.connectionState == ConnectionState.waiting &&
+                        !topicSnapshot.hasData) ||
+                    (eventSnapshot.connectionState == ConnectionState.waiting &&
+                        !eventSnapshot.hasData)) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (sessionSnapshot.hasError ||
+                    topicSnapshot.hasError ||
+                    eventSnapshot.hasError) {
+                  return const EmptyStateCard(
+                    icon: Icons.error_outline_rounded,
+                    message: 'Não foi possível carregar seu progresso.',
+                  );
+                }
+
+                final sessions = sessionSnapshot.data ?? const <StudySession>[];
+                final topics = topicSnapshot.data ?? const <StudyTopic>[];
+                final revisions = (eventSnapshot.data ?? const <SubjectEvent>[])
+                    .where((event) => event.type == SubjectEventType.revision)
+                    .toList();
+                final seenTopics = topics.where((topic) => topic.isSeen).length;
+                final pendingTopics = topics.length - seenTopics;
+
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      IntrinsicHeight(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: SummaryMetricTile(
+                                label: 'Horas',
+                                value: _formatStudyDuration(
+                                  StudySession.totalMinutes(sessions),
+                                ),
+                                icon: Icons.timer_outlined,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: SummaryMetricTile(
+                                label: 'Sessões',
+                                value: '${sessions.length}',
+                                icon: Icons.history_outlined,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      IntrinsicHeight(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: SummaryMetricTile(
+                                label: 'Vistos',
+                                value: '$seenTopics/${topics.length}',
+                                icon: Icons.checklist_rtl_outlined,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: SummaryMetricTile(
+                                label: 'Revisões',
+                                value: '${revisions.length}',
+                                icon: Icons.event_repeat_outlined,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      _IndependentProgressList(
+                        pendingTopics: pendingTopics,
+                        revisions: revisions,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _formatStudyDuration(int minutes) {
+    if (minutes <= 0) return '0h';
+
+    final hours = minutes ~/ 60;
+    final remainingMinutes = minutes % 60;
+
+    if (hours == 0) return '${remainingMinutes}min';
+    if (remainingMinutes == 0) return '${hours}h';
+
+    return '${hours}h ${remainingMinutes}min';
+  }
+}
+
+class _IndependentProgressList extends StatelessWidget {
+  final int pendingTopics;
+  final List<SubjectEvent> revisions;
+
+  const _IndependentProgressList({
+    required this.pendingTopics,
+    required this.revisions,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return AppSurface.card(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'RESUMO DE ESTUDO',
+            style: TextStyle(
+              color: colors.textSubtle,
+              fontSize: 12,
+              fontFamily: 'Roboto',
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 14),
+          _ProgressSummaryRow(
+            icon: Icons.checklist_rtl_outlined,
+            title:
+                '$pendingTopics ${pendingTopics == 1 ? 'assunto a ver' : 'assuntos a ver'}',
+            subtitle: pendingTopics == 0
+                ? 'Seu checklist está em dia.'
+                : 'Continue avançando pelo checklist das disciplinas.',
+          ),
+          const SizedBox(height: 12),
+          _ProgressSummaryRow(
+            icon: Icons.event_repeat_outlined,
+            title: revisions.isEmpty
+                ? 'Sem revisões próximas'
+                : '${revisions.length} ${revisions.length == 1 ? 'revisão marcada' : 'revisões marcadas'}',
+            subtitle: revisions.isEmpty
+                ? 'Marque revisões no calendário para fixar os assuntos.'
+                : 'Próxima: ${revisions.first.displayDateTimeLabel}.',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressSummaryRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  const _ProgressSummaryRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Row(
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: colors.primary.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: colors.primary, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: colors.textDark,
+                  fontSize: 14,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: colors.textMuted,
+                  fontSize: 12,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -13,6 +13,8 @@ users/{uid}/schedules/{scheduleId}
 users/{uid}/assessments/{assessmentId}
 users/{uid}/subjectNotes/{noteId}
 users/{uid}/subjectEvents/{eventId}
+users/{uid}/studySessions/{sessionId}
+users/{uid}/studyTopics/{topicId}
 ```
 
 O `{uid}` e o `uid` do Firebase Auth. O documento raiz `users/{uid}` e criado
@@ -317,6 +319,9 @@ disciplineName: string
 title: string
 type: string
 eventDate: timestamp
+startTimeMinutes: number | ausente
+endTimeMinutes: number | ausente
+topicIds: string[]
 description: string
 createdAt: timestamp
 updatedAt: timestamp
@@ -326,6 +331,7 @@ Valores atuais de `type`:
 
 ```txt
 Prova
+Revisão
 Palestra
 Seminário
 Entrega
@@ -336,10 +342,79 @@ Outro
 Observacoes:
 
 - `eventDate` e salvo como timestamp, normalizado para data sem horario.
+- `startTimeMinutes` e `endTimeMinutes` sao opcionais.
+- `topicIds` liga revisoes a assuntos quando informado.
 - `description` pode ser string vazia.
 - A agenda usa eventos futuros para marcar e listar compromissos.
 - A Home usa eventos proximos para alertas e resumo.
 - Detalhes de disciplina permitem criar e excluir eventos daquela disciplina.
+
+## studySessions
+
+Caminho:
+
+```txt
+users/{uid}/studySessions/{sessionId}
+```
+
+Campos atuais:
+
+```txt
+studyCycleId: string | ausente
+disciplineId: string | ausente
+disciplineName: string
+studiedAt: timestamp
+durationMinutes: number
+topicIds: string[]
+notes: string
+createdAt: timestamp
+updatedAt: timestamp
+```
+
+Observacoes:
+
+- Usado principalmente por ciclos independentes.
+- `studiedAt` e normalizado para data sem horario.
+- `durationMinutes` representa o tempo estudado naquela sessao.
+- Totais de horas sao calculados a partir das sessoes.
+- `topicIds` pode registrar quais assuntos foram trabalhados na sessao.
+
+## studyTopics
+
+Caminho:
+
+```txt
+users/{uid}/studyTopics/{topicId}
+```
+
+Campos atuais:
+
+```txt
+studyCycleId: string | ausente
+disciplineId: string | ausente
+disciplineName: string
+title: string
+status: string
+position: number
+seenAt: timestamp | ausente
+createdAt: timestamp
+updatedAt: timestamp
+```
+
+Valores atuais de `status`:
+
+```txt
+todo
+seen
+```
+
+Observacoes:
+
+- Usado principalmente por ciclos independentes.
+- `todo` representa assunto a ver.
+- `seen` representa assunto visto.
+- `position` mantem a ordem simples do checklist por disciplina.
+- `seenAt` e preenchido quando o assunto e marcado como visto.
 
 ## Regras
 
@@ -357,6 +432,8 @@ users/{uid}/disciplines/{disciplineId}
 users/{uid}/assessments/{assessmentId}
 users/{uid}/subjectNotes/{noteId}
 users/{uid}/subjectEvents/{eventId}
+users/{uid}/studySessions/{sessionId}
+users/{uid}/studyTopics/{topicId}
 ```
 
 Quando os schemas amadurecerem, uma melhoria possivel e validar tipos e campos

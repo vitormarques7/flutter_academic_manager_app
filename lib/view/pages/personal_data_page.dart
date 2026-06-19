@@ -1016,26 +1016,32 @@ class _StudyCycleManagementSheetState
               ),
             ],
           },
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _passingGradeController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: _sheetInputDecoration(
-              context,
-              label: 'Média mínima para aprovação',
-              icon: Icons.star_border_rounded,
+          if (_activeCycle.type != StudyCycleType.independent) ...[
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _passingGradeController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: _sheetInputDecoration(
+                context,
+                label: 'Média mínima para aprovação',
+                icon: Icons.star_border_rounded,
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Informe a média mínima.';
+                }
+                final parsed = double.tryParse(
+                  value.trim().replaceAll(',', '.'),
+                );
+                if (parsed == null || parsed < 0 || parsed > 10) {
+                  return 'Informe um valor entre 0 e 10.';
+                }
+                return null;
+              },
             ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Informe a média mínima.';
-              }
-              final parsed = double.tryParse(value.trim().replaceAll(',', '.'));
-              if (parsed == null || parsed < 0 || parsed > 10) {
-                return 'Informe um valor entre 0 e 10.';
-              }
-              return null;
-            },
-          ),
+          ],
           const SizedBox(height: 18),
           Row(
             children: [

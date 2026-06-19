@@ -31,7 +31,7 @@ tela de configuracao:
 
 - Universitario: curso, periodo, disciplinas e horarios.
 - Ensino medio: serie, disciplinas e horarios.
-- Independente: objetivo, disciplinas e horarios.
+- Independente: objetivo, disciplinas e assuntos iniciais opcionais.
 
 As telas de configuracao persistem o ciclo academico, disciplinas e horarios no
 Firestore. O ciclo criado tambem passa a ser salvo como `activeStudyCycleId` em
@@ -56,6 +56,8 @@ A Home consome dados reais do Firestore para o ciclo ativo:
 - Media geral por `AssessmentRepository`.
 - Alertas derivados de tarefas atrasadas, entregas de hoje, eventos proximos,
   grade vazia ou ausencia de notas.
+- Para ciclos independentes, a Home prioriza tarefas, revisoes, horas estudadas
+  na semana e assuntos pendentes, sem alertas de falta ou media minima.
 
 Quando nao ha ciclo ativo, a Home mostra uma chamada para configurar o primeiro
 ciclo de estudos.
@@ -73,6 +75,8 @@ Ela permite:
 - Informar dias e horarios no modal, criando horarios em
   `users/{uid}/schedules`.
 - Excluir disciplina junto com horarios vinculados.
+- No ciclo independente, criar disciplina usa um modal de disciplina e assuntos,
+  sem professor, faltas, carga horaria ou horarios.
 
 ### Detalhes de disciplina
 
@@ -84,6 +88,8 @@ A tela de detalhes da disciplina usa dados reais relacionados a disciplina:
 - Anotacoes em `users/{uid}/subjectNotes`.
 
 Ela permite criar e excluir notas, eventos e anotacoes.
+No ciclo independente, tambem permite registrar sessoes de estudo e gerenciar
+assuntos a ver/vistos.
 
 ### Tarefas
 
@@ -118,6 +124,8 @@ Estado atual:
 - A edicao da grade permite criar, atualizar e excluir horarios via
   `ScheduleEditorSheet`.
 - O botao `+` na agenda cria eventos academicos em `subjectEvents`.
+- No ciclo independente, a agenda oculta a grade de aulas e permite usar eventos
+  do tipo `Revisão`, opcionalmente ligados a assuntos.
 
 ### Perfil e dados pessoais
 

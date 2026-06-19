@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../config/theme/app_theme_colors.dart';
 import '../../../models/discipline.dart';
+import '../../../models/study_topic.dart';
 import '../../../models/subject_event.dart';
 import '../inputs/date_picker_field.dart';
 import '../inputs/time_range_picker_field.dart';
@@ -15,6 +16,7 @@ class ScheduleEventDialogResult {
   final String description;
   final String? disciplineId;
   final String disciplineName;
+  final List<String> topicIds;
 
   const ScheduleEventDialogResult({
     required this.title,
@@ -25,16 +27,19 @@ class ScheduleEventDialogResult {
     required this.description,
     required this.disciplineId,
     required this.disciplineName,
+    this.topicIds = const [],
   });
 }
 
 class ScheduleEventDialog extends StatefulWidget {
   final List<Discipline> disciplines;
+  final List<StudyTopic> topics;
   final DateTime initialDate;
 
   const ScheduleEventDialog({
     super.key,
     required this.disciplines,
+    this.topics = const [],
     required this.initialDate,
   });
 
@@ -54,6 +59,7 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
   bool _hasTimeRange = false;
   TimeOfDay _startTime = const TimeOfDay(hour: 8, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 9, minute: 0);
+  final Set<String> _selectedTopicIds = {};
   String? _timeErrorMessage;
 
   @override
@@ -94,6 +100,9 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
         description: _descriptionController.text.trim(),
         disciplineId: discipline?.id,
         disciplineName: discipline?.name ?? '',
+        topicIds: _selectedType == SubjectEventType.revision
+            ? _selectedTopicIds.toList()
+            : const [],
       ),
     );
   }
@@ -147,6 +156,31 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
     }
 
     return null;
+  }
+
+  List<StudyTopic> _topicsForSelectedDiscipline() {
+    final selectedDiscipline = _selectedDiscipline();
+    if (selectedDiscipline == null) return const [];
+
+    return widget.topics.where((topic) {
+      final topicDisciplineId = topic.disciplineId?.trim();
+      if (topicDisciplineId != null && topicDisciplineId.isNotEmpty) {
+        return topicDisciplineId == selectedDiscipline.id;
+      }
+
+      return topic.disciplineName.trim().toLowerCase() ==
+          selectedDiscipline.name.trim().toLowerCase();
+    }).toList();
+  }
+
+  void _toggleTopic(String topicId, bool selected) {
+    setState(() {
+      if (selected) {
+        _selectedTopicIds.add(topicId);
+      } else {
+        _selectedTopicIds.remove(topicId);
+      }
+    });
   }
 
   @override
@@ -260,7 +294,17 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
                             ],
                             onChanged: (value) {
                               if (value == null) return;
-                              setState(() => _selectedDisciplineId = value);
+                              setState(() {
+                                _selectedDisciplineId = value;
+                                final availableTopicIds =
+                                    _topicsForSelectedDiscipline()
+                                        .map((topic) => topic.id)
+                                        .toSet();
+                                _selectedTopicIds.removeWhere(
+                                  (topicId) =>
+                                      !availableTopicIds.contains(topicId),
+                                );
+                              });
                             },
                           ),
                         ),
@@ -286,6 +330,18 @@ class _ScheduleEventDialogState extends State<ScheduleEventDialog> {
                             },
                           ),
                         ),
+                        if (_selectedType == SubjectEventType.revision &&
+                            _topicsForSelectedDiscipline().isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          _DialogField(
+                            label: 'Assuntos',
+                            child: _RevisionTopicsSelector(
+                              topics: _topicsForSelectedDiscipline(),
+                              selectedTopicIds: _selectedTopicIds,
+                              onChanged: _toggleTopic,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 16),
                         _DialogField(
                           label: 'Data',
@@ -429,6 +485,56 @@ class _DialogField extends StatelessWidget {
         const SizedBox(height: 8),
         child,
       ],
+    );
+  }
+}
+
+class _RevisionTopicsSelector extends StatelessWidget {
+  final List<StudyTopic> topics;
+  final Set<String> selectedTopicIds;
+  final void Function(String topicId, bool selected) onChanged;
+
+  const _RevisionTopicsSelector({
+    required this.topics,
+    required this.selectedTopicIds,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surfaceAlt,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.outline),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: topics.map((topic) {
+          final selected = selectedTopicIds.contains(topic.id);
+
+          return CheckboxListTile(
+            value: selected,
+            dense: true,
+            controlAffinity: ListTileControlAffinity.leading,
+            activeColor: colors.primary,
+            title: Text(
+              topic.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: colors.textDark,
+                fontSize: 14,
+                fontFamily: 'Roboto',
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            onChanged: (value) => onChanged(topic.id, value ?? false),
+          );
+        }).toList(),
+      ),
     );
   }
 }

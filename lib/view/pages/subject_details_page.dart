@@ -11,16 +11,21 @@ import '../../models/assessment.dart';
 import '../../models/discipline.dart';
 import '../../models/grade_summary.dart';
 import '../../models/study_cycle.dart';
+import '../../models/study_session.dart';
+import '../../models/study_topic.dart';
 import '../../models/subject_event.dart';
 import '../../models/subject_note.dart';
 import '../../repositories/assessment_repository.dart';
 import '../../repositories/discipline_repository.dart';
 import '../../repositories/study_cycle_repository.dart';
+import '../../repositories/study_session_repository.dart';
+import '../../repositories/study_topic_repository.dart';
 import '../../repositories/subject_event_repository.dart';
 import '../../repositories/subject_note_repository.dart';
 import '../../repositories/task_repository.dart';
 import '../widgets/common/app_bottom_nav_bar.dart';
 import '../widgets/common/app_surface.dart';
+import '../widgets/common/empty_state_card.dart';
 import '../widgets/common/metadata_chip.dart';
 import '../widgets/dialogs/task_dialog.dart';
 import '../widgets/inputs/date_picker_field.dart';
@@ -63,6 +68,9 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
   final TaskRepository _taskRepository = TaskRepository();
   final DisciplineRepository _disciplineRepository = DisciplineRepository();
   final StudyCycleRepository _studyCycleRepository = StudyCycleRepository();
+  final StudySessionRepository _studySessionRepository =
+      StudySessionRepository();
+  final StudyTopicRepository _studyTopicRepository = StudyTopicRepository();
 
   Color get _accentColor => Color(widget.colorValue);
 
@@ -197,6 +205,7 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
           eventDate: result.eventDate,
           startTimeMinutes: result.startTimeMinutes,
           endTimeMinutes: result.endTimeMinutes,
+          topicIds: result.topicIds,
           description: result.description,
         ),
       );
@@ -205,6 +214,83 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
       _showError(error.message);
     } catch (_) {
       _showError('Não foi possível salvar o evento. Tente novamente.');
+    }
+  }
+
+  Future<void> _openStudySessionDialog(List<StudyTopic> topics) async {
+    final result = await showDialog<_StudySessionDialogResult>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.28),
+      builder: (_) => _StudySessionDialog(topics: topics),
+    );
+
+    if (result == null) return;
+
+    try {
+      await _studySessionRepository.createSession(
+        StudySessionInput(
+          studyCycleId: widget.studyCycleId,
+          disciplineId: widget.disciplineId,
+          disciplineName: widget.name,
+          studiedAt: result.studiedAt,
+          durationMinutes: result.durationMinutes,
+          topicIds: result.topicIds,
+          notes: result.notes,
+        ),
+      );
+      for (final topic in topics) {
+        if (!result.topicIds.contains(topic.id) || topic.isSeen) continue;
+
+        await _studyTopicRepository.updateStatus(
+          topic: topic,
+          status: StudyTopicStatus.seen,
+        );
+      }
+      _showSuccess('Sessão de estudo salva.');
+    } on StudySessionRepositoryException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Não foi possível salvar a sessão de estudo.');
+    }
+  }
+
+  Future<void> _openStudyTopicDialog({required int position}) async {
+    final result = await showDialog<_StudyTopicDialogResult>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.28),
+      builder: (_) => const _StudyTopicDialog(),
+    );
+
+    if (result == null) return;
+
+    try {
+      await _studyTopicRepository.createTopic(
+        StudyTopicInput(
+          studyCycleId: widget.studyCycleId,
+          disciplineId: widget.disciplineId,
+          disciplineName: widget.name,
+          title: result.title,
+          position: position,
+        ),
+      );
+      _showSuccess('Assunto salvo.');
+    } on StudyTopicRepositoryException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Não foi possível salvar o assunto.');
+    }
+  }
+
+  Future<void> _toggleStudyTopic(StudyTopic topic, bool isSeen) async {
+    try {
+      await _studyTopicRepository.updateStatus(
+        topic: topic,
+        status: isSeen ? StudyTopicStatus.seen : StudyTopicStatus.todo,
+      );
+    } on StudyTopicRepositoryException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Não foi possível atualizar o assunto.');
     }
   }
 
@@ -323,6 +409,192 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
 
       return task.studyCycleId == null || task.studyCycleId == cycleId;
     }).toList();
+  }
+
+  Widget _buildIndependentDetailsContent({
+    required Discipline currentDiscipline,
+    required List<Assessment> assessments,
+    required bool assessmentsAreLoading,
+    required bool assessmentsHaveError,
+    required List<AcademicTask> tasks,
+    required bool tasksAreLoading,
+    required bool tasksHaveError,
+    required List<TaskDialogSubject> taskSubjects,
+  }) {
+    final pendingTasks = tasks.where((task) => !task.isChecked).length;
+
+    return StreamBuilder<List<StudyTopic>>(
+      stream: _studyTopicRepository.watchTopics(
+        studyCycleId: widget.studyCycleId,
+        disciplineId: widget.disciplineId,
+      ),
+      builder: (context, topicSnapshot) {
+        final topics = topicSnapshot.data ?? const <StudyTopic>[];
+        final topicsAreLoading =
+            topicSnapshot.connectionState == ConnectionState.waiting &&
+            !topicSnapshot.hasData;
+        final topicsHaveError = topicSnapshot.hasError;
+        final seenTopics = topics.where((topic) => topic.isSeen).length;
+
+        return StreamBuilder<List<StudySession>>(
+          stream: _studySessionRepository.watchSessions(
+            studyCycleId: widget.studyCycleId,
+            disciplineId: widget.disciplineId,
+          ),
+          builder: (context, sessionSnapshot) {
+            final sessions = sessionSnapshot.data ?? const <StudySession>[];
+            final sessionsAreLoading =
+                sessionSnapshot.connectionState == ConnectionState.waiting &&
+                !sessionSnapshot.hasData;
+            final sessionsHaveError = sessionSnapshot.hasError;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _IndependentSubjectSummaryCard(
+                  name: currentDiscipline.name,
+                  totalStudyMinutes: StudySession.totalMinutes(sessions),
+                  topicCount: topics.length,
+                  seenTopicCount: seenTopics,
+                  pendingTaskCount: pendingTasks,
+                  accentColor: _accentColor,
+                ),
+                const SizedBox(height: 26),
+                _StudyProgressCard(
+                  sessions: sessions,
+                  topics: topics,
+                  accentColor: _accentColor,
+                  onAddSession: () => _openStudySessionDialog(topics),
+                  onAddTopic: () =>
+                      _openStudyTopicDialog(position: topics.length),
+                ),
+                const SizedBox(height: 28),
+                _SectionHeader(
+                  title: 'Assuntos',
+                  trailing: _InlineActionButton(
+                    label: 'Adicionar',
+                    icon: Icons.add,
+                    onTap: () => _openStudyTopicDialog(position: topics.length),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _StudyTopicsPanel(
+                  topics: topics,
+                  isLoading: topicsAreLoading,
+                  hasError: topicsHaveError,
+                  accentColor: _accentColor,
+                  onMarkSeen: (topic) => _toggleStudyTopic(topic, true),
+                  onMarkTodo: (topic) => _toggleStudyTopic(topic, false),
+                ),
+                const SizedBox(height: 28),
+                _SectionHeader(
+                  title: 'Sessões recentes',
+                  trailing: _InlineActionButton(
+                    label: 'Registrar',
+                    icon: Icons.timer_outlined,
+                    onTap: () => _openStudySessionDialog(topics),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _StudySessionsPanel(
+                  sessions: sessions,
+                  isLoading: sessionsAreLoading,
+                  hasError: sessionsHaveError,
+                  accentColor: _accentColor,
+                ),
+                const SizedBox(height: 28),
+                _SectionHeader(
+                  title: 'Revisões e eventos',
+                  trailing: _InlineActionButton(
+                    label: 'Adicionar',
+                    icon: Icons.event_available_outlined,
+                    onTap: _openEventDialog,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                StreamBuilder<List<SubjectEvent>>(
+                  stream: _eventRepository.watchEvents(
+                    studyCycleId: widget.studyCycleId,
+                    disciplineId: widget.disciplineId,
+                    upcomingOnly: true,
+                  ),
+                  builder: (context, eventSnapshot) {
+                    return _SubjectEventsPanel(
+                      events: eventSnapshot.data ?? const [],
+                      isLoading:
+                          eventSnapshot.connectionState ==
+                              ConnectionState.waiting &&
+                          !eventSnapshot.hasData,
+                      hasError: eventSnapshot.hasError,
+                      accentColor: _accentColor,
+                      onOpen: _openEventDetails,
+                    );
+                  },
+                ),
+                const SizedBox(height: 28),
+                _SectionHeader(
+                  title: 'Simulados',
+                  trailing: _InlineActionButton(
+                    label: 'Adicionar',
+                    icon: Icons.add,
+                    onTap: _openAssessmentDialog,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _AssessmentsPanel(
+                  assessments: assessments,
+                  isLoading: assessmentsAreLoading,
+                  hasError: assessmentsHaveError,
+                  accentColor: _accentColor,
+                  passingGrade: 0,
+                  onAdd: _openAssessmentDialog,
+                  onDelete: _deleteAssessment,
+                  onEdit: _editAssessment,
+                ),
+                const SizedBox(height: 28),
+                const _SectionHeader(title: 'Tarefas relacionadas'),
+                const SizedBox(height: 12),
+                _RelatedTasksPanel(
+                  tasks: tasks,
+                  isLoading: tasksAreLoading,
+                  hasError: tasksHaveError,
+                  accentColor: _accentColor,
+                  onOpen: (task) => _openTaskDetails(task, taskSubjects),
+                ),
+                const SizedBox(height: 28),
+                _SectionHeader(
+                  title: 'Anotações',
+                  trailing: _InlineActionButton(
+                    label: 'Adicionar',
+                    icon: Icons.note_add_outlined,
+                    onTap: _openNoteDialog,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                StreamBuilder<List<SubjectNote>>(
+                  stream: _noteRepository.watchNotes(
+                    studyCycleId: widget.studyCycleId,
+                    disciplineId: widget.disciplineId,
+                  ),
+                  builder: (context, noteSnapshot) {
+                    return _SubjectNotesPanel(
+                      notes: noteSnapshot.data ?? const [],
+                      isLoading:
+                          noteSnapshot.connectionState ==
+                              ConnectionState.waiting &&
+                          !noteSnapshot.hasData,
+                      hasError: noteSnapshot.hasError,
+                      accentColor: _accentColor,
+                      onOpen: _openNoteDetails,
+                    );
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   String _normalizedText(String value) {
@@ -446,6 +718,22 @@ class _SubjectDetailsPageState extends State<SubjectDetailsPage> {
                                       .length;
                                   final taskSubjects =
                                       _taskSubjectsFromDisciplines(disciplines);
+
+                                  if (currentCycle.type ==
+                                      StudyCycleType.independent) {
+                                    return _buildIndependentDetailsContent(
+                                      currentDiscipline: currentDiscipline,
+                                      assessments: assessments,
+                                      assessmentsAreLoading:
+                                          assessmentsAreLoading,
+                                      assessmentsHaveError:
+                                          assessmentsHaveError,
+                                      tasks: tasks,
+                                      tasksAreLoading: tasksAreLoading,
+                                      tasksHaveError: tasksHaveError,
+                                      taskSubjects: taskSubjects,
+                                    );
+                                  }
 
                                   return Column(
                                     crossAxisAlignment:

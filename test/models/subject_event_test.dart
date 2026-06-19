@@ -6,6 +6,7 @@ void main() {
   group('SubjectEventType', () {
     test('fromLabel resolves known labels and falls back to other', () {
       expect(SubjectEventType.fromLabel('Seminário'), SubjectEventType.seminar);
+      expect(SubjectEventType.fromLabel('Revisão'), SubjectEventType.revision);
       expect(
         SubjectEventType.fromLabel('desconhecido'),
         SubjectEventType.other,
@@ -31,6 +32,7 @@ void main() {
           'eventDate': eventDate,
           'startTimeMinutes': 14 * 60,
           'endTimeMinutes': 16 * 60,
+          'topicIds': [' topic-1 ', 'topic-2', 'topic-1'],
           'description': ' Sala 203. ',
           'createdAt': createdAt,
           'updatedAt': updatedAt,
@@ -50,6 +52,7 @@ void main() {
       expect(event.displayDateLabel, '30/06/2026');
       expect(event.timeRangeLabel, '14:00 - 16:00');
       expect(event.displayDateTimeLabel, '30/06/2026 • 14:00 - 16:00');
+      expect(event.topicIds, ['topic-1', 'topic-2']);
       expect(event.description, 'Sala 203.');
       expect(event.createdAt, createdAt.toDate());
       expect(event.updatedAt, updatedAt.toDate());
@@ -83,6 +86,7 @@ void main() {
         eventDate: DateTime(2026, 7, 2),
         startTimeMinutes: 19 * 60,
         endTimeMinutes: 20 * 60 + 30,
+        topicIds: const ['topic-1', 'topic-2'],
         description: 'Auditório principal.',
         createdAt: DateTime(2026, 6, 11, 8),
         updatedAt: DateTime(2026, 6, 11, 9),
@@ -102,6 +106,7 @@ void main() {
       expect(reconstructed.eventDate, original.eventDate);
       expect(reconstructed.startTimeMinutes, original.startTimeMinutes);
       expect(reconstructed.endTimeMinutes, original.endTimeMinutes);
+      expect(reconstructed.topicIds, original.topicIds);
       expect(reconstructed.description, original.description);
       expect(reconstructed.createdAt, original.createdAt);
       expect(reconstructed.updatedAt, original.updatedAt);
@@ -161,6 +166,7 @@ void main() {
       eventDate: DateTime(2026, 6, 30, 14),
       startTimeMinutes: 14 * 60,
       endTimeMinutes: 16 * 60,
+      topicIds: const [' topic-1 ', 'topic-2'],
       description: ' Sala 203. ',
     );
 
@@ -175,6 +181,7 @@ void main() {
       expect((map['eventDate'] as Timestamp).toDate(), DateTime(2026, 6, 30));
       expect(map['startTimeMinutes'], 14 * 60);
       expect(map['endTimeMinutes'], 16 * 60);
+      expect(map['topicIds'], ['topic-1', 'topic-2']);
       expect(map['description'], 'Sala 203.');
       expect(map['createdAt'], isA<FieldValue>());
       expect(map['updatedAt'], isA<FieldValue>());
@@ -191,6 +198,7 @@ void main() {
       expect((map['eventDate'] as Timestamp).toDate(), DateTime(2026, 6, 30));
       expect(map['startTimeMinutes'], 14 * 60);
       expect(map['endTimeMinutes'], 16 * 60);
+      expect(map['topicIds'], ['topic-1', 'topic-2']);
       expect(map['description'], 'Sala 203.');
       expect(map['updatedAt'], isA<FieldValue>());
       expect(map.containsKey('createdAt'), isFalse);

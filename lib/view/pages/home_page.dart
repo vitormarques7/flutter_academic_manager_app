@@ -12,11 +12,15 @@ import '../../models/discipline.dart';
 import '../../models/grade_summary.dart';
 import '../../models/schedule.dart';
 import '../../models/study_cycle.dart';
+import '../../models/study_session.dart';
+import '../../models/study_topic.dart';
 import '../../models/subject_event.dart';
 import '../../repositories/assessment_repository.dart';
 import '../../repositories/discipline_repository.dart';
 import '../../repositories/schedule_repository.dart';
 import '../../repositories/study_cycle_repository.dart';
+import '../../repositories/study_session_repository.dart';
+import '../../repositories/study_topic_repository.dart';
 import '../../repositories/subject_event_repository.dart';
 import '../../repositories/task_repository.dart';
 import '../../repositories/user_profile_repository.dart';
@@ -44,6 +48,9 @@ class _HomePageState extends State<HomePage> {
   final AssessmentRepository _assessmentRepository = AssessmentRepository();
   final UserProfileRepository _userProfileRepository = UserProfileRepository();
   final DisciplineRepository _disciplineRepository = DisciplineRepository();
+  final StudySessionRepository _studySessionRepository =
+      StudySessionRepository();
+  final StudyTopicRepository _studyTopicRepository = StudyTopicRepository();
 
   late Future<String?> _activeStudyCycleIdFuture;
 
@@ -104,6 +111,8 @@ class _HomePageState extends State<HomePage> {
                     eventRepository: _eventRepository,
                     assessmentRepository: _assessmentRepository,
                     disciplineRepository: _disciplineRepository,
+                    studySessionRepository: _studySessionRepository,
+                    studyTopicRepository: _studyTopicRepository,
                   );
                 },
               ),
@@ -183,6 +192,8 @@ class _HomeDashboard extends StatelessWidget {
   final SubjectEventRepository eventRepository;
   final AssessmentRepository assessmentRepository;
   final DisciplineRepository disciplineRepository;
+  final StudySessionRepository studySessionRepository;
+  final StudyTopicRepository studyTopicRepository;
 
   const _HomeDashboard({
     required this.activeStudyCycleId,
@@ -191,6 +202,8 @@ class _HomeDashboard extends StatelessWidget {
     required this.eventRepository,
     required this.assessmentRepository,
     required this.disciplineRepository,
+    required this.studySessionRepository,
+    required this.studyTopicRepository,
   });
 
   @override
@@ -237,68 +250,118 @@ class _HomeDashboard extends StatelessWidget {
                             studyCycleId: activeStudyCycleId,
                           ),
                           builder: (context, assessmentSnapshot) {
-                            final isLoading =
-                                (studyCycleSnapshot.connectionState ==
-                                        ConnectionState.waiting &&
-                                    !studyCycleSnapshot.hasData) ||
-                                _isWaiting(disciplineSnapshot) ||
-                                _isWaiting(taskSnapshot) ||
-                                _isWaiting(scheduleSnapshot) ||
-                                _isWaiting(eventSnapshot) ||
-                                _isWaiting(assessmentSnapshot);
-                            if (isLoading) return const _HomeLoadingState();
-
-                            final hasError =
-                                studyCycleSnapshot.hasError ||
-                                disciplineSnapshot.hasError ||
-                                taskSnapshot.hasError ||
-                                scheduleSnapshot.hasError ||
-                                eventSnapshot.hasError ||
-                                assessmentSnapshot.hasError;
-                            final disciplines =
-                                disciplineSnapshot.data ?? const <Discipline>[];
-                            final tasks = _tasksForCycle(
-                              taskSnapshot.data ?? const [],
-                              activeStudyCycleId,
-                            );
-                            final dashboard = _HomeDashboardData.from(
-                              tasks: tasks,
-                              schedules: scheduleSnapshot.data ?? const [],
-                              events: eventSnapshot.data ?? const [],
-                              assessments: assessmentSnapshot.data ?? const [],
-                              disciplines: disciplines,
-                              passingGrade: passingGrade,
-                            );
-                            final taskSubjects =
-                                _taskDialogSubjectsFromDisciplines(disciplines);
-
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _StudyFocusCard(data: dashboard),
-                                if (hasError) ...[
-                                  const SizedBox(height: 14),
-                                  const _HomeWarningPanel(),
-                                ],
-                                const SizedBox(height: 22),
-                                _HomeTimelinePanel(
-                                  tasks: dashboard.upcomingTasks,
-                                  subjects: taskSubjects,
-                                  activeStudyCycleId: activeStudyCycleId,
-                                  events: dashboard.upcomingEvents,
-                                  onDelete: _deleteEvent,
-                                ),
-                                if (dashboard.alerts.isNotEmpty) ...[
-                                  const SizedBox(height: 24),
-                                  _HomeInlineSectionHeader(
-                                    icon: Icons.radar_rounded,
-                                    label: 'Radar',
-                                    count: dashboard.alerts.length,
+                            return StreamBuilder<List<StudySession>>(
+                              stream: studySessionRepository.watchSessions(
+                                studyCycleId: activeStudyCycleId,
+                              ),
+                              builder: (context, sessionSnapshot) {
+                                return StreamBuilder<List<StudyTopic>>(
+                                  stream: studyTopicRepository.watchTopics(
+                                    studyCycleId: activeStudyCycleId,
                                   ),
-                                  const SizedBox(height: 10),
-                                  _AlertsCard(alerts: dashboard.alerts),
-                                ],
-                              ],
+                                  builder: (context, topicSnapshot) {
+                                    final isIndependent =
+                                        activeCycle.type ==
+                                        StudyCycleType.independent;
+                                    final isLoading =
+                                        (studyCycleSnapshot.connectionState ==
+                                                ConnectionState.waiting &&
+                                            !studyCycleSnapshot.hasData) ||
+                                        _isWaiting(disciplineSnapshot) ||
+                                        _isWaiting(taskSnapshot) ||
+                                        (!isIndependent &&
+                                            _isWaiting(scheduleSnapshot)) ||
+                                        _isWaiting(eventSnapshot) ||
+                                        (!isIndependent &&
+                                            _isWaiting(assessmentSnapshot)) ||
+                                        (isIndependent &&
+                                            _isWaiting(sessionSnapshot)) ||
+                                        (isIndependent &&
+                                            _isWaiting(topicSnapshot));
+                                    if (isLoading) {
+                                      return const _HomeLoadingState();
+                                    }
+
+                                    final hasError =
+                                        studyCycleSnapshot.hasError ||
+                                        disciplineSnapshot.hasError ||
+                                        taskSnapshot.hasError ||
+                                        (!isIndependent &&
+                                            scheduleSnapshot.hasError) ||
+                                        eventSnapshot.hasError ||
+                                        (!isIndependent &&
+                                            assessmentSnapshot.hasError) ||
+                                        (isIndependent &&
+                                            sessionSnapshot.hasError) ||
+                                        (isIndependent &&
+                                            topicSnapshot.hasError);
+                                    final disciplines =
+                                        disciplineSnapshot.data ??
+                                        const <Discipline>[];
+                                    final tasks = _tasksForCycle(
+                                      taskSnapshot.data ?? const [],
+                                      activeStudyCycleId,
+                                    );
+                                    final dashboard = _HomeDashboardData.from(
+                                      cycleType: activeCycle.type,
+                                      tasks: tasks,
+                                      schedules: isIndependent
+                                          ? const []
+                                          : (scheduleSnapshot.data ?? const []),
+                                      events:
+                                          eventSnapshot.data ??
+                                          const <SubjectEvent>[],
+                                      assessments: isIndependent
+                                          ? const []
+                                          : (assessmentSnapshot.data ??
+                                                const []),
+                                      disciplines: disciplines,
+                                      passingGrade: passingGrade,
+                                      studySessions: isIndependent
+                                          ? (sessionSnapshot.data ?? const [])
+                                          : const [],
+                                      studyTopics: isIndependent
+                                          ? (topicSnapshot.data ?? const [])
+                                          : const [],
+                                    );
+                                    final taskSubjects =
+                                        _taskDialogSubjectsFromDisciplines(
+                                          disciplines,
+                                        );
+
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _StudyFocusCard(data: dashboard),
+                                        if (hasError) ...[
+                                          const SizedBox(height: 14),
+                                          const _HomeWarningPanel(),
+                                        ],
+                                        const SizedBox(height: 22),
+                                        _HomeTimelinePanel(
+                                          tasks: dashboard.upcomingTasks,
+                                          subjects: taskSubjects,
+                                          activeStudyCycleId:
+                                              activeStudyCycleId,
+                                          events: dashboard.upcomingEvents,
+                                          onDelete: _deleteEvent,
+                                        ),
+                                        if (dashboard.alerts.isNotEmpty) ...[
+                                          const SizedBox(height: 24),
+                                          _HomeInlineSectionHeader(
+                                            icon: Icons.radar_rounded,
+                                            label: 'Radar',
+                                            count: dashboard.alerts.length,
+                                          ),
+                                          const SizedBox(height: 10),
+                                          _AlertsCard(alerts: dashboard.alerts),
+                                        ],
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
                             );
                           },
                         );
@@ -525,7 +588,7 @@ class _StudyFocusCard extends StatelessWidget {
             runSpacing: 8,
             children: [
               MetadataChip(
-                icon: Icons.school_outlined,
+                icon: data.primaryStatusIcon,
                 label: data.nextClassLabel,
                 foregroundColor: data.nextClassColor(colors),
                 backgroundColor: data.nextClassBackground(colors),
@@ -1287,20 +1350,26 @@ class _HomeDivider extends StatelessWidget {
 }
 
 class _HomeDashboardData {
+  final StudyCycleType cycleType;
   final int pendingTasks;
   final int totalTasks;
   final int gradeRiskCount;
   final int gradeAttentionCount;
+  final int studyMinutesThisWeek;
+  final int pendingTopicCount;
   final List<_HomeTask> upcomingTasks;
   final List<_HomeEvent> upcomingEvents;
   final List<_HomeAlert> alerts;
   final _NextClass? nextClass;
 
   const _HomeDashboardData({
+    required this.cycleType,
     required this.pendingTasks,
     required this.totalTasks,
     required this.gradeRiskCount,
     required this.gradeAttentionCount,
+    required this.studyMinutesThisWeek,
+    required this.pendingTopicCount,
     required this.upcomingTasks,
     required this.upcomingEvents,
     required this.alerts,
@@ -1308,12 +1377,15 @@ class _HomeDashboardData {
   });
 
   factory _HomeDashboardData.from({
+    required StudyCycleType cycleType,
     required List<AcademicTask> tasks,
     required List<Schedule> schedules,
     required List<SubjectEvent> events,
     required List<Assessment> assessments,
     required List<Discipline> disciplines,
     required double passingGrade,
+    List<StudySession> studySessions = const [],
+    List<StudyTopic> studyTopics = const [],
   }) {
     final pendingTasks = tasks.where((task) => !task.isChecked).toList();
     final sortedPendingTasks = pendingTasks.toList()
@@ -1328,24 +1400,125 @@ class _HomeDashboardData {
     final nextClass = _NextClass.fromSchedules(schedules);
     final homeTasks = sortedPendingTasks.take(3).map(_HomeTask.from).toList();
     final homeEvents = upcomingEvents.take(3).map(_HomeEvent.from).toList();
+    final isIndependent = cycleType == StudyCycleType.independent;
+    final studyMinutesThisWeek = _studyMinutesThisWeek(studySessions);
+    final pendingTopicCount = studyTopics
+        .where((topic) => topic.status == StudyTopicStatus.todo)
+        .length;
 
     return _HomeDashboardData(
+      cycleType: cycleType,
       pendingTasks: pendingTasks.length,
       totalTasks: tasks.length,
-      gradeRiskCount: summary.countByStatus(GradeStatus.risk),
-      gradeAttentionCount: summary.countByStatus(GradeStatus.attention),
+      gradeRiskCount: isIndependent
+          ? 0
+          : summary.countByStatus(GradeStatus.risk),
+      gradeAttentionCount: isIndependent
+          ? 0
+          : summary.countByStatus(GradeStatus.attention),
+      studyMinutesThisWeek: studyMinutesThisWeek,
+      pendingTopicCount: pendingTopicCount,
       upcomingTasks: homeTasks,
       upcomingEvents: homeEvents,
-      alerts: _buildAlerts(
-        pendingTasks: pendingTasks,
-        schedules: schedules,
-        events: upcomingEvents,
-        disciplines: disciplines,
-        passingGrade: passingGrade,
-        summary: summary,
-      ),
+      alerts: isIndependent
+          ? _buildIndependentAlerts(
+              pendingTasks: pendingTasks,
+              events: upcomingEvents,
+              pendingTopicCount: pendingTopicCount,
+            )
+          : _buildAlerts(
+              pendingTasks: pendingTasks,
+              schedules: schedules,
+              events: upcomingEvents,
+              disciplines: disciplines,
+              passingGrade: passingGrade,
+              summary: summary,
+            ),
       nextClass: nextClass,
     );
+  }
+
+  bool get isIndependent => cycleType == StudyCycleType.independent;
+
+  static int _studyMinutesThisWeek(List<StudySession> sessions) {
+    final now = DateTime.now();
+    final today = _dateOnly(now);
+    final weekStart = today.subtract(Duration(days: today.weekday - 1));
+
+    return sessions
+        .where((session) {
+          final studiedAt = _dateOnly(session.studiedAt);
+          return !studiedAt.isBefore(weekStart) && !studiedAt.isAfter(today);
+        })
+        .fold(0, (sum, session) => sum + session.durationMinutes);
+  }
+
+  static List<_HomeAlert> _buildIndependentAlerts({
+    required List<AcademicTask> pendingTasks,
+    required List<SubjectEvent> events,
+    required int pendingTopicCount,
+  }) {
+    final today = _dateOnly(DateTime.now());
+    final overdueCount = pendingTasks.where((task) {
+      final deadline = _parseBrazilianDate(task.deadline);
+      return deadline != null && deadline.isBefore(today);
+    }).length;
+    final todayCount = pendingTasks.where((task) {
+      final deadline = _parseBrazilianDate(task.deadline);
+      return deadline != null && deadline == today;
+    }).length;
+    final nextRevision = events.where((event) {
+      if (event.type != SubjectEventType.revision) return false;
+      final daysUntil = _dateOnly(event.eventDate).difference(today).inDays;
+      return daysUntil >= 0 && daysUntil <= 3;
+    }).firstOrNull;
+
+    final alerts = <_HomeAlert>[];
+    if (overdueCount > 0) {
+      alerts.add(
+        _HomeAlert(
+          title:
+              '$overdueCount ${overdueCount == 1 ? 'tarefa atrasada' : 'tarefas atrasadas'}',
+          description: 'Revise seus prazos para retomar o plano.',
+          level: _AlertLevel.danger,
+          icon: Icons.warning_amber_rounded,
+        ),
+      );
+    }
+    if (todayCount > 0) {
+      alerts.add(
+        _HomeAlert(
+          title:
+              '$todayCount ${todayCount == 1 ? 'tarefa para hoje' : 'tarefas para hoje'}',
+          description: 'Separe um bloco de estudo para concluir.',
+          level: _AlertLevel.warning,
+          icon: Icons.today_outlined,
+        ),
+      );
+    }
+    if (nextRevision != null) {
+      alerts.add(
+        _HomeAlert(
+          title: 'Revisão: ${nextRevision.title}',
+          description: 'Marcada para ${nextRevision.displayDateTimeLabel}.',
+          level: _AlertLevel.info,
+          icon: Icons.event_repeat_outlined,
+        ),
+      );
+    }
+    if (pendingTopicCount > 0) {
+      alerts.add(
+        _HomeAlert(
+          title:
+              '$pendingTopicCount ${pendingTopicCount == 1 ? 'assunto a ver' : 'assuntos a ver'}',
+          description: 'Escolha um assunto para avançar hoje.',
+          level: _AlertLevel.info,
+          icon: Icons.checklist_rtl_outlined,
+        ),
+      );
+    }
+
+    return alerts.take(3).toList();
   }
 
   String get taskStatusLabel {
@@ -1377,6 +1550,11 @@ class _HomeDashboardData {
   }
 
   String get gradeStatusLabel {
+    if (isIndependent) {
+      if (pendingTopicCount == 0) return 'Assuntos em dia';
+      return '$pendingTopicCount ${pendingTopicCount == 1 ? 'assunto' : 'assuntos'} a ver';
+    }
+
     if (gradeRiskCount > 0) {
       return '$gradeRiskCount em risco';
     }
@@ -1385,24 +1563,42 @@ class _HomeDashboardData {
   }
 
   IconData get gradeStatusIcon {
+    if (isIndependent) return Icons.checklist_rtl_outlined;
     if (gradeRiskCount > 0) return Icons.trending_up_rounded;
 
     return Icons.fact_check_outlined;
   }
 
   Color gradeStatusColor(AppThemeColors colors) {
+    if (isIndependent) {
+      return pendingTopicCount > 0 ? colors.warning : colors.success;
+    }
     if (gradeRiskCount > 0) return colors.danger;
 
     return colors.success;
   }
 
   Color gradeStatusBackground(AppThemeColors colors) {
+    if (isIndependent) {
+      return pendingTopicCount > 0
+          ? colors.warningSurface
+          : colors.successSurface;
+    }
     if (gradeRiskCount > 0) return colors.dangerSurface;
 
     return colors.successSurface;
   }
 
   IconData get focusIcon {
+    if (isIndependent) {
+      if (upcomingTasks.any((task) => task.isDueToday)) {
+        return Icons.today_outlined;
+      }
+      if (_nextRevision != null) return Icons.event_repeat_outlined;
+      if (studyMinutesThisWeek > 0) return Icons.timer_outlined;
+      return Icons.auto_stories_outlined;
+    }
+
     if (gradeRiskCount > 0) return Icons.trending_up_rounded;
     if (gradeAttentionCount > 0) return Icons.fact_check_outlined;
     final hasDangerAlert = alerts.any(
@@ -1418,6 +1614,13 @@ class _HomeDashboardData {
   }
 
   Color focusColor(AppThemeColors colors) {
+    if (isIndependent) {
+      if (upcomingTasks.any((task) => task.isDueToday)) return colors.warning;
+      if (_nextRevision != null) return colors.event;
+      if (studyMinutesThisWeek > 0) return colors.navActive;
+      return colors.success;
+    }
+
     if (gradeRiskCount > 0) return colors.danger;
     if (gradeAttentionCount > 0) return colors.warning;
     final hasDangerAlert = alerts.any(
@@ -1430,17 +1633,35 @@ class _HomeDashboardData {
     return colors.success;
   }
 
+  IconData get primaryStatusIcon {
+    return isIndependent ? Icons.timer_outlined : Icons.school_outlined;
+  }
+
   String get nextClassLabel {
+    if (isIndependent) {
+      return '${_formatStudyDuration(studyMinutesThisWeek)} nesta semana';
+    }
+
     final next = nextClass;
     if (next == null) return 'Sem próxima aula';
     return '${next.title}: ${next.timeLabel}';
   }
 
   Color nextClassColor(AppThemeColors colors) {
+    if (isIndependent) {
+      return studyMinutesThisWeek > 0 ? colors.navActive : colors.textMedium;
+    }
+
     return nextClass == null ? colors.textMedium : colors.navActive;
   }
 
   Color nextClassBackground(AppThemeColors colors) {
+    if (isIndependent) {
+      return studyMinutesThisWeek > 0
+          ? colors.primarySurface
+          : colors.surfaceAlt;
+    }
+
     return nextClass == null ? colors.surfaceAlt : colors.primarySurface;
   }
 
@@ -1458,6 +1679,15 @@ class _HomeDashboardData {
   }
 
   String get focusTitle {
+    if (isIndependent) {
+      if (upcomingTasks.any((task) => task.isDueToday)) {
+        return 'Hoje tem estudo';
+      }
+      if (_nextRevision != null) return 'Revisão no radar';
+      if (pendingTopicCount > 0) return 'Próximo assunto definido';
+      return 'Seu plano está em dia';
+    }
+
     if (gradeRiskCount > 0) return 'Disciplina em risco';
     if (gradeAttentionCount > 0) return 'Notas pedindo cuidado';
     final hasDangerAlert = alerts.any(
@@ -1471,6 +1701,20 @@ class _HomeDashboardData {
   }
 
   String get focusSubtitle {
+    if (isIndependent) {
+      final nextRevision = _nextRevision;
+      if (nextRevision != null) {
+        return '${nextRevision.title} em ${nextRevision.dateLabel}.';
+      }
+      if (studyMinutesThisWeek > 0) {
+        return '${_formatStudyDuration(studyMinutesThisWeek)} estudados nesta semana.';
+      }
+      if (pendingTopicCount > 0) {
+        return '$pendingTopicCount ${pendingTopicCount == 1 ? 'assunto ainda está' : 'assuntos ainda estão'} a ver.';
+      }
+      return 'Registre sessões e revisões para acompanhar seu avanço.';
+    }
+
     if (gradeRiskCount > 0) {
       if (gradeRiskCount == 1) {
         return 'Revise as notas da disciplina em risco.';
@@ -1494,6 +1738,24 @@ class _HomeDashboardData {
         ? 'tarefa pendente'
         : 'tarefas pendentes';
     return '$pendingTasks $taskLabel no ciclo atual.';
+  }
+
+  _HomeEvent? get _nextRevision {
+    return upcomingEvents
+        .where((event) => event.type == SubjectEventType.revision)
+        .firstOrNull;
+  }
+
+  static String _formatStudyDuration(int minutes) {
+    if (minutes <= 0) return '0h';
+
+    final hours = minutes ~/ 60;
+    final remainingMinutes = minutes % 60;
+
+    if (hours == 0) return '${remainingMinutes}min';
+    if (remainingMinutes == 0) return '${hours}h';
+
+    return '${hours}h ${remainingMinutes}min';
   }
 
   static List<_HomeAlert> _buildAlerts({
@@ -1747,6 +2009,8 @@ class _HomeEvent {
     required this.icon,
   });
 
+  SubjectEventType get type => source.type;
+
   factory _HomeEvent.from(SubjectEvent event) {
     final subject = event.disciplineName.trim();
 
@@ -1760,6 +2024,7 @@ class _HomeEvent {
           : '${event.type.label}: ${_shortDate(event.eventDate)}',
       icon: switch (event.type) {
         SubjectEventType.exam => Icons.edit_square,
+        SubjectEventType.revision => Icons.event_repeat_outlined,
         SubjectEventType.lecture => Icons.record_voice_over_outlined,
         SubjectEventType.seminar => Icons.co_present_outlined,
         SubjectEventType.deadline => Icons.assignment_turned_in_outlined,

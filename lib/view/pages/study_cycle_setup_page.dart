@@ -375,7 +375,10 @@ class _StudyCycleSetupPageState extends State<StudyCycleSetupPage> {
                 const SizedBox(height: 24),
                 _CycleTypeSelector(
                   selectedType: _selectedType,
-                  onChanged: (type) => setState(() => _selectedType = type),
+                  onChanged: (type) => setState(() {
+                    _selectedType = type;
+                    _disciplines = const [];
+                  }),
                 ),
                 const SizedBox(height: 24),
                 AnimatedSwitcher(
@@ -405,9 +408,14 @@ class _StudyCycleSetupPageState extends State<StudyCycleSetupPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const SectionLabel(label: 'DISCIPLINAS E HORÁRIOS'),
+                SectionLabel(
+                  label: _selectedType == _StudyCycleType.independent
+                      ? 'DISCIPLINAS E ASSUNTOS'
+                      : 'DISCIPLINAS E HORÁRIOS',
+                ),
                 const SizedBox(height: 8),
                 DisciplineSetupList(
+                  isIndependent: _selectedType == _StudyCycleType.independent,
                   onChanged: (disciplines) => _disciplines = disciplines,
                 ),
                 const SizedBox(height: 44),

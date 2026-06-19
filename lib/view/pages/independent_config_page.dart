@@ -115,6 +115,7 @@ class _IndependentConfigPageState extends State<IndependentConfigPage> {
                 const SectionLabel(label: 'DISCIPLINAS'),
                 const SizedBox(height: 8),
                 DisciplineSetupList(
+                  isIndependent: true,
                   onChanged: (disciplines) => _disciplines = disciplines,
                 ),
 

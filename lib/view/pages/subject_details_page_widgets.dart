@@ -494,6 +494,7 @@ class _SubjectEventRow extends StatelessWidget {
   IconData get _typeIcon {
     return switch (event.type) {
       SubjectEventType.exam => Icons.edit_square,
+      SubjectEventType.revision => Icons.event_repeat_outlined,
       SubjectEventType.lecture => Icons.record_voice_over_outlined,
       SubjectEventType.seminar => Icons.co_present_outlined,
       SubjectEventType.deadline => Icons.assignment_turned_in_outlined,
@@ -1215,6 +1216,540 @@ class _GradeBadge extends StatelessWidget {
       ),
     );
   }
+}
+
+class _IndependentSubjectSummaryCard extends StatelessWidget {
+  final String name;
+  final int totalStudyMinutes;
+  final int topicCount;
+  final int seenTopicCount;
+  final int pendingTaskCount;
+  final Color accentColor;
+
+  const _IndependentSubjectSummaryCard({
+    required this.name,
+    required this.totalStudyMinutes,
+    required this.topicCount,
+    required this.seenTopicCount,
+    required this.pendingTaskCount,
+    required this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return AppSurface.card(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      gradient: _disciplineSurfaceGradient(
+        context: context,
+        colors: colors,
+        accentColor: accentColor,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _DisciplineAccentMark(accentColor: accentColor),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _IconTile(
+                icon: Icons.auto_stories_outlined,
+                color: accentColor,
+                size: 52,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colors.textDark,
+                        fontSize: 22,
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.w800,
+                        height: 1.12,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        MetadataChip(
+                          icon: Icons.timer_outlined,
+                          label: _formatStudyDuration(totalStudyMinutes),
+                          foregroundColor: accentColor,
+                          backgroundColor: accentColor.withValues(alpha: 0.08),
+                          iconSize: 15,
+                          maxWidth: 160,
+                        ),
+                        MetadataChip(
+                          icon: Icons.checklist_rtl_outlined,
+                          label: '$seenTopicCount/$topicCount vistos',
+                          iconSize: 15,
+                          maxWidth: 170,
+                        ),
+                        MetadataChip(
+                          icon: Icons.pending_actions_outlined,
+                          label:
+                              '$pendingTaskCount ${pendingTaskCount == 1 ? 'pendente' : 'pendentes'}',
+                          iconSize: 15,
+                          maxWidth: 160,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StudyProgressCard extends StatelessWidget {
+  final List<StudySession> sessions;
+  final List<StudyTopic> topics;
+  final Color accentColor;
+  final VoidCallback onAddSession;
+  final VoidCallback onAddTopic;
+
+  const _StudyProgressCard({
+    required this.sessions,
+    required this.topics,
+    required this.accentColor,
+    required this.onAddSession,
+    required this.onAddTopic,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final totalMinutes = StudySession.totalMinutes(sessions);
+    final seenTopics = topics.where((topic) => topic.isSeen).length;
+
+    return AppSurface.card(
+      padding: const EdgeInsets.all(16),
+      gradient: _disciplineSurfaceGradient(
+        context: context,
+        colors: colors,
+        accentColor: accentColor,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _DisciplineAccentMark(accentColor: accentColor),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Progresso de estudo',
+                  style: TextStyle(
+                    color: colors.textDark,
+                    fontSize: 18,
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              _InlineActionButton(
+                label: 'Sessão',
+                icon: Icons.timer_outlined,
+                onTap: onAddSession,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _ProgressMetric(
+                  label: 'Horas estudadas',
+                  value: _formatStudyDuration(totalMinutes),
+                  icon: Icons.timer_outlined,
+                  color: accentColor,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _ProgressMetric(
+                  label: 'Assuntos vistos',
+                  value: '$seenTopics/${topics.length}',
+                  icon: Icons.checklist_rtl_outlined,
+                  color: colors.success,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onAddTopic,
+              icon: const Icon(Icons.add),
+              label: const Text('Adicionar assunto'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: accentColor,
+                side: BorderSide(color: accentColor.withValues(alpha: 0.35)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressMetric extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _ProgressMetric({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: colors.textDark,
+              fontSize: 20,
+              fontFamily: 'Roboto',
+              fontWeight: FontWeight.w900,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: colors.textMedium,
+              fontSize: 11,
+              fontFamily: 'Roboto',
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StudyTopicsPanel extends StatelessWidget {
+  final List<StudyTopic> topics;
+  final bool isLoading;
+  final bool hasError;
+  final Color accentColor;
+  final ValueChanged<StudyTopic> onMarkSeen;
+  final ValueChanged<StudyTopic> onMarkTodo;
+
+  const _StudyTopicsPanel({
+    required this.topics,
+    required this.isLoading,
+    required this.hasError,
+    required this.accentColor,
+    required this.onMarkSeen,
+    required this.onMarkTodo,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    if (isLoading) {
+      return const _PanelLoading(message: 'Carregando assuntos...');
+    }
+
+    if (hasError) {
+      return const EmptyStateCard(
+        icon: Icons.error_outline_rounded,
+        message: 'Não foi possível carregar os assuntos.',
+      );
+    }
+
+    if (topics.isEmpty) {
+      return const EmptyStateCard(
+        icon: Icons.checklist_rtl_outlined,
+        message: 'Nenhum assunto cadastrado.',
+      );
+    }
+
+    final todoTopics = topics
+        .where((topic) => topic.status == StudyTopicStatus.todo)
+        .toList();
+    final seenTopics = topics
+        .where((topic) => topic.status == StudyTopicStatus.seen)
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ...todoTopics.map(
+          (topic) => _StudyTopicTile(
+            topic: topic,
+            accentColor: accentColor,
+            onChanged: (value) => onMarkSeen(topic),
+          ),
+        ),
+        if (todoTopics.isNotEmpty && seenTopics.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Text(
+              'VISTOS',
+              style: TextStyle(
+                color: colors.textSubtle,
+                fontSize: 12,
+                fontFamily: 'Roboto',
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ),
+        ...seenTopics.map(
+          (topic) => _StudyTopicTile(
+            topic: topic,
+            accentColor: colors.success,
+            onChanged: (value) => onMarkTodo(topic),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StudyTopicTile extends StatelessWidget {
+  final StudyTopic topic;
+  final Color accentColor;
+  final ValueChanged<bool?> onChanged;
+
+  const _StudyTopicTile({
+    required this.topic,
+    required this.accentColor,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: AppSurface.soft(
+        padding: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        child: CheckboxListTile(
+          value: topic.isSeen,
+          onChanged: onChanged,
+          activeColor: accentColor,
+          controlAffinity: ListTileControlAffinity.leading,
+          title: Text(
+            topic.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: topic.isSeen ? colors.textMuted : colors.textDark,
+              fontSize: 14,
+              fontFamily: 'Roboto',
+              fontWeight: FontWeight.w700,
+              decoration: topic.isSeen ? TextDecoration.lineThrough : null,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StudySessionsPanel extends StatelessWidget {
+  final List<StudySession> sessions;
+  final bool isLoading;
+  final bool hasError;
+  final Color accentColor;
+
+  const _StudySessionsPanel({
+    required this.sessions,
+    required this.isLoading,
+    required this.hasError,
+    required this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const _PanelLoading(message: 'Carregando sessões...');
+    }
+
+    if (hasError) {
+      return const EmptyStateCard(
+        icon: Icons.error_outline_rounded,
+        message: 'Não foi possível carregar as sessões.',
+      );
+    }
+
+    if (sessions.isEmpty) {
+      return const EmptyStateCard(
+        icon: Icons.timer_outlined,
+        message: 'Nenhuma sessão registrada.',
+      );
+    }
+
+    return Column(
+      children: sessions.take(5).map((session) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: _StudySessionTile(session: session, accentColor: accentColor),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _StudySessionTile extends StatelessWidget {
+  final StudySession session;
+  final Color accentColor;
+
+  const _StudySessionTile({required this.session, required this.accentColor});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return AppSurface.soft(
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.timer_outlined, color: accentColor, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  session.durationLabel,
+                  style: TextStyle(
+                    color: colors.textDark,
+                    fontSize: 15,
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  session.notes.isEmpty
+                      ? session.studiedAtLabel
+                      : '${session.studiedAtLabel} • ${session.notes}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colors.textMuted,
+                    fontSize: 12,
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PanelLoading extends StatelessWidget {
+  final String message;
+
+  const _PanelLoading({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return AppSurface.soft(
+      padding: const EdgeInsets.all(18),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.2,
+              color: colors.primary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: colors.textMedium,
+                fontSize: 13,
+                fontFamily: 'Roboto',
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _formatStudyDuration(int minutes) {
+  if (minutes <= 0) return '0h';
+
+  final hours = minutes ~/ 60;
+  final remainingMinutes = minutes % 60;
+
+  if (hours == 0) return '${remainingMinutes}min';
+  if (remainingMinutes == 0) return '${hours}h';
+
+  return '${hours}h ${remainingMinutes}min';
 }
 
 class _AttendanceManagementCard extends StatelessWidget {

@@ -9,6 +9,7 @@ class ScheduleHeader extends StatelessWidget {
   final VoidCallback onPreviousDay;
   final VoidCallback onNextDay;
   final VoidCallback onCourseScheduleTap;
+  final bool showCourseScheduleShortcut;
 
   const ScheduleHeader({
     super.key,
@@ -17,6 +18,7 @@ class ScheduleHeader extends StatelessWidget {
     required this.onPreviousDay,
     required this.onNextDay,
     required this.onCourseScheduleTap,
+    this.showCourseScheduleShortcut = true,
   });
 
   @override
@@ -28,7 +30,7 @@ class ScheduleHeader extends StatelessWidget {
         final shortcutWidth = (constraints.maxWidth - 134).clamp(156.0, 224.0);
 
         return SizedBox(
-          height: 128,
+          height: showCourseScheduleShortcut ? 128 : 112,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -87,14 +89,15 @@ class ScheduleHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              Positioned(
-                right: 0,
-                top: 78,
-                child: _CourseScheduleShortcut(
-                  width: shortcutWidth,
-                  onTap: onCourseScheduleTap,
+              if (showCourseScheduleShortcut)
+                Positioned(
+                  right: 0,
+                  top: 78,
+                  child: _CourseScheduleShortcut(
+                    width: shortcutWidth,
+                    onTap: onCourseScheduleTap,
+                  ),
                 ),
-              ),
             ],
           ),
         );

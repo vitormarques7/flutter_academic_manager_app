@@ -40,6 +40,14 @@ service cloud.firestore {
       match /subjectEvents/{eventId} {
         allow read, create, update, delete: if isOwner(userId);
       }
+
+      match /studySessions/{sessionId} {
+        allow read, create, update, delete: if isOwner(userId);
+      }
+
+      match /studyTopics/{topicId} {
+        allow read, create, update, delete: if isOwner(userId);
+      }
     }
   }
 }

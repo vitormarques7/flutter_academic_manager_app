@@ -34,6 +34,16 @@ class DisciplineRepository {
     return _firestore.collection('users').doc(uid).collection('assessments');
   }
 
+  CollectionReference<Map<String, dynamic>> _studySessionsCollection(
+    String uid,
+  ) {
+    return _firestore.collection('users').doc(uid).collection('studySessions');
+  }
+
+  CollectionReference<Map<String, dynamic>> _studyTopicsCollection(String uid) {
+    return _firestore.collection('users').doc(uid).collection('studyTopics');
+  }
+
   Query<Map<String, dynamic>> _disciplinesQuery(
     String uid, {
     String? studyCycleId,
@@ -119,8 +129,20 @@ class DisciplineRepository {
           : _assessmentsCollection(
               uid,
             ).where('studyCycleId', isEqualTo: normalizedStudyCycleId);
+      final studySessionsQuery = normalizedStudyCycleId == null
+          ? _studySessionsCollection(uid)
+          : _studySessionsCollection(
+              uid,
+            ).where('studyCycleId', isEqualTo: normalizedStudyCycleId);
+      final studyTopicsQuery = normalizedStudyCycleId == null
+          ? _studyTopicsCollection(uid)
+          : _studyTopicsCollection(
+              uid,
+            ).where('studyCycleId', isEqualTo: normalizedStudyCycleId);
       final schedulesSnapshot = await schedulesQuery.get();
       final assessmentsSnapshot = await assessmentsQuery.get();
+      final studySessionsSnapshot = await studySessionsQuery.get();
+      final studyTopicsSnapshot = await studyTopicsQuery.get();
       final referencesToDelete = <DocumentReference<Map<String, dynamic>>>[
         _disciplinesCollection(uid).doc(discipline.id),
       ];
@@ -160,6 +182,26 @@ class DisciplineRepository {
 
         if (belongsToDiscipline) {
           referencesToDelete.add(assessmentDocument.reference);
+        }
+      }
+
+      for (final sessionDocument in studySessionsSnapshot.docs) {
+        if (_documentBelongsToDiscipline(
+          data: sessionDocument.data(),
+          disciplineId: discipline.id,
+          disciplineName: normalizedDisciplineName,
+        )) {
+          referencesToDelete.add(sessionDocument.reference);
+        }
+      }
+
+      for (final topicDocument in studyTopicsSnapshot.docs) {
+        if (_documentBelongsToDiscipline(
+          data: topicDocument.data(),
+          disciplineId: discipline.id,
+          disciplineName: normalizedDisciplineName,
+        )) {
+          referencesToDelete.add(topicDocument.reference);
         }
       }
 
@@ -248,5 +290,21 @@ class DisciplineRepository {
 
     final trimmed = value.trim();
     return trimmed.isEmpty ? null : trimmed;
+  }
+
+  static bool _documentBelongsToDiscipline({
+    required Map<String, dynamic> data,
+    required String disciplineId,
+    required String? disciplineName,
+  }) {
+    final documentDisciplineId = _normalizeString(data['disciplineId']);
+    final documentDisciplineName = _normalizeString(
+      data['disciplineName'],
+    )?.toLowerCase();
+
+    return documentDisciplineId == disciplineId ||
+        (documentDisciplineId == null &&
+            disciplineName != null &&
+            documentDisciplineName == disciplineName);
   }
 }

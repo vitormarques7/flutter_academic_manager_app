@@ -46,6 +46,7 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
   IconData get _eventIcon {
     return switch (_currentEvent.type) {
       SubjectEventType.exam => Icons.edit_square,
+      SubjectEventType.revision => Icons.event_repeat_outlined,
       SubjectEventType.lecture => Icons.record_voice_over_outlined,
       SubjectEventType.seminar => Icons.co_present_outlined,
       SubjectEventType.deadline => Icons.assignment_turned_in_outlined,
@@ -124,6 +125,7 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
         eventDate: result.eventDate,
         startTimeMinutes: result.startTimeMinutes,
         endTimeMinutes: result.endTimeMinutes,
+        topicIds: result.topicIds,
         description: result.description,
       );
 
@@ -146,6 +148,7 @@ class _SubjectEventDetailsPageState extends State<SubjectEventDetailsPage> {
           eventDate: result.eventDate,
           startTimeMinutes: result.startTimeMinutes,
           endTimeMinutes: result.endTimeMinutes,
+          topicIds: result.topicIds,
           description: result.description,
           createdAt: _currentEvent.createdAt,
           updatedAt: DateTime.now(),

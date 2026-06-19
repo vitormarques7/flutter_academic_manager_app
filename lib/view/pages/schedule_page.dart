@@ -7,10 +7,12 @@ import '../../models/academic_task.dart';
 import '../../models/discipline.dart';
 import '../../models/schedule.dart';
 import '../../models/study_cycle.dart';
+import '../../models/study_topic.dart';
 import '../../models/subject_event.dart';
 import '../../repositories/discipline_repository.dart';
 import '../../repositories/schedule_repository.dart';
 import '../../repositories/study_cycle_repository.dart';
+import '../../repositories/study_topic_repository.dart';
 import '../../repositories/subject_event_repository.dart';
 import '../../repositories/task_repository.dart';
 import '../../repositories/user_profile_repository.dart';
@@ -39,6 +41,7 @@ class _SchedulePageState extends State<SchedulePage> {
   final ScheduleRepository _scheduleRepository = ScheduleRepository();
   final SubjectEventRepository _eventRepository = SubjectEventRepository();
   final StudyCycleRepository _studyCycleRepository = StudyCycleRepository();
+  final StudyTopicRepository _studyTopicRepository = StudyTopicRepository();
   final UserProfileRepository _userProfileRepository = UserProfileRepository();
   final TaskRepository _taskRepository = TaskRepository();
   late Future<_ActiveStudyCycleInfo> _activeStudyCycleInfoFuture;
@@ -72,6 +75,8 @@ class _SchedulePageState extends State<SchedulePage> {
 
         final activeStudyCycleInfo =
             activeCycleSnapshot.data ?? const _ActiveStudyCycleInfo();
+        final isIndependent =
+            activeStudyCycleInfo.type == StudyCycleType.independent;
 
         return StreamBuilder<List<Schedule>>(
           stream: _scheduleRepository.watchSchedules(
@@ -87,7 +92,9 @@ class _SchedulePageState extends State<SchedulePage> {
               return _ScheduleErrorScaffold(onRetry: _reloadActiveStudyCycle);
             }
 
-            final schedules = snapshot.data ?? [];
+            final schedules = isIndependent
+                ? const <Schedule>[]
+                : (snapshot.data ?? []);
 
             return StreamBuilder<List<Discipline>>(
               stream: _disciplineRepository.watchDisciplines(
@@ -106,7 +113,7 @@ class _SchedulePageState extends State<SchedulePage> {
                   disciplines,
                 );
 
-                if (_isShowingCourseSchedule) {
+                if (_isShowingCourseSchedule && !isIndependent) {
                   return CourseScheduleView(
                     days: courseScheduleDays,
                     subtitle: activeStudyCycleInfo.label,
@@ -185,7 +192,10 @@ class _SchedulePageState extends State<SchedulePage> {
                                                   _changeSelectedDay(-1),
                                               onNextDay: () =>
                                                   _changeSelectedDay(1),
+                                              showCourseScheduleShortcut:
+                                                  !isIndependent,
                                               onCourseScheduleTap: () {
+                                                if (isIndependent) return;
                                                 setState(
                                                   () =>
                                                       _isShowingCourseSchedule =
@@ -268,11 +278,29 @@ class _SchedulePageState extends State<SchedulePage> {
       return;
     }
 
+    var topics = const <StudyTopic>[];
+    if (activeStudyCycleInfo.type == StudyCycleType.independent) {
+      try {
+        topics = await _studyTopicRepository.fetchTopics(
+          studyCycleId: activeStudyCycleInfo.id,
+        );
+      } on StudyTopicRepositoryException catch (error) {
+        _showError(error.message);
+        return;
+      } catch (_) {
+        _showError('Não foi possível carregar seus assuntos.');
+        return;
+      }
+    }
+
+    if (!mounted) return;
+
     final result = await showDialog<ScheduleEventDialogResult>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.28),
       builder: (_) => ScheduleEventDialog(
         disciplines: disciplines,
+        topics: topics,
         initialDate: _selectedDay,
       ),
     );
@@ -290,6 +318,7 @@ class _SchedulePageState extends State<SchedulePage> {
           eventDate: result.eventDate,
           startTimeMinutes: result.startTimeMinutes,
           endTimeMinutes: result.endTimeMinutes,
+          topicIds: result.topicIds,
           description: result.description,
         ),
       );
@@ -382,6 +411,7 @@ class _SchedulePageState extends State<SchedulePage> {
       if (studyCycle.id == activeStudyCycleId) {
         return _ActiveStudyCycleInfo(
           id: activeStudyCycleId,
+          type: studyCycle.type,
           label: _activeStudyCycleLabel(studyCycle),
         );
       }
@@ -616,6 +646,7 @@ class _SchedulePageState extends State<SchedulePage> {
   IconData _eventIcon(SubjectEventType type) {
     return switch (type) {
       SubjectEventType.exam => Icons.edit_square,
+      SubjectEventType.revision => Icons.event_repeat_outlined,
       SubjectEventType.lecture => Icons.record_voice_over_outlined,
       SubjectEventType.seminar => Icons.co_present_outlined,
       SubjectEventType.deadline => Icons.assignment_turned_in_outlined,
@@ -1040,10 +1071,12 @@ enum _ScheduleShift {
 
 class _ActiveStudyCycleInfo {
   final String? id;
+  final StudyCycleType? type;
   final String label;
 
   const _ActiveStudyCycleInfo({
     this.id,
+    this.type,
     this.label = 'Ciclo acadêmico não configurado',
   });
 }

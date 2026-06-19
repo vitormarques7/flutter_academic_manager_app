@@ -84,12 +84,12 @@ Campos:
 
 - Objetivo.
 - Disciplinas.
-- Horarios das disciplinas.
+- Assuntos iniciais opcionais por disciplina.
 
 As telas de configuracao possuem rolagem unica: cabecalho, campos, disciplinas
 e botoes rolam juntos.
 
-Ao salvar, o app cria o ciclo academico, disciplinas e horarios no Firestore,
+Ao salvar, o app cria o ciclo academico, disciplinas e dados relacionados no Firestore,
 atualiza `users/{uid}.activeStudyCycleId` e so entao segue para a home.
 
 Persistencia:
@@ -99,7 +99,8 @@ AcademicSetupService
   -> StudyCycleRepository.createStudyCycle
   -> UserProfileRepository.setActiveStudyCycleId
   -> DisciplineRepository.createDiscipline
-  -> ScheduleRepository.createSchedule
+  -> ScheduleRepository.createSchedule para ciclos academicos com grade
+  -> StudyTopicRepository.createTopic para assuntos iniciais do independente
 ```
 
 ## Fluxo de Home
@@ -181,13 +182,18 @@ SubjectsPage
   FloatingAddButton -> SubjectDialog
 ```
 
-O modal permite preencher:
+Para universitario e ensino medio, o modal permite preencher:
 
 - Nome.
 - Professor.
 - Carga horaria.
 - Dias da semana.
 - Horarios.
+
+Para estudante independente, o modal permite preencher:
+
+- Nome da disciplina.
+- Assuntos a ver, um por linha.
 
 Ao salvar, a tela cria a disciplina em `users/{uid}/disciplines` e cria
 documentos de horario em `users/{uid}/schedules` quando o usuario informa dias
@@ -241,7 +247,7 @@ Estado atual:
   - Tarefas: Verde (`colors.success`)
   - Se houver múltiplos tipos (ex: aula + tarefa), o traço é dividido ao meio (10px cada). Se houver os três, em três partes (6.6px cada).
 - O card "Grade de Horário" alterna para uma visualização semanal com os
-  horários reais cadastrados.
+  horários reais cadastrados. No ciclo independente, esse atalho fica oculto.
 - A ação de editar grade abre `ScheduleEditorSheet`, que cria, atualiza e
   exclui horários.
 - O botão `+` abre `ScheduleEventDialog` para criar evento acadêmico.
